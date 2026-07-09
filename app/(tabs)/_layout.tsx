@@ -1,20 +1,20 @@
 import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Palette } from '@/constants/theme';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
-// Custom tab icon with optional badge
-function TabIcon({
-  emoji, label, focused, badge,
-}: { emoji: string; label: string; focused: boolean; badge?: number }) {
+type SFSymbol = 'house.fill' | 'location.fill' | 'calendar' | 'creditcard.fill' | 'person.fill';
+
+function TabIcon({ symbol, focused, badge }: { symbol: SFSymbol; focused: boolean; badge?: number }) {
   return (
-    <View style={iconStyles.wrap}>
-      <View style={[iconStyles.iconWrap, focused && iconStyles.iconWrapActive]}>
-        <Text style={iconStyles.emoji}>{emoji}</Text>
+    <View style={ic.wrap}>
+      <View style={[ic.box, focused && ic.boxActive]}>
+        <IconSymbol name={symbol} size={22} color={focused ? Palette.primary : Palette.grey400} />
         {!!badge && (
-          <View style={iconStyles.badge}>
-            <Text style={iconStyles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+          <View style={ic.badge}>
+            <Text style={ic.badgeText}>{badge > 9 ? '9+' : badge}</Text>
           </View>
         )}
       </View>
@@ -22,13 +22,12 @@ function TabIcon({
   );
 }
 
-const iconStyles = StyleSheet.create({
-  wrap:           { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
-  iconWrap:       { alignItems: 'center', justifyContent: 'center', width: 40, height: 32, borderRadius: 16 },
-  iconWrapActive: { backgroundColor: Palette.primaryLight },
-  emoji:          { fontSize: 22 },
-  badge:          { position: 'absolute', top: -2, right: -4, backgroundColor: Palette.danger, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
-  badgeText:      { color: '#fff', fontSize: 9, fontWeight: '800' },
+const ic = StyleSheet.create({
+  wrap:      { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
+  box:       { alignItems: 'center', justifyContent: 'center', width: 44, height: 32, borderRadius: 16 },
+  boxActive: { backgroundColor: Palette.primaryLight },
+  badge:     { position: 'absolute', top: -2, right: -4, backgroundColor: Palette.danger, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
+  badgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
 });
 
 export default function UserTabLayout() {
@@ -50,46 +49,17 @@ export default function UserTabLayout() {
         tabBarLabelStyle: { fontSize: 10, fontWeight: '700', marginTop: 2 },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Home" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="courts"
-        options={{
-          title: 'Courts',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏓" label="Courts" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="matches"
-        options={{
-          title: 'Matches',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" label="Matches" focused={focused} badge={2} />,
-        }}
-      />
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Community',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👥" label="Community" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profile" focused={focused} />,
-        }}
-      />
+      <Tabs.Screen name="index"    options={{ title: 'Home',       tabBarIcon: ({ focused }) => <TabIcon symbol="house.fill"     focused={focused} /> }} />
+      <Tabs.Screen name="courts"   options={{ title: 'Courts',     tabBarIcon: ({ focused }) => <TabIcon symbol="location.fill"  focused={focused} /> }} />
+      <Tabs.Screen name="bookings" options={{ title: 'My Bookings',tabBarIcon: ({ focused }) => <TabIcon symbol="calendar"       focused={focused} badge={1} /> }} />
+      <Tabs.Screen name="payments" options={{ title: 'Payments',   tabBarIcon: ({ focused }) => <TabIcon symbol="creditcard.fill"focused={focused} /> }} />
+      <Tabs.Screen name="profile"  options={{ title: 'Profile',    tabBarIcon: ({ focused }) => <TabIcon symbol="person.fill"    focused={focused} /> }} />
 
-      {/* Hidden redirect tabs — keep out of tab bar */}
-      <Tabs.Screen name="explore"        options={{ href: null }} />
-      <Tabs.Screen name="bookings"       options={{ href: null }} />
-      <Tabs.Screen name="notifications"  options={{ href: null }} />
+      {/* Hidden tabs */}
+      <Tabs.Screen name="explore"       options={{ href: null }} />
+      <Tabs.Screen name="matches"       options={{ href: null }} />
+      <Tabs.Screen name="community"     options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
   );
 }

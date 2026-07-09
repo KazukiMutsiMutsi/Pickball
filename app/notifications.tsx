@@ -1,6 +1,14 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { shadowSm } from '@/src/utils/shadow';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Notif {
@@ -20,21 +28,20 @@ const ICONS: Record<string, string> = {
 };
 
 const MOCK: Notif[] = [
-  { id: '1', type: 'booking', title: 'Booking Confirmed', message: 'Your court at Downtown Pickleball Center is confirmed for July 12 at 9:00 AM.', time: '2h ago', read: false },
-  { id: '2', type: 'reminder', title: 'Upcoming Session', message: 'Your session at Riverside Courts starts in 1 hour. Don\'t forget your paddle!', time: '5h ago', read: false },
-  { id: '3', type: 'promo', title: 'Weekend Special 🎉', message: 'Use code WEEKEND20 for 20% off any booking this Saturday or Sunday.', time: '1d ago', read: true },
-  { id: '4', type: 'booking', title: 'Booking Cancelled', message: 'Your booking at Northpark Arena on June 15 was cancelled. Refund processing.', time: '3d ago', read: true },
-  { id: '5', type: 'system', title: 'App Update Available', message: 'A new version of PicklePro is available with improved booking features.', time: '1w ago', read: true },
+  { id: '1', type: 'booking',  title: 'Booking Confirmed',  message: 'Your court at Downtown Pickleball Center is confirmed for July 12 at 9:00 AM.', time: '2h ago',  read: false },
+  { id: '2', type: 'reminder', title: 'Upcoming Session',   message: "Your session at Riverside Courts starts in 1 hour. Don't forget your paddle!",  time: '5h ago',  read: false },
+  { id: '3', type: 'promo',    title: 'Weekend Special 🎉', message: 'Book any court this Saturday or Sunday and get 20% off. Use code WEEKEND20.',      time: '1d ago',  read: true  },
+  { id: '4', type: 'booking',  title: 'Booking Cancelled',  message: 'Your booking at Northpark Arena on June 15 was cancelled. Refund processing.',    time: '3d ago',  read: true  },
+  { id: '5', type: 'system',   title: 'App Update Available',message: 'A new version of PicklePro is available with improved booking features.',         time: '1w ago',  read: true  },
 ];
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const [notifs, setNotifs] = useState(MOCK);
-
   const unreadCount = notifs.filter((n) => !n.read).length;
 
   const markAllRead = () => setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-  const markRead = (id: string) => setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  const markRead    = (id: string) => setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -90,28 +97,26 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.grey100 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
-  backBtn: { width: 40 },
-  backIcon: { fontSize: 30, color: Palette.primary, lineHeight: 34 },
-  title: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: Palette.grey900 },
-  markAllBtn: { width: 60, alignItems: 'flex-end' },
-  markAllText: { fontSize: 13, color: Palette.primary, fontWeight: '600' },
-
-  list: { padding: Spacing.md, gap: Spacing.sm },
-  empty: { alignItems: 'center', paddingTop: 60 },
-  emptyEmoji: { fontSize: 48 },
-  emptyText: { fontSize: 15, color: Palette.grey500, marginTop: Spacing.sm },
-
-  card: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md, ...shadowSm },
-  cardUnread: { borderLeftWidth: 3, borderLeftColor: Palette.primary },
-  iconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.sm },
-  icon: { fontSize: 18 },
-  content: { flex: 1 },
-  contentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  cardTitle: { fontSize: 14, fontWeight: '600', color: Palette.grey700, flex: 1, marginRight: 8 },
+  safe:            { flex: 1, backgroundColor: Palette.grey100 },
+  header:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
+  backBtn:         { width: 40 },
+  backIcon:        { fontSize: 30, color: Palette.primary, lineHeight: 34 },
+  title:           { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: Palette.grey900 },
+  markAllBtn:      { width: 60, alignItems: 'flex-end' },
+  markAllText:     { fontSize: 13, color: Palette.primary, fontWeight: '600' },
+  list:            { padding: Spacing.md, gap: Spacing.sm },
+  empty:           { alignItems: 'center', paddingTop: 60 },
+  emptyEmoji:      { fontSize: 48 },
+  emptyText:       { fontSize: 15, color: Palette.grey500, marginTop: Spacing.sm },
+  card:            { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md, ...shadowSm },
+  cardUnread:      { borderLeftWidth: 3, borderLeftColor: Palette.primary },
+  iconWrap:        { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.sm },
+  icon:            { fontSize: 18 },
+  content:         { flex: 1 },
+  contentHeader:   { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  cardTitle:       { fontSize: 14, fontWeight: '600', color: Palette.grey700, flex: 1, marginRight: 8 },
   cardTitleUnread: { color: Palette.grey900, fontWeight: '700' },
-  time: { fontSize: 11, color: Palette.grey500 },
-  message: { fontSize: 13, color: Palette.grey600, lineHeight: 18 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Palette.primary, marginLeft: 6, marginTop: 4 },
+  time:            { fontSize: 11, color: Palette.grey500 },
+  message:         { fontSize: 13, color: Palette.grey600, lineHeight: 18 },
+  unreadDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: Palette.primary, marginLeft: 6, marginTop: 4 },
 });
