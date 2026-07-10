@@ -1,49 +1,26 @@
 import { useState } from 'react';
-import RebookModal from '../components/RebookModal';
 import RescheduleModal from '../components/RescheduleModal';
 import StatusBadge from '../components/StatusBadge';
 import { STAFF_BOOKINGS, TODAY } from '../data/mock';
 import type { BookingStatus, StaffBooking } from '../types';
-import { findConflict } from '../utils/conflicts';
 import { fmt12 } from '../utils/time';
-
-interface ConflictState { pending: StaffBooking; existing: StaffBooking; }
 
 export default function StaffCheckIn() {
   const [bookings,         setBookings]         = useState<StaffBooking[]>(STAFF_BOOKINGS);
   const [search,           setSearch]           = useState('');
   const [rescheduleTarget, setRescheduleTarget] = useState<StaffBooking | null>(null);
-  const [conflictState,    setConflictState]    = useState<ConflictState | null>(null);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const updateStatus = (id: string, status: BookingStatus) =>
     setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
 
-  // Approve with conflict check
-  const handleApprove = (booking: StaffBooking) => {
-    const conflict = findConflict(booking, bookings);
-    if (conflict) setConflictState({ pending: booking, existing: conflict });
-    else updateStatus(booking.id, 'confirmed');
-  };
-
-  // Accept customer reschedule request → open rebook modal
+  // Accept customer reschedule request → open reschedule modal
   const handleAcceptReschedule = (booking: StaffBooking) =>
     setRescheduleTarget(booking);
 
   // Decline customer reschedule → keep original, confirm it
   const handleDeclineReschedule = (id: string) =>
     updateStatus(id, 'confirmed');
-
-  // Rebook confirm (conflict path)
-  const handleRebookConfirm = (
-    updated: Pick<StaffBooking, 'date'|'startTime'|'endTime'|'durationHrs'|'courtId'|'courtName'>,
-  ) => {
-    if (!conflictState) return;
-    setBookings((prev) => prev.map((b) =>
-      b.id === conflictState.pending.id ? { ...b, ...updated, status: 'confirmed' } : b,
-    ));
-    setConflictState(null);
-  };
 
   // Reschedule confirm (customer-requested path)
   const handleRescheduleConfirm = (
@@ -70,7 +47,6 @@ export default function StaffCheckIn() {
   const todayActive = todayAll
     .filter((b) =>
       b.status === 'confirmed' ||
-      b.status === 'pending'   ||
       b.status === 'checked_in' ||
       b.status === 'reschedule_requested',
     )
@@ -87,13 +63,12 @@ export default function StaffCheckIn() {
 
   const confirmedCount  = todayAll.filter((b) => b.status === 'confirmed').length;
   const checkedInCount  = todayAll.filter((b) => b.status === 'checked_in').length;
-  const pendingCount    = todayAll.filter((b) => b.status === 'pending').length;
   const rescheduleCount = todayAll.filter((b) => b.status === 'reschedule_requested').length;
 
   // Reports
-  const noShowCount   = todayAll.filter((b) => b.status === 'no_show').length;
-  const completedCount= todayAll.filter((b) => b.status === 'completed').length;
-  const cancelledCount= todayAll.filter((b) => b.status === 'cancelled').length;
+  const noShowCount    = todayAll.filter((b) => b.status === 'no_show').length;
+  const completedCount = todayAll.filter((b) => b.status === 'completed').length;
+  const cancelledCount = todayAll.filter((b) => b.status === 'cancelled').length;
 
   return (
     <div style={s.page}>
@@ -102,8 +77,7 @@ export default function StaffCheckIn() {
       <div style={s.summaryRow}>
         {[
           { label: 'Awaiting Check-In', value: confirmedCount,  color: '#2563eb', bg: '#dbeafe' },
-          { label: 'Currently In',      value: checkedInCount,  color: '#15803d', bg: '#dcfce7' },
-          { label: 'Pending Approval',  value: pendingCount,    color: '#b45309', bg: '#fef3c7' },
+          { label: 'On Court',          value: checkedInCount,  color: '#15803d', bg: '#dcfce7' },
           { label: 'Reschedule Req.',   value: rescheduleCount, color: '#7c3aed', bg: '#fdf4ff' },
         ].map((stat) => (
           <div key={stat.label} style={{ ...s.summaryCard, background: stat.bg, borderColor: stat.color + '44' }}>
@@ -144,7 +118,6 @@ export default function StaffCheckIn() {
                 borderLeft: `4px solid ${
                   b.status === 'reschedule_requested' ? '#7c3aed'
                   : b.status === 'checked_in'         ? '#16a34a'
-                  : b.status === 'pending'             ? '#d97706'
                   : '#2563eb'
                 }`,
               }}
@@ -172,16 +145,10 @@ export default function StaffCheckIn() {
                     </div>
                   )}
                   <div style={s.rescheduleActions}>
-                    <button
-                      style={s.btnAccept}
-                      onClick={() => handleAcceptReschedule(b)}
-                    >
+                    <button style={s.btnAccept} onClick={() => handleAcceptReschedule(b)}>
                       ✓ Accept & Rebook
                     </button>
-                    <button
-                      style={s.btnKeep}
-                      onClick={() => handleDeclineReschedule(b.id)}
-                    >
+                    <button style={s.btnKeep} onClick={() => handleDeclineReschedule(b.id)}>
                       Keep Original Schedule
                     </button>
                   </div>
@@ -203,15 +170,9 @@ export default function StaffCheckIn() {
               {/* Standard workflow actions (non-reschedule) */}
               {b.status !== 'reschedule_requested' && (
                 <div style={s.checkActions}>
-                  {b.status === 'pending' && (
-                    <>
-                      <button style={s.btnGreen} onClick={() => handleApprove(b)}>✓ Approve</button>
-                      <button style={s.btnRed}   onClick={() => updateStatus(b.id, 'cancelled')}>✕ Decline</button>
-                    </>
-                  )}
                   {b.status === 'confirmed' && (
                     <>
-                      <button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>✅ Check In</button>
+                      <button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>✅ On Court</button>
                       <button style={s.btnGhost} onClick={() => updateStatus(b.id, 'no_show')}>No Show</button>
                     </>
                   )}
@@ -233,10 +194,9 @@ export default function StaffCheckIn() {
         </div>
         <div style={s.reportGrid}>
           {[
-            { icon: '✅', label: 'Completed',   value: completedCount, color: '#15803d', bg: '#dcfce7' },
-            { icon: '⏳', label: 'Pending',     value: pendingCount,   color: '#b45309', bg: '#fef3c7' },
-            { icon: '🚫', label: 'No Show',     value: noShowCount,    color: '#dc2626', bg: '#fee2e2' },
-            { icon: '✕',  label: 'Cancelled',   value: cancelledCount, color: '#64748b', bg: '#f1f5f9' },
+            { icon: '✅', label: 'Completed', value: completedCount, color: '#15803d', bg: '#dcfce7' },
+            { icon: '🚫', label: 'No Show',   value: noShowCount,    color: '#dc2626', bg: '#fee2e2' },
+            { icon: '✕',  label: 'Cancelled', value: cancelledCount, color: '#64748b', bg: '#f1f5f9' },
           ].map((r) => (
             <div key={r.label} style={{ ...s.reportItem, background: r.bg }}>
               <span style={s.reportItemIcon}>{r.icon}</span>
@@ -254,16 +214,6 @@ export default function StaffCheckIn() {
           onConfirm={handleRescheduleConfirm}
           onDecline={handleRescheduleModalDecline}
           onClose={() => setRescheduleTarget(null)}
-        />
-      )}
-      {conflictState && (
-        <RebookModal
-          booking={conflictState.pending}
-          conflicting={conflictState.existing}
-          allBookings={bookings}
-          onConfirm={handleRebookConfirm}
-          onHold={() => setConflictState(null)}
-          onClose={() => setConflictState(null)}
         />
       )}
     </div>
@@ -295,7 +245,6 @@ const s: Record<string, React.CSSProperties> = {
   checkPlayerName: { fontSize: 15, fontWeight: 800, color: '#0f172a' },
   checkPhone:      { fontSize: 12, color: '#64748b', marginTop: 1 },
 
-  // Reschedule response block
   rescheduleBox:     { background: '#fdf4ff', border: '1px solid #e9d5ff', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 },
   rescheduleHeader:  { display: 'flex', alignItems: 'center', gap: 8 },
   rescheduleIcon:    { fontSize: 16, color: '#7c3aed' },
@@ -314,10 +263,8 @@ const s: Record<string, React.CSSProperties> = {
 
   btnGreen: { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   btnBlue:  { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
-  btnRed:   { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   btnGhost: { flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
 
-  // Reports
   reportCard:      { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' },
   reportHeader:    { display: 'flex', alignItems: 'baseline', gap: 10, padding: '16px 20px', borderBottom: '1px solid #f1f5f9' },
   reportTitle:     { fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 },

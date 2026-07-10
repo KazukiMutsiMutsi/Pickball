@@ -3,6 +3,9 @@ import StatusBadge from '../components/StatusBadge';
 import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
 import { fmt12 } from '../utils/time';
 
+const IMG_LEFT  = '/qwerty.jpg';
+const IMG_RIGHT = '/imageg1.webp';
+
 function getTimeOfDay() {
   const h = new Date().getHours();
   if (h < 12) return 'morning';
@@ -14,37 +17,59 @@ export default function StaffDashboard() {
   const todayBookings = STAFF_BOOKINGS.filter((b) => b.date === TODAY);
   const total         = todayBookings.length;
   const checkedIn     = todayBookings.filter((b) => b.status === 'checked_in').length;
-  const pending       = todayBookings.filter((b) => b.status === 'pending').length;
   const completed     = todayBookings.filter((b) => b.status === 'completed').length;
   const reschedules   = todayBookings.filter((b) => b.status === 'reschedule_requested').length;
   const activeCourts  = STAFF_COURTS.filter((c) => c.active).length;
 
   const upcoming = [...todayBookings]
-    .filter((b) => b.status === 'confirmed' || b.status === 'pending' || b.status === 'reschedule_requested')
+    .filter((b) => b.status === 'confirmed' || b.status === 'reschedule_requested')
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
     .slice(0, 5);
 
   const stats = [
     { icon: '📅', label: "Today's Bookings", value: total,        sub: `${completed} completed`,          accent: '#2563eb' },
-    { icon: '✅', label: 'Checked In',        value: checkedIn,    sub: `${total - checkedIn} remaining`,  accent: '#16a34a' },
-    { icon: '⏳', label: 'Pending',           value: pending,      sub: 'Need attention',                  accent: '#d97706' },
+    { icon: '✅', label: 'On Court',         value: checkedIn,    sub: `${total - checkedIn} remaining`,  accent: '#16a34a' },
     { icon: '↻',  label: 'Reschedules',       value: reschedules,  sub: 'Customer requests',               accent: '#7c3aed' },
     { icon: '🏓', label: 'Active Courts',     value: activeCourts, sub: `of ${STAFF_COURTS.length} total`, accent: '#0284c7' },
   ];
 
   return (
     <div style={s.page}>
-      {/* Banner */}
+      {/* ── Hero Banner ── */}
       <div style={s.banner}>
-        <div>
-          <div style={s.bannerTitle}>Good {getTimeOfDay()}, ready for your shift 👋</div>
+        {/* LEFT photo */}
+        <img src={IMG_LEFT}  alt="" aria-hidden="true" style={s.imgLeft}  />
+        {/* RIGHT photo */}
+        <img src={IMG_RIGHT} alt="" aria-hidden="true" style={s.imgRight} />
+        {/* left fade */}
+        <div style={s.fadeLeft}  aria-hidden="true" />
+        {/* center overlay */}
+        <div style={s.centerOverlay} aria-hidden="true" />
+        {/* right fade */}
+        <div style={s.fadeRight} aria-hidden="true" />
+        {/* scanlines */}
+        <div style={s.scanlines} aria-hidden="true" />
+
+        {/* Content */}
+        <div style={s.bannerContent}>
+          <div style={s.pillTag}>🏓 PicklePro Staff Portal</div>
+          <div style={s.bannerTitle}>
+            Good {getTimeOfDay()}, <span style={s.bannerName}>Alex</span> 👋
+          </div>
+          <div style={s.bannerRole}>Staff Employee</div>
           <div style={s.bannerSub}>
-            {pending > 0 || reschedules > 0
-              ? `${pending} pending · ${reschedules} reschedule request${reschedules !== 1 ? 's' : ''} · ${total - completed} bookings remaining`
+            {reschedules > 0
+              ? `${reschedules} reschedule request${reschedules !== 1 ? 's' : ''} · ${total - completed} bookings remaining`
               : `All caught up · ${total} bookings today`}
           </div>
+          <div style={s.bannerChips}>
+            <span style={s.chip}>📅 {total} bookings today</span>
+            <span style={s.chip}>🏓 {activeCourts} courts active</span>
+            <span style={{ ...s.chip, background: 'rgba(22,163,74,.25)', borderColor: 'rgba(22,163,74,.5)' }}>
+              ✅ {checkedIn} on court
+            </span>
+          </div>
         </div>
-        <span style={s.bannerEmoji}>🏓</span>
       </div>
 
       {/* KPI stats */}
@@ -129,10 +154,129 @@ export default function StaffDashboard() {
 
 const s: Record<string, React.CSSProperties> = {
   page:        { display: 'flex', flexDirection: 'column', gap: 24 },
-  banner:      { background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)', borderRadius: 16, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#fff' },
-  bannerTitle: { fontSize: 18, fontWeight: 800, marginBottom: 6 },
-  bannerSub:   { fontSize: 13, color: '#94a3b8', lineHeight: 1.5 },
-  bannerEmoji: { fontSize: 52, flexShrink: 0 },
+  // ── Hero banner ────────────────────────────────────────────────────────────
+  banner: {
+    position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
+    height: 220,
+    background: '#0D1F35',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imgLeft: {
+    position: 'absolute' as const,
+    top: 0, left: 0,
+    width: '42%', height: '100%',
+    objectFit: 'cover' as const,
+    objectPosition: 'center 5%',
+    filter: 'brightness(0.6) saturate(1.2)',
+  },
+  imgRight: {
+    position: 'absolute' as const,
+    top: 0, right: 0,
+    width: '42%', height: '100%',
+    objectFit: 'cover' as const,
+    objectPosition: 'center',
+    filter: 'brightness(0.6) saturate(1.2)',
+  },
+  fadeLeft: {
+    position: 'absolute' as const,
+    top: 0, bottom: 0, left: '30%',
+    width: '20%',
+    background: 'linear-gradient(to right, transparent, #0D1F35)',
+    zIndex: 1,
+  },
+  centerOverlay: {
+    position: 'absolute' as const,
+    inset: 0,
+    background: 'linear-gradient(90deg, transparent 0%, #0D1F35 30%, #0D1F35 70%, transparent 100%)',
+    zIndex: 2,
+  },
+  fadeRight: {
+    position: 'absolute' as const,
+    top: 0, bottom: 0, right: '30%',
+    width: '20%',
+    background: 'linear-gradient(to left, transparent, #0D1F35)',
+    zIndex: 1,
+  },
+  // subtle scanline texture for depth
+  scanlines: {
+    position: 'absolute' as const,
+    inset: 0,
+    backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px)',
+    zIndex: 3,
+    pointerEvents: 'none' as const,
+  },
+  // text sits above all overlays
+  bannerContent: {
+    position: 'absolute' as const,
+    inset: 0,
+    zIndex: 10,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    textAlign: 'center' as const,
+    padding: '0 40px',
+  },
+  pillTag: {
+    display: 'inline-block',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+    color: '#7dd3fc',
+    background: 'rgba(56,189,248,0.12)',
+    border: '1px solid rgba(56,189,248,0.3)',
+    borderRadius: 99,
+    padding: '3px 14px',
+    marginBottom: 4,
+  },
+  bannerTitle: {
+    fontSize: 26,
+    fontWeight: 900,
+    color: '#ffffff',
+    lineHeight: 1.2,
+    textShadow: '0 2px 12px rgba(0,0,0,0.6)',
+  },
+  bannerName: {
+    background: 'linear-gradient(90deg, #38bdf8, #818cf8)',
+    WebkitBackgroundClip: 'text' as const,
+    WebkitTextFillColor: 'transparent' as const,
+  },
+  bannerRole: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#94a3b8',
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+  },
+  bannerSub: {
+    fontSize: 13,
+    color: '#cbd5e1',
+    lineHeight: 1.5,
+  },
+  bannerChips: {
+    display: 'flex',
+    gap: 8,
+    marginTop: 8,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center',
+  },
+  chip: {
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#e2e8f0',
+    background: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 99,
+    padding: '4px 12px',
+    backdropFilter: 'blur(4px)',
+  },
   statsGrid:   { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: 16 },
   statCard:    { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 4 },
   statIcon:    { width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 6 },

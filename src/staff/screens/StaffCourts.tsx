@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
 import type { StaffCourt } from '../types';
 
-type CloseReason = 'Court Maintenance' | 'Fully Booked';
+type CloseReason = 'Court Maintenance' ;
 
 interface CourtState extends StaffCourt {
   closeReason?: CloseReason;
@@ -14,11 +14,10 @@ const TYPE_COLOR: Record<string, { bg: string; color: string }> = {
   Covered: { bg: '#fef3c7', color: '#b45309' },
 };
 
-const CLOSE_REASONS: CloseReason[] = ['Court Maintenance', 'Fully Booked'];
+const CLOSE_REASONS: CloseReason[] = ['Court Maintenance'];
 
 const REASON_CONFIG: Record<CloseReason, { icon: string; color: string; bg: string }> = {
-  'Court Maintenance': { icon: '🔧', color: '#b45309', bg: '#fef3c7' },
-  'Fully Booked':      { icon: '🚫', color: '#dc2626', bg: '#fee2e2' },
+  'Court Maintenance': { icon: '🔧', color: '#b45309', bg: '#fef3c7' }
 };
 
 // ─── Close reason picker modal ───────────────────────────────────────────────
@@ -197,7 +196,7 @@ export default function StaffCourts() {
                 </div>
                 <div style={s.courtStat}>
                   <div style={s.courtStatValue}>{court.totalSlots}</div>
-                  <div style={s.courtStatLabel}>total slots</div>
+                  <div style={s.courtStatLabel}>available court slot</div>
                 </div>
                 <div style={s.courtStat}>
                   <div style={{ ...s.courtStatValue, color: '#2563eb' }}>{todayBookings.length}</div>

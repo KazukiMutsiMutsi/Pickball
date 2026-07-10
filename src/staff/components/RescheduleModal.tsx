@@ -40,6 +40,21 @@ export default function RescheduleModal({ booking, onConfirm, onDecline, onClose
     const duration = calcDuration(startTime, endTime);
     if (duration <= 0) { setError('End time must be after start time.'); return; }
 
+    const [sh] = startTime.split(':').map(Number);
+    const [eh, em] = endTime.split(':').map(Number);
+    if (sh < 9)                           { setError('Opening time is 9:00 AM. Start time cannot be earlier.'); return; }
+    if (eh > 0 || (eh === 0 && em === 0)) {
+      // endTime "00:00" means midnight — allowed; anything after is not
+    } else if (eh < 9) {
+      // non-midnight early hour — invalid
+      setError('Closing time is 12:00 AM. End time cannot exceed midnight.'); return;
+    }
+    // treat endTime > 23:59 as overflow past midnight
+    const endMins = eh * 60 + em;
+    const startMins = sh * 60 + (startTime.split(':').map(Number)[1]);
+    if (endMins !== 0 && endMins < startMins) { setError('End time must be after start time.'); return; }
+    if (endMins !== 0 && eh >= 1 && eh < 9)   { setError('Closing time is 12:00 AM. End time cannot exceed midnight.'); return; }
+
     onConfirm({
       date,
       startTime,
@@ -125,6 +140,8 @@ export default function RescheduleModal({ booking, onConfirm, onDecline, onClose
               value={startTime}
               onChange={(e) => { setStartTime(e.target.value); setError(''); }}
               style={s.input}
+              min="09:00"
+              max="23:59"
             />
           </div>
 
@@ -137,6 +154,7 @@ export default function RescheduleModal({ booking, onConfirm, onDecline, onClose
               value={endTime}
               onChange={(e) => { setEndTime(e.target.value); setError(''); }}
               style={s.input}
+              min="09:00"
             />
           </div>
 

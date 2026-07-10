@@ -1,25 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import RebookModal from '../components/RebookModal';
 import RescheduleModal from '../components/RescheduleModal';
 import StatusBadge from '../components/StatusBadge';
 import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
 import type { BookingStatus, StaffBooking } from '../types';
-import { findConflict } from '../utils/conflicts';
 import { fmt12 } from '../utils/time';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 type ViewMode     = 'month' | 'day' | 'list';
 type FilterStatus = 'all' | BookingStatus;
-interface ConflictState { pending: StaffBooking; existing: StaffBooking; }
 
-const HOURS  = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM–10 PM
+const HOURS  = Array.from({ length: 15 }, (_, i) => i + 9); // 9 AM–11 PM
 const HOUR_W = 90;   // px per hour — wider = more readable
 const ROW_H  = 80;   // px per court row — taller blocks
 
 const STATUS_COLOR: Record<string, string> = {
   confirmed:            '#2563eb',
   checked_in:           '#16a34a',
-  pending:              '#d97706',
   completed:            '#64748b',
   cancelled:            '#dc2626',
   no_show:              '#dc2626',
@@ -32,7 +28,7 @@ function toMin(t: string) {
   return h * 60 + m;
 }
 function timeToX(t: string) {
-  return (toMin(t) - 6 * 60) * (HOUR_W / 60);
+  return (toMin(t) - 9 * 60) * (HOUR_W / 60);
 }
 function durationToW(s: string, e: string) {
   return (toMin(e) - toMin(s)) * (HOUR_W / 60);
@@ -119,7 +115,6 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const STATUS_DOT: Record<string, string> = {
   confirmed:            '#2563eb',
   checked_in:           '#16a34a',
-  pending:              '#d97706',
   completed:            '#94a3b8',
   reschedule_requested: '#7c3aed',
   no_show:              '#dc2626',
@@ -271,7 +266,6 @@ export default function StaffSchedule() {
   const [filterStatus,     setFilterStatus]     = useState<FilterStatus>('all');
   const [selected,         setSelected]         = useState<StaffBooking | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<StaffBooking | null>(null);
-  const [conflictState,    setConflictState]    = useState<ConflictState | null>(null);
   const [now,              setNow]              = useState(new Date());
   const calRef = useRef<HTMLDivElement>(null);
 
@@ -292,22 +286,6 @@ export default function StaffSchedule() {
   // ── Status updater ────────────────────────────────────────────────────────
   const updateStatus = (id: string, status: BookingStatus) =>
     setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
-
-  // ── Approve with conflict check ───────────────────────────────────────────
-  const handleApprove = (booking: StaffBooking) => {
-    const conflict = findConflict(booking, bookings);
-    if (conflict) setConflictState({ pending: booking, existing: conflict });
-    else updateStatus(booking.id, 'confirmed');
-  };
-
-  // ── Rebook confirm (conflict resolution) ─────────────────────────────────
-  const handleRebookConfirm = (updated: Pick<StaffBooking,'date'|'startTime'|'endTime'|'durationHrs'|'courtId'|'courtName'>) => {
-    if (!conflictState) return;
-    setBookings((prev) => prev.map((b) =>
-      b.id === conflictState.pending.id ? { ...b, ...updated, status: 'confirmed' } : b,
-    ));
-    setConflictState(null);
-  };
 
   // ── Reschedule confirm (customer-requested) ───────────────────────────────
   const handleRescheduleConfirm = (updated: Pick<StaffBooking,'date'|'startTime'|'endTime'|'durationHrs'|'courtId'|'courtName'>) => {
@@ -361,8 +339,7 @@ export default function StaffSchedule() {
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)} style={s.select} aria-label="Filter status">
               <option value="all">All Statuses</option>
               <option value="confirmed">Confirmed</option>
-              <option value="pending">Pending</option>
-              <option value="checked_in">Checked In</option>
+              <option value="checked_in">On Court</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
               <option value="no_show">No Show</option>
@@ -393,9 +370,8 @@ export default function StaffSchedule() {
           {/* Legend — compact, one line */}
           <div style={s.legend}>
             {[
-              { color: '#16a34a', label: 'Checked In' },
+              { color: '#16a34a', label: 'On Court' },
               { color: '#2563eb', label: 'Confirmed' },
-              { color: '#d97706', label: 'Pending' },
               { color: '#7c3aed', label: 'Reschedule' },
               { color: '#64748b', label: 'Completed' },
               { color: '#dc2626', label: 'No Show' },
@@ -489,12 +465,9 @@ export default function StaffSchedule() {
                 )}
               </div>
               <div style={s.detailActions}>
-                {selected.status === 'pending' && (
-                  <button style={s.btnGreen} onClick={() => { handleApprove(selected); setSelected(null); }}>Approve</button>
-                )}
                 {selected.status === 'confirmed' && (
                   <>
-                    <button style={s.btnGreen}  onClick={() => { updateStatus(selected.id, 'checked_in'); setSelected(null); }}>Check In</button>
+                    <button style={s.btnGreen}  onClick={() => { updateStatus(selected.id, 'checked_in'); setSelected(null); }}>On Court</button>
                     <button style={s.btnGhost}  onClick={() => { updateStatus(selected.id, 'no_show');    setSelected(null); }}>No Show</button>
                   </>
                 )}
@@ -557,8 +530,7 @@ export default function StaffSchedule() {
                       <td style={s.td}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
                           {b.status === 'reschedule_requested' && <button style={s.btnViolet} onClick={() => setRescheduleTarget(b)}>↻ Review</button>}
-                          {b.status === 'pending'    && <><button style={s.btnGreen} onClick={() => handleApprove(b)}>Approve</button><button style={s.btnGhost} onClick={() => updateStatus(b.id, 'cancelled')}>Decline</button></>}
-                          {b.status === 'confirmed'  && <><button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>Check In</button><button style={s.btnGhost} onClick={() => updateStatus(b.id, 'no_show')}>No Show</button></>}
+                          {b.status === 'confirmed'  && <><button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>On Court</button><button style={s.btnGhost} onClick={() => updateStatus(b.id, 'no_show')}>No Show</button></>}
                           {b.status === 'checked_in' && <button style={s.btnBlue} onClick={() => updateStatus(b.id, 'completed')}>Complete</button>}
                         </div>
                       </td>
@@ -574,9 +546,6 @@ export default function StaffSchedule() {
       {/* ── Modals ── */}
       {rescheduleTarget && (
         <RescheduleModal booking={rescheduleTarget} onConfirm={handleRescheduleConfirm} onDecline={handleRescheduleDecline} onClose={() => setRescheduleTarget(null)} />
-      )}
-      {conflictState && (
-        <RebookModal booking={conflictState.pending} conflicting={conflictState.existing} allBookings={bookings} onConfirm={handleRebookConfirm} onHold={() => setConflictState(null)} onClose={() => setConflictState(null)} />
       )}
     </div>
   );
