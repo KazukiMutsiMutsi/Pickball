@@ -1,83 +1,95 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// ─── Court data ───────────────────────────────────────────────────────────────
 const COURTS: Record<string, {
-  id: string; name: string; location: string; pricePerHour: number;
-  rating: number; type: string; slots: number; reviewCount: number;
+  id: string; name: string; type: string;
+  pricePerHour: number; rating: number; slots: number; reviewCount: number;
   description: string; amenities: string[]; images: string[];
   openHours: string; phone: string;
+  address: string; city: string; lat: number; lng: number;
 }> = {
   '1': {
-    id: '1', name: 'Downtown Pickleball Center', location: '123 Main St, Central District',
-    pricePerHour: 20, rating: 4.8, type: 'Indoor', slots: 6, reviewCount: 124,
-    description: 'State-of-the-art indoor facility with 6 regulation pickleball courts, full air conditioning, and professional LED lighting. Ideal for both competitive play and casual recreational games.',
+    id: '1', name: 'Downtown Pickleball Center', type: 'Indoor',
+    pricePerHour: 20, rating: 4.8, slots: 6, reviewCount: 124,
+    description: 'State-of-the-art indoor facility with 6 regulation pickleball courts, full air conditioning, and professional LED lighting. Located in Lapu-Lapu City, Cebu.',
     amenities: ['Air Conditioning', 'Locker Rooms', 'Showers', 'Pro Shop', 'Parking', 'Café', 'Equipment Rental'],
-    images: ['https://picsum.photos/seed/court1a/800/400', 'https://picsum.photos/seed/court1b/800/400', 'https://picsum.photos/seed/court1c/800/400'],
-    openHours: '6:00 AM – 10:00 PM daily', phone: '+63 2 8123 4567',
+    images: ['https://picsum.photos/seed/court1a/800/400','https://picsum.photos/seed/court1b/800/400','https://picsum.photos/seed/court1c/800/400'],
+    openHours: '6:00 AM – 10:00 PM daily', phone: '+63 32 888 1234',
+    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
+    lat: 10.31216602850818, lng: 123.9601975259465,
   },
   '2': {
-    id: '2', name: 'Riverside Courts', location: '456 River Rd, Eastside',
-    pricePerHour: 15, rating: 4.5, type: 'Outdoor', slots: 3, reviewCount: 87,
-    description: 'Scenic outdoor courts set alongside the river with a relaxed, community-friendly atmosphere. Perfect for morning and evening sessions with beautiful natural lighting.',
+    id: '2', name: 'Riverside Courts', type: 'Outdoor',
+    pricePerHour: 15, rating: 4.5, slots: 3, reviewCount: 87,
+    description: 'Scenic outdoor courts in Lapu-Lapu City with a relaxed atmosphere. Perfect for morning and evening sessions.',
     amenities: ['Outdoor', 'Parking', 'Restrooms', 'Water Station', 'Seating Area'],
-    images: ['https://picsum.photos/seed/court2a/800/400', 'https://picsum.photos/seed/court2b/800/400', 'https://picsum.photos/seed/court2c/800/400'],
-    openHours: '5:00 AM – 9:00 PM daily', phone: '+63 2 8234 5678',
+    images: ['https://picsum.photos/seed/court2a/800/400','https://picsum.photos/seed/court2b/800/400','https://picsum.photos/seed/court2c/800/400'],
+    openHours: '5:00 AM – 9:00 PM daily', phone: '+63 32 888 2345',
+    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
+    lat: 10.31216602850818, lng: 123.9601975259465,
   },
   '3': {
-    id: '3', name: 'Sunset Pavilion', location: '789 Park Ave, West End',
-    pricePerHour: 18, rating: 4.7, type: 'Covered', slots: 8, reviewCount: 203,
-    description: 'Large covered pavilion protecting players from rain and direct sun. Natural ventilation keeps conditions comfortable all year round.',
+    id: '3', name: 'Sunset Pavilion', type: 'Covered',
+    pricePerHour: 18, rating: 4.7, slots: 8, reviewCount: 203,
+    description: 'Large covered pavilion in Lapu-Lapu City protecting players from rain and direct sun. Natural ventilation keeps it comfortable year-round.',
     amenities: ['Covered Roof', 'LED Lighting', 'Parking', 'Restrooms', 'Spectator Seating'],
-    images: ['https://picsum.photos/seed/court3a/800/400', 'https://picsum.photos/seed/court3b/800/400', 'https://picsum.photos/seed/court3c/800/400'],
-    openHours: '6:00 AM – 11:00 PM daily', phone: '+63 2 8345 6789',
+    images: ['https://picsum.photos/seed/court3a/800/400','https://picsum.photos/seed/court3b/800/400','https://picsum.photos/seed/court3c/800/400'],
+    openHours: '6:00 AM – 11:00 PM daily', phone: '+63 32 888 3456',
+    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
+    lat: 10.31216602850818, lng: 123.9601975259465,
   },
   '4': {
-    id: '4', name: 'Northpark Arena', location: '101 North Blvd, Northside',
-    pricePerHour: 22, rating: 4.9, type: 'Indoor', slots: 2, reviewCount: 311,
-    description: 'Premium tournament-grade indoor arena. High-end hardwood flooring, broadcast-quality lighting, and 200-seat spectator stands. Home to regional championships.',
+    id: '4', name: 'Northpark Arena', type: 'Indoor',
+    pricePerHour: 22, rating: 4.9, slots: 2, reviewCount: 311,
+    description: 'Premium tournament-grade indoor arena in Lapu-Lapu City with hardwood flooring, broadcast lighting, and 200-seat spectator stands.',
     amenities: ['Air Conditioning', 'Locker Rooms', 'Showers', 'Spectator Stands', 'Pro Shop', 'Parking', 'Café', 'Scoreboard'],
-    images: ['https://picsum.photos/seed/court4a/800/400', 'https://picsum.photos/seed/court4b/800/400', 'https://picsum.photos/seed/court4c/800/400'],
-    openHours: '7:00 AM – 10:00 PM daily', phone: '+63 2 8456 7890',
+    images: ['https://picsum.photos/seed/court4a/800/400','https://picsum.photos/seed/court4b/800/400','https://picsum.photos/seed/court4c/800/400'],
+    openHours: '7:00 AM – 10:00 PM daily', phone: '+63 32 888 4567',
+    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
+    lat: 10.31216602850818, lng: 123.9601975259465,
   },
   '5': {
-    id: '5', name: 'Bayview Open Courts', location: '202 Bay St, Bayfront',
-    pricePerHour: 12, rating: 4.3, type: 'Outdoor', slots: 10, reviewCount: 56,
-    description: 'Affordable open courts with a stunning bay view. Multiple side-by-side courts make it perfect for group sessions and community leagues.',
+    id: '5', name: 'Bayview Open Courts', type: 'Outdoor',
+    pricePerHour: 12, rating: 4.3, slots: 10, reviewCount: 56,
+    description: 'Affordable open courts in Lapu-Lapu City with a stunning bay view. Perfect for group sessions and community leagues.',
     amenities: ['Outdoor', 'Parking', 'Water Station', 'Bench Seating'],
-    images: ['https://picsum.photos/seed/court5a/800/400', 'https://picsum.photos/seed/court5b/800/400', 'https://picsum.photos/seed/court5c/800/400'],
-    openHours: '5:00 AM – 8:00 PM daily', phone: '+63 2 8567 8901',
+    images: ['https://picsum.photos/seed/court5a/800/400','https://picsum.photos/seed/court5b/800/400','https://picsum.photos/seed/court5c/800/400'],
+    openHours: '5:00 AM – 8:00 PM daily', phone: '+63 32 888 5678',
+    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
+    lat: 10.31216602850818, lng: 123.9601975259465,
   },
 };
 
+// ─── Reviews ──────────────────────────────────────────────────────────────────
 const REVIEWS = [
-  { id: '1', name: 'Maria Santos', initials: 'MS', rating: 5, date: 'Jul 5, 2026',  comment: 'Excellent facilities! The courts are well-maintained and the staff is very friendly. Will definitely book again.' },
-  { id: '2', name: 'Pedro Reyes',  initials: 'PR', rating: 4, date: 'Jun 28, 2026', comment: 'Great courts, good lighting. Parking can get a bit crowded during peak hours but overall a fantastic experience.' },
-  { id: '3', name: 'Ana Gonzales', initials: 'AG', rating: 5, date: 'Jun 20, 2026', comment: 'Best pickleball venue in the area. Clean, professional, and well-organized. The booking process was seamless.' },
+  { id: '1', name: 'Maria Santos', initials: 'MS', rating: 5, date: 'Jul 5, 2026',  comment: 'Excellent facilities! Courts are well-maintained and staff is friendly. Will book again.' },
+  { id: '2', name: 'Pedro Reyes',  initials: 'PR', rating: 4, date: 'Jun 28, 2026', comment: 'Great courts, good lighting. Parking can be crowded at peak hours but overall fantastic.' },
+  { id: '3', name: 'Ana Gonzales', initials: 'AG', rating: 5, date: 'Jun 20, 2026', comment: 'Best pickleball venue in the area. Clean, professional, seamless booking process.' },
 ];
 
-const TIME_SLOTS    = ['7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM', '5:00 PM', '6:00 PM'];
-const UNAVAILABLE   = new Set(['9:00 AM', '3:00 PM']);
-
+// ─── Court rules ──────────────────────────────────────────────────────────────
 const COURT_RULES = [
   { icon: '🕐', text: 'Max 2 hours per booking during peak hours (6–9 PM)' },
   { icon: '👟', text: 'Non-marking court shoes required' },
-  { icon: '🎾', text: 'BYO paddle or rent at the venue (₱100/session)' },
+  { icon: '🎾', text: 'BYO paddle or rent at venue (₱100/session)' },
   { icon: '🚫', text: 'No food or drinks on court' },
   { icon: '📱', text: 'Booking must be paid 1 hour before session' },
 ];
 
-const AVATAR_COLORS = ['#1A8FE3', '#27AE60', '#E91E63'];
 const TYPE_COLOR: Record<string, string> = { Indoor: '#60A5FA', Outdoor: '#34D399', Covered: '#FBBF24' };
+const AVATAR_COLORS = ['#1A8FE3', '#27AE60', '#E91E63'];
 const AMENITY_ICON: Record<string, string> = {
   'Air Conditioning': '❄️', 'Locker Rooms': '🚿', 'Showers': '🚿', 'Pro Shop': '🛒',
   'Parking': '🅿️', 'Café': '☕', 'Equipment Rental': '🏓', 'Outdoor': '🌳',
@@ -98,13 +110,32 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+// ─── Main screen ──────────────────────────────────────────────────────────────
 export default function CourtDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const court = COURTS[id ?? '1'] ?? COURTS['1'];
   const [activePhoto, setActivePhoto] = useState(0);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const tc = TYPE_COLOR[court.type] ?? Palette.primary;
+
+  const openMaps = () =>
+    WebBrowser.openBrowserAsync(`https://maps.google.com/?q=${court.lat},${court.lng}`);
+
+  const openStreetView = () =>
+    WebBrowser.openBrowserAsync(
+      `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${court.lat},${court.lng}`
+    );
+
+  const openDirections = () =>
+    WebBrowser.openBrowserAsync(
+      `https://www.google.com/maps/dir/?api=1&destination=${court.lat},${court.lng}`
+    );
+
+  // Static map image URL (no API key needed for basic embed)
+  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${court.lat},${court.lng}&zoom=16&size=600x200&markers=color:red%7C${court.lat},${court.lng}`;
+
+  // Google Maps Embed URL (works without API key for basic use)
+  const embedUrl = `https://www.google.com/maps/embed?pb=!4v1783619134437!6m8!1m7!1skIchZMjoKl3QsK9Vx4V0Ew!2m2!1d${court.lat}!2d${court.lng}!3f175.5!4f4.3!5f0.78`;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -114,18 +145,15 @@ export default function CourtDetailsScreen() {
         <View style={styles.heroWrap}>
           <Image source={{ uri: court.images[activePhoto] }} style={styles.heroImage} contentFit="cover" transition={400} />
           <View style={styles.heroOverlay} />
-          {/* Back button */}
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="Go back">
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
-          {/* Badges */}
           <View style={[styles.photoTypeBadge, { backgroundColor: tc }]}>
             <Text style={styles.photoTypeBadgeText}>{court.type}</Text>
           </View>
           <View style={[styles.photoSlotBadge, court.slots <= 2 ? styles.slotLow : styles.slotOk]}>
             <Text style={styles.photoSlotText}>{court.slots} slots available</Text>
           </View>
-          {/* Dot indicators */}
           <View style={styles.dotRow}>
             {court.images.map((_, i) => (
               <View key={i} style={[styles.dot, i === activePhoto && styles.dotActive]} />
@@ -153,7 +181,7 @@ export default function CourtDetailsScreen() {
               <Text style={styles.reviewCount}>({court.reviewCount})</Text>
             </View>
           </View>
-          <Text style={styles.location}>📍 {court.location}</Text>
+          <Text style={styles.location}>📍 {court.city}</Text>
 
           {/* Stats */}
           <View style={styles.statsRow}>
@@ -198,30 +226,96 @@ export default function CourtDetailsScreen() {
             ))}
           </View>
 
-          {/* Available Time Slots */}
-          <Text style={styles.sectionTitle}>Available Time Slots</Text>
-          <Text style={styles.slotLabel}>Tap to select a start time for today</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slotRow}>
-            {TIME_SLOTS.map((slot) => {
-              const unavail  = UNAVAILABLE.has(slot);
-              const selected = selectedSlot === slot;
-              return (
-                <TouchableOpacity
-                  key={slot}
-                  disabled={unavail}
-                  onPress={() => setSelectedSlot(selected ? null : slot)}
-                  style={[styles.slotChip, unavail && styles.slotChipUnavail, selected && styles.slotChipSelected]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${slot}${unavail ? ', unavailable' : ''}`}
-                >
-                  <Text style={[styles.slotChipText, unavail && styles.slotChipTextUnavail, selected && styles.slotChipTextSelected]}>
-                    {slot}
-                  </Text>
-                  {unavail && <Text style={styles.slotFullTag}>Full</Text>}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {/* Location & Google Map */}
+          <Text style={styles.sectionTitle}>Location & Directions</Text>
+          <View style={styles.locationCard}>
+
+            {/* Address row */}
+            <View style={styles.addressRow}>
+              <Text style={styles.addressIcon}>📍</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.addressMain}>{court.address}</Text>
+                <Text style={styles.addressCity}>{court.city}</Text>
+              </View>
+            </View>
+
+            {/* Embedded Google Maps iframe (web) / native map link (mobile) */}
+            {Platform.OS === 'web' ? (
+              // On web: render real Google Maps embed inside an iframe via dangerouslySetInnerHTML
+              <View style={styles.mapEmbedWrap}>
+                {/* @ts-ignore — iframe is valid in React Native Web */}
+                <iframe
+                  src={`https://maps.google.com/maps?q=${court.lat},${court.lng}&z=17&output=embed`}
+                  width="100%"
+                  height="280"
+                  style={{ border: 0, borderRadius: 8 }}
+                  allowFullScreen
+                  loading="lazy"
+                  title="Court Location"
+                />
+              </View>
+            ) : (
+              // On native: show a styled tap-to-open card
+              <TouchableOpacity
+                style={styles.mapNativeCard}
+                onPress={openMaps}
+                accessibilityRole="button"
+                accessibilityLabel="Open in Google Maps"
+              >
+                <View style={styles.mapNativeBg}>
+                  {/* Road lines */}
+                  <View style={styles.mapRoadH} />
+                  <View style={styles.mapRoadV} />
+                  {/* Pin */}
+                  <View style={styles.mapPinWrap}>
+                    <View style={styles.mapPinBubble}>
+                      <Text style={styles.mapPinIcon}>🏓</Text>
+                    </View>
+                    <View style={styles.mapPinStem} />
+                  </View>
+                  {/* Tap prompt */}
+                  <View style={styles.mapTapHint}>
+                    <Text style={styles.mapTapHintText}>Tap to open in Google Maps</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Location info + action buttons */}
+            <View style={styles.mapInfo}>
+              <Text style={styles.mapCoords}>🌐 {court.lat.toFixed(5)}, {court.lng.toFixed(5)}</Text>
+            </View>
+
+            <View style={styles.mapBtns}>
+              <TouchableOpacity
+                style={[styles.mapBtn, styles.mapBtnPrimary]}
+                onPress={openDirections}
+                accessibilityRole="button"
+                accessibilityLabel="Get directions"
+              >
+                <Text style={styles.mapBtnIcon}>🧭</Text>
+                <Text style={styles.mapBtnTextWhite}>Get Directions</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.mapBtn, styles.mapBtnOutline]}
+                onPress={openMaps}
+                accessibilityRole="button"
+                accessibilityLabel="Open in Google Maps"
+              >
+                <Text style={styles.mapBtnIcon}>🗺️</Text>
+                <Text style={styles.mapBtnTextDark}>Open Maps</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.mapBtn, styles.mapBtnOutline]}
+                onPress={openStreetView}
+                accessibilityRole="button"
+                accessibilityLabel="View Street View"
+              >
+                <Text style={styles.mapBtnIcon}>📸</Text>
+                <Text style={styles.mapBtnTextDark}>Street View</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           {/* Reviews */}
           <Text style={styles.sectionTitle}>Reviews</Text>
@@ -258,7 +352,7 @@ export default function CourtDetailsScreen() {
         <View style={{ height: 110 }} />
       </ScrollView>
 
-      {/* ── Sticky footer ── */}
+      {/* Sticky footer */}
       <View style={styles.footer}>
         <View>
           <Text style={styles.footerPrice}>₱{court.pricePerHour}<Text style={styles.footerPriceUnit}>/hr</Text></Text>
@@ -268,9 +362,9 @@ export default function CourtDetailsScreen() {
           style={styles.bookBtn}
           onPress={() => router.push({ pathname: '/booking/date', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour } })}
           accessibilityRole="button"
-          accessibilityLabel={selectedSlot ? `Book ${selectedSlot}` : 'Book this court'}
+          accessibilityLabel="Book this court"
         >
-          <Text style={styles.bookBtnText}>📅 {selectedSlot ? `Book ${selectedSlot}` : 'Book Now'}</Text>
+          <Text style={styles.bookBtnText}>📅 Book Now</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -319,15 +413,46 @@ const styles = StyleSheet.create({
   amenityChip:        { flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.primaryLight, paddingHorizontal: 12, paddingVertical: 7, borderRadius: Radius.full, gap: 5 },
   amenityIcon:        { fontSize: 14 },
   amenityText:        { fontSize: 12, color: Palette.primary, fontWeight: '600' },
-  slotLabel:          { fontSize: 12, color: Palette.grey500, marginBottom: Spacing.sm },
-  slotRow:            { paddingBottom: Spacing.sm, gap: Spacing.sm },
-  slotChip:           { paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.md, backgroundColor: Palette.grey50, borderWidth: 1.5, borderColor: Palette.grey200, alignItems: 'center', minWidth: 80 },
-  slotChipSelected:   { backgroundColor: Palette.primary, borderColor: Palette.primary },
-  slotChipUnavail:    { opacity: 0.5 },
-  slotChipText:       { fontSize: 13, fontWeight: '600', color: Palette.grey800 },
-  slotChipTextSelected: { color: '#fff' },
-  slotChipTextUnavail:{ color: Palette.grey400 },
-  slotFullTag:        { fontSize: 9, color: Palette.grey400, fontWeight: '600', marginTop: 2 },
+
+  // Location & Map
+  locationCard:       { backgroundColor: Palette.grey50, borderRadius: Radius.lg, overflow: 'hidden', marginBottom: Spacing.sm },
+  addressRow:         { flexDirection: 'row', alignItems: 'flex-start', padding: Spacing.md, gap: Spacing.sm },
+  addressIcon:        { fontSize: 20, marginTop: 2 },
+  addressMain:        { fontSize: 15, fontWeight: '700', color: Palette.grey900 },
+  addressCity:        { fontSize: 13, color: Palette.grey600, marginTop: 2 },
+  addressCoords:      { fontSize: 11, color: Palette.grey400, marginTop: 4 },
+  mapThumb:           { height: 160, overflow: 'hidden', position: 'relative' },
+  mapBg:              { flex: 1, backgroundColor: '#E8F0FE', alignItems: 'center', justifyContent: 'center' },
+  mapGrid:            { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', flexWrap: 'wrap' },
+  mapGridLine:        { width: '12.5%', height: '25%', borderWidth: 0.5, borderColor: 'rgba(66,133,244,0.15)' },
+  mapPin:             { zIndex: 2, marginBottom: 8 },
+  mapPinEmoji:        { fontSize: 40 },
+  mapLabel:           { position: 'absolute', bottom: 10, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: Radius.full },
+  mapLabelText:       { fontSize: 12, color: Palette.grey800, fontWeight: '600' },
+  mapBtns:            { flexDirection: 'row', gap: Spacing.sm, padding: Spacing.sm },
+  mapBtn:             { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md, paddingVertical: 11, gap: 5 },
+  mapBtnPrimary:      { backgroundColor: Palette.primary },
+  mapBtnOutline:      { backgroundColor: '#fff', borderWidth: 1.5, borderColor: Palette.grey300 },
+  mapBtnIcon:         { fontSize: 14 },
+  mapBtnTextWhite:    { color: '#fff', fontSize: 12, fontWeight: '700' },
+  mapBtnTextDark:     { color: Palette.grey800, fontSize: 12, fontWeight: '600' },
+
+  // Map embed (web) & native card (mobile)
+  mapEmbedWrap:       { height: 280, marginHorizontal: 0, overflow: 'hidden', borderRadius: 0 },
+  mapNativeCard:      { height: 200, overflow: 'hidden', position: 'relative' },
+  mapNativeBg:        { flex: 1, backgroundColor: '#E8F0FE', alignItems: 'center', justifyContent: 'center' },
+  mapRoadH:           { position: 'absolute', left: 0, right: 0, top: '50%', height: 12, backgroundColor: '#fff', opacity: 0.7 },
+  mapRoadV:           { position: 'absolute', top: 0, bottom: 0, left: '40%', width: 12, backgroundColor: '#fff', opacity: 0.7 },
+  mapPinWrap:         { alignItems: 'center', zIndex: 2 },
+  mapPinBubble:       { width: 52, height: 52, borderRadius: 26, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#fff' },
+  mapPinIcon:         { fontSize: 26 },
+  mapPinStem:         { width: 3, height: 10, backgroundColor: Palette.primary },
+  mapTapHint:         { position: 'absolute', bottom: 10, backgroundColor: 'rgba(255,255,255,0.93)', paddingHorizontal: 16, paddingVertical: 6, borderRadius: Radius.full },
+  mapTapHintText:     { fontSize: 12, color: Palette.primary, fontWeight: '700' },
+  mapInfo:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+  mapCoords:          { fontSize: 11, color: Palette.grey500 },
+
+  // Reviews
   reviewCard:         { backgroundColor: Palette.grey50, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.sm },
   reviewHeader:       { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
   reviewAvatar:       { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.sm },
@@ -337,11 +462,15 @@ const styles = StyleSheet.create({
   reviewSubRow:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   reviewDate:         { fontSize: 11, color: Palette.grey500 },
   reviewComment:      { fontSize: 13, color: Palette.grey700, lineHeight: 20 },
+
+  // Court Rules
   rulesCard:          { backgroundColor: Palette.grey50, borderRadius: Radius.md, overflow: 'hidden', marginBottom: Spacing.sm },
   ruleRow:            { flexDirection: 'row', alignItems: 'flex-start', padding: Spacing.md, gap: Spacing.sm },
   ruleRowBorder:      { borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
   ruleIcon:           { fontSize: 16, width: 24 },
   ruleText:           { flex: 1, fontSize: 13, color: Palette.grey700, lineHeight: 20 },
+
+  // Footer
   footer:             { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: Palette.grey200 },
   footerPrice:        { fontSize: 26, fontWeight: '900', color: Palette.primary },
   footerPriceUnit:    { fontSize: 14, color: Palette.grey600, fontWeight: '400' },
