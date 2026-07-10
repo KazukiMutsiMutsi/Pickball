@@ -1,4 +1,4 @@
-import { Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -36,7 +36,7 @@ function StatCard({ icon, label, value, change, color }: {
 }
 
 const statStyles = StyleSheet.create({
-  card:     { flex: 1, backgroundColor: CARD_BG, borderRadius: Radius.md, padding: Spacing.md, borderLeftWidth: 3, minWidth: (width - 56) / 2 },
+  card:     { flex: 1, backgroundColor: CARD_BG, borderRadius: 16, padding: Spacing.md, borderLeftWidth: 3, minWidth: (width - 56) / 2 },
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   icon:     { fontSize: 20 },
   value:    { fontSize: 26, fontWeight: '900', color: '#fff' },
@@ -68,13 +68,13 @@ function BookingRow({ name, court, time, status }: {
 }
 
 const rowStyles = StyleSheet.create({
-  row:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  row:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
   avatar:     { width: 38, height: 38, borderRadius: 19, backgroundColor: PURPLE + '44', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   avatarText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   info:       { flex: 1 },
   name:       { color: '#fff', fontWeight: '600', fontSize: 14 },
   sub:        { color: '#9CA3AF', fontSize: 12, marginTop: 2 },
-  badge:      { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.full },
+  badge:      { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
   badgeText:  { fontSize: 11, fontWeight: '700' },
 });
 
@@ -87,11 +87,11 @@ const STATS = [
 ];
 
 const RECENT = [
-  { name: 'Juan dela Cruz',     court: 'Downtown Center', time: '09:00–11:00', status: 'confirmed'  as const },
-  { name: 'Maria Santos',       court: 'Riverside Courts', time: '14:00–15:30', status: 'pending'    as const },
-  { name: 'Pedro Reyes',        court: 'Sunset Pavilion',  time: '16:00–18:00', status: 'confirmed'  as const },
-  { name: 'Ana Gonzales',       court: 'Northpark Arena',  time: '10:00–12:00', status: 'cancelled'  as const },
-  { name: 'Jose Rizal',         court: 'Bayview Courts',   time: '08:00–09:00', status: 'confirmed'  as const },
+  { name: 'Juan dela Cruz', court: 'Court 1', time: '09:00–11:00', status: 'confirmed' as const },
+  { name: 'Maria Santos',   court: 'Court 2', time: '14:00–15:30', status: 'pending'   as const },
+  { name: 'Pedro Reyes',    court: 'Court 3', time: '16:00–18:00', status: 'confirmed' as const },
+  { name: 'Ana Gonzales',   court: 'Court 1', time: '10:00–12:00', status: 'cancelled' as const },
+  { name: 'Jose Rizal',     court: 'Court 2', time: '08:00–09:00', status: 'confirmed' as const },
 ];
 
 export default function AdminDashboard() {
@@ -146,10 +146,10 @@ export default function AdminDashboard() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actions}>
           {[
-            { icon: '➕', label: 'Add Court',    onPress: () => router.push('/(admin)/courts') },
+            { icon: '➕', label: 'Add Court',    onPress: () => router.push('/(admin)/courts')   },
             { icon: '📋', label: 'All Bookings', onPress: () => router.push('/(admin)/bookings') },
-            { icon: '👥', label: 'Manage Users', onPress: () => router.push('/(admin)/users') },
-            { icon: '📊', label: 'Reports',      onPress: () => {} },
+            { icon: '👥', label: 'Manage Users', onPress: () => router.push('/(admin)/users')   },
+            { icon: '📸', label: 'QR Scanner',   onPress: () => router.push('/(admin)/scanner') },
           ].map((a) => (
             <TouchableOpacity key={a.label} style={styles.actionBtn} onPress={a.onPress} accessibilityRole="button" accessibilityLabel={a.label}>
               <Text style={styles.actionIcon}>{a.icon}</Text>
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: Spacing.md, paddingBottom: Spacing.sm },
   headerRole:   { fontSize: 12, color: PURPLE, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
   headerName:   { fontSize: 20, fontWeight: '800', color: '#fff', marginTop: 2 },
-  logoutBtn:    { backgroundColor: '#F87171' + '22', paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.full },
+  logoutBtn:    { backgroundColor: '#F87171' + '22', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100 },
   logoutText:   { color: '#F87171', fontWeight: '700', fontSize: 13 },
 
   sectionTitle:  { fontSize: 15, fontWeight: '700', color: '#E2E8F0', marginLeft: Spacing.md, marginTop: Spacing.md, marginBottom: Spacing.sm },
@@ -194,19 +194,19 @@ const styles = StyleSheet.create({
 
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: Spacing.md, gap: Spacing.sm },
 
-  chartCard:   { backgroundColor: CARD_BG, borderRadius: Radius.md, marginHorizontal: Spacing.md, padding: Spacing.md },
+  chartCard:   { backgroundColor: CARD_BG, borderRadius: 16, marginHorizontal: Spacing.md, padding: Spacing.md },
   chartBars:   { flexDirection: 'row', alignItems: 'flex-end', height: 90, gap: 4 },
   barWrap:     { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
-  bar:         { width: '80%', borderRadius: 3 },
+  bar:         { width: '80%', borderRadius: 4 },
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   chartLabel:  { fontSize: 8, color: '#6B7280' },
   chartNote:   { fontSize: 12, color: '#9CA3AF', marginTop: Spacing.sm, textAlign: 'right' },
 
   actions:     { flexDirection: 'row', paddingHorizontal: Spacing.md, gap: Spacing.sm },
-  actionBtn:   { flex: 1, backgroundColor: CARD_BG, borderRadius: Radius.md, paddingVertical: Spacing.md, alignItems: 'center', gap: 6 },
+  actionBtn:   { flex: 1, backgroundColor: CARD_BG, borderRadius: 16, paddingVertical: Spacing.md, alignItems: 'center', gap: 6 },
   actionIcon:  { fontSize: 22 },
   actionLabel: { fontSize: 11, color: '#E2E8F0', fontWeight: '600', textAlign: 'center' },
 
-  recentCard: { backgroundColor: CARD_BG, borderRadius: Radius.md, marginHorizontal: Spacing.md, paddingHorizontal: Spacing.md },
+  recentCard: { backgroundColor: CARD_BG, borderRadius: 16, marginHorizontal: Spacing.md, paddingHorizontal: Spacing.md },
   divider:    { height: 1, backgroundColor: '#3D3A55' },
 });

@@ -28,8 +28,8 @@ const ICONS: Record<string, string> = {
 };
 
 const MOCK: Notif[] = [
-  { id: '1', type: 'booking',  title: 'Booking Confirmed',  message: 'Your court at Downtown Pickleball Center is confirmed for July 12 at 9:00 AM.', time: '2h ago',  read: false },
-  { id: '2', type: 'reminder', title: 'Upcoming Session',   message: "Your session at Riverside Courts starts in 1 hour. Don't forget your paddle!",  time: '5h ago',  read: false },
+  { id: '1', type: 'booking',  title: 'Booking Confirmed',  message: 'Your Court 1 booking is confirmed for July 12 at 9:00 AM.', time: '2h ago',  read: false },
+  { id: '2', type: 'reminder', title: 'Upcoming Session',   message: "Your Court 2 session starts in 1 hour. Don't forget your paddle!", time: '5h ago', read: false },
   { id: '3', type: 'promo',    title: 'Weekend Special 🎉', message: 'Book any court this Saturday or Sunday and get 20% off. Use code WEEKEND20.',      time: '1d ago',  read: true  },
   { id: '4', type: 'booking',  title: 'Booking Cancelled',  message: 'Your booking at Northpark Arena on June 15 was cancelled. Refund processing.',    time: '3d ago',  read: true  },
   { id: '5', type: 'system',   title: 'App Update Available',message: 'A new version of PicklePro is available with improved booking features.',         time: '1w ago',  read: true  },

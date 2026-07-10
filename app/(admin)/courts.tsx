@@ -21,11 +21,9 @@ interface Court {
 }
 
 const INITIAL: Court[] = [
-  { id: '1', name: 'Downtown Pickleball Center', location: 'Central District', type: 'Indoor',  pricePerHour: 20, slots: 6, active: true,  bookingsToday: 8  },
-  { id: '2', name: 'Riverside Courts',           location: 'Eastside',         type: 'Outdoor', pricePerHour: 15, slots: 3, active: true,  bookingsToday: 3  },
-  { id: '3', name: 'Sunset Pavilion',            location: 'West End',         type: 'Covered', pricePerHour: 18, slots: 8, active: true,  bookingsToday: 5  },
-  { id: '4', name: 'Northpark Arena',            location: 'Northside',        type: 'Indoor',  pricePerHour: 22, slots: 2, active: false, bookingsToday: 0  },
-  { id: '5', name: 'Bayview Open Courts',        location: 'Bayfront',         type: 'Outdoor', pricePerHour: 12, slots: 10, active: true, bookingsToday: 12 },
+  { id: '1', name: 'Court 1', location: 'Lapu-Lapu, Cebu', type: 'Indoor',  pricePerHour: 20, slots: 6, active: true,  bookingsToday: 8  },
+  { id: '2', name: 'Court 2', location: 'Lapu-Lapu, Cebu', type: 'Outdoor', pricePerHour: 15, slots: 3, active: true,  bookingsToday: 3  },
+  { id: '3', name: 'Court 3', location: 'Lapu-Lapu, Cebu', type: 'Covered', pricePerHour: 18, slots: 8, active: true,  bookingsToday: 5  },
 ];
 
 const TYPE_COLOR: Record<string, string> = {

@@ -97,6 +97,27 @@ export default function ConfirmationScreen() {
 
           {/* Actions */}
           <TouchableOpacity
+            style={styles.qrBtn}
+            onPress={() => router.push({
+              pathname: '/booking/qr-ticket',
+              params: {
+                bookingId:     params.bookingId,
+                courtName:     params.courtName,
+                date:          params.date,
+                startTime:     params.startTime,
+                endTime:       params.endTime,
+                duration:      params.duration,
+                grandTotal:    params.grandTotal,
+                paymentMethod: params.paymentMethod,
+              },
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="View QR ticket"
+          >
+            <Text style={styles.qrBtnText}>🎫 View QR Check-in Ticket</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => router.replace('/booking/history')}
             accessibilityRole="button"
@@ -153,6 +174,17 @@ const styles = StyleSheet.create({
   tipsTitle: { fontSize: 13, fontWeight: '700', color: Palette.primary, marginBottom: 4 },
   tipText: { fontSize: 13, color: Palette.grey700 },
 
+  qrBtn: {
+    width: '100%',
+    backgroundColor: '#F3E5F5',
+    borderRadius: Radius.md,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: '#8E44AD',
+  },
+  qrBtnText: { color: '#8E44AD', fontSize: 15, fontWeight: '800' },
   primaryBtn: {
     width: '100%',
     backgroundColor: Palette.primary,
