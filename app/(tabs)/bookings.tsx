@@ -1,4 +1,4 @@
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Palette, Spacing } from '@/constants/theme';
 import { shadowMd } from '@/src/utils/shadow';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -67,14 +67,24 @@ export default function BookingsTab() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Bookings</Text>
-        <TouchableOpacity
-          style={styles.newBtn}
-          onPress={() => router.push('/(tabs)/courts')}
-          accessibilityRole="button"
-          accessibilityLabel="Book a court"
-        >
-          <Text style={styles.newBtnText}>+ New</Text>
-        </TouchableOpacity>
+        <View style={styles.headerBtns}>
+          <TouchableOpacity
+            style={styles.repeatBtn}
+            onPress={() => router.push({ pathname: '/booking/subscription', params: { courtId: '1', courtName: 'Court 1', price: '20' } })}
+            accessibilityRole="button"
+            accessibilityLabel="Repeat booking"
+          >
+            <Text style={styles.repeatBtnText}>🔄 Repeat</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.newBtn}
+            onPress={() => router.push('/(tabs)/courts')}
+            accessibilityRole="button"
+            accessibilityLabel="Book a court"
+          >
+            <Text style={styles.newBtnText}>+ New</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -149,6 +159,28 @@ export default function BookingsTab() {
                     <Text style={styles.payNowBtnText}>💳 Pay Now</Text>
                   </TouchableOpacity>
                 )}
+                {item.status === 'upcoming' && item.paid && (
+                  <TouchableOpacity
+                    style={styles.qrBtn}
+                    onPress={() => router.push({
+                      pathname: '/booking/qr-ticket',
+                      params: {
+                        bookingId:     item.id,
+                        courtName:     item.courtName,
+                        date:          item.date,
+                        startTime:     item.startTime,
+                        endTime:       item.endTime,
+                        duration:      item.duration.toString(),
+                        grandTotal:    item.total.toFixed(2),
+                        paymentMethod: item.paymentMethod,
+                      },
+                    })}
+                    accessibilityRole="button"
+                    accessibilityLabel="View QR ticket"
+                  >
+                    <Text style={styles.qrBtnText}>🎫 QR Ticket</Text>
+                  </TouchableOpacity>
+                )}
                 {item.status === 'upcoming' && (
                   <TouchableOpacity style={styles.cancelBtn} accessibilityRole="button" accessibilityLabel="Cancel booking">
                     <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -169,41 +201,46 @@ export default function BookingsTab() {
 }
 
 const styles = StyleSheet.create({
-  safe:          { flex: 1, backgroundColor: Palette.grey100 },
-  header:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
-  title:         { fontSize: 22, fontWeight: '900', color: Palette.grey900 },
-  newBtn:        { backgroundColor: Palette.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: Radius.full },
+  safe:          { flex: 1, backgroundColor: '#F8FAFC' },
+  header:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  title:         { fontSize: 22, fontWeight: '900', color: '#0F172A' },
+  headerBtns:    { flexDirection: 'row', gap: Spacing.sm },
+  repeatBtn:     { backgroundColor: Palette.primaryLight, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 100 },
+  repeatBtnText: { color: Palette.primary, fontWeight: '700', fontSize: 13 },
+  newBtn:        { backgroundColor: Palette.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100 },
   newBtnText:    { color: '#fff', fontWeight: '700', fontSize: 13 },
-  tabRow:        { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
+  tabRow:        { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   tabBtn:        { flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabBtnActive:  { borderBottomColor: Palette.primary },
-  tabText:       { fontSize: 12, color: Palette.grey500, fontWeight: '500' },
+  tabText:       { fontSize: 12, color: '#64748B', fontWeight: '500' },
   tabTextActive: { color: Palette.primary, fontWeight: '700' },
-  list:          { padding: Spacing.md, gap: Spacing.sm, paddingBottom: 32 },
+  list:          { padding: Spacing.md, gap: 12, paddingBottom: 32 },
   empty:         { alignItems: 'center', paddingTop: 60, paddingHorizontal: Spacing.lg },
   emptyEmoji:    { fontSize: 52 },
-  emptyTitle:    { fontSize: 18, fontWeight: '800', color: Palette.grey900, marginTop: Spacing.md },
-  emptySub:      { fontSize: 14, color: Palette.grey500, marginTop: 6, textAlign: 'center' },
-  emptyBtn:      { marginTop: Spacing.lg, backgroundColor: Palette.primary, paddingHorizontal: 28, paddingVertical: 12, borderRadius: Radius.full },
+  emptyTitle:    { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: Spacing.md },
+  emptySub:      { fontSize: 14, color: '#64748B', marginTop: 6, textAlign: 'center' },
+  emptyBtn:      { marginTop: Spacing.lg, backgroundColor: Palette.primary, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 100 },
   emptyBtnText:  { color: '#fff', fontWeight: '700', fontSize: 14 },
-  card:          { backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md },
+  card:          { backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   cardTop:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  courtName:     { fontSize: 15, fontWeight: '700', color: Palette.grey900, flex: 1, marginRight: 8 },
-  statusBadge:   { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.full },
-  statusText:    { fontSize: 11, fontWeight: '700' },
-  meta:          { fontSize: 13, color: Palette.grey600, marginBottom: 2 },
-  cardFooter:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Palette.grey100 },
-  bookingId:     { fontSize: 10, color: Palette.grey400, marginBottom: 4 },
-  payBadge:      { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.full },
+  courtName:     { fontSize: 15, fontWeight: '600', color: '#0F172A', flex: 1, marginRight: 8 },
+  statusBadge:   { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
+  statusText:    { fontSize: 11, fontWeight: '500' },
+  meta:          { fontSize: 13, color: '#64748B', marginBottom: 2 },
+  cardFooter:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
+  bookingId:     { fontSize: 10, color: '#64748B', marginBottom: 4 },
+  payBadge:      { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100 },
   payBadgePaid:  { backgroundColor: '#E8F8EF' },
   payBadgeUnpaid:{ backgroundColor: '#FFF8E1' },
   payBadgeText:  { fontSize: 11, fontWeight: '600' },
-  amount:        { fontSize: 18, fontWeight: '900', color: Palette.grey900 },
+  amount:        { fontSize: 18, fontWeight: '900', color: '#0F172A' },
   actions:       { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
-  payNowBtn:     { flex: 1, backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 10, alignItems: 'center' },
+  payNowBtn:     { flex: 1, backgroundColor: Palette.primary, borderRadius: 10, height: 40, alignItems: 'center', justifyContent: 'center' },
   payNowBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  cancelBtn:     { flex: 1, borderWidth: 1, borderColor: Palette.danger, borderRadius: Radius.md, paddingVertical: 10, alignItems: 'center' },
-  cancelBtnText: { color: Palette.danger, fontWeight: '600', fontSize: 13 },
-  rebookBtn:     { flex: 1, borderWidth: 1, borderColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 10, alignItems: 'center' },
+  qrBtn:         { flex: 1, backgroundColor: '#F3E5F5', borderRadius: 10, height: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#8E44AD' },
+  qrBtnText:     { color: '#8E44AD', fontWeight: '700', fontSize: 12 },
+  cancelBtn:     { flex: 1, borderWidth: 1, borderColor: '#EF4444', borderRadius: 10, height: 40, alignItems: 'center', justifyContent: 'center' },
+  cancelBtnText: { color: '#EF4444', fontWeight: '600', fontSize: 13 },
+  rebookBtn:     { flex: 1, borderWidth: 1, borderColor: Palette.primary, borderRadius: 10, height: 40, alignItems: 'center', justifyContent: 'center' },
   rebookBtnText: { color: Palette.primary, fontWeight: '600', fontSize: 13 },
 });

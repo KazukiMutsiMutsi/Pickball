@@ -26,10 +26,10 @@ interface BookingRecord {
 }
 
 const MOCK: BookingRecord[] = [
-  { id: 'BKG-A1B2C3', courtName: 'Downtown Pickleball Center', date: '2026-07-12', startTime: '09:00', endTime: '11:00', duration: 2,   total: 42,    status: 'upcoming',  paymentMethod: 'Credit Card' },
-  { id: 'BKG-D4E5F6', courtName: 'Riverside Courts',           date: '2026-07-05', startTime: '14:00', endTime: '15:30', duration: 1.5, total: 23.63, status: 'completed', paymentMethod: 'PayPal'      },
-  { id: 'BKG-G7H8I9', courtName: 'Sunset Pavilion',            date: '2026-06-28', startTime: '16:00', endTime: '18:00', duration: 2,   total: 37.8,  status: 'completed', paymentMethod: 'Apple Pay'   },
-  { id: 'BKG-J1K2L3', courtName: 'Northpark Arena',            date: '2026-06-15', startTime: '10:00', endTime: '12:00', duration: 2,   total: 46.2,  status: 'cancelled', paymentMethod: 'Credit Card' },
+  { id: 'BKG-A1B2C3', courtName: 'Court 1', date: '2026-07-12', startTime: '09:00', endTime: '11:00', duration: 2,   total: 42,    status: 'upcoming',  paymentMethod: 'Credit Card' },
+  { id: 'BKG-D4E5F6', courtName: 'Court 2', date: '2026-07-05', startTime: '14:00', endTime: '15:30', duration: 1.5, total: 23.63, status: 'completed', paymentMethod: 'PayPal'      },
+  { id: 'BKG-G7H8I9', courtName: 'Court 3', date: '2026-06-28', startTime: '16:00', endTime: '18:00', duration: 2,   total: 37.8,  status: 'completed', paymentMethod: 'Apple Pay'   },
+  { id: 'BKG-J1K2L3', courtName: 'Court 1', date: '2026-06-15', startTime: '10:00', endTime: '12:00', duration: 2,   total: 46.2,  status: 'cancelled', paymentMethod: 'Credit Card' },
 ];
 
 const TABS: { key: 'all' | Status; label: string }[] = [

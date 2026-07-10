@@ -1,12 +1,12 @@
 import { Radius, Spacing } from '@/constants/theme';
 import React, { useState } from 'react';
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,13 +22,13 @@ interface Booking {
 }
 
 const ALL: Booking[] = [
-  { id: 'BKG-001', user: 'Juan dela Cruz',   court: 'Downtown Center',  date: '2026-07-12', time: '09:00–11:00', amount: 420,  status: 'confirmed'  },
-  { id: 'BKG-002', user: 'Maria Santos',     court: 'Riverside Courts', date: '2026-07-12', time: '14:00–15:30', amount: 315,  status: 'pending'    },
-  { id: 'BKG-003', user: 'Pedro Reyes',      court: 'Sunset Pavilion',  date: '2026-07-11', time: '16:00–18:00', amount: 378,  status: 'completed'  },
-  { id: 'BKG-004', user: 'Ana Gonzales',     court: 'Northpark Arena',  date: '2026-07-10', time: '10:00–12:00', amount: 462,  status: 'cancelled'  },
-  { id: 'BKG-005', user: 'Jose Rizal',       court: 'Bayview Courts',   date: '2026-07-10', time: '08:00–09:00', amount: 126,  status: 'confirmed'  },
-  { id: 'BKG-006', user: 'Andres Bonifacio', court: 'Downtown Center',  date: '2026-07-09', time: '17:00–19:00', amount: 420,  status: 'completed'  },
-  { id: 'BKG-007', user: 'Emilio Aguinaldo', court: 'Riverside Courts', date: '2026-07-09', time: '07:00–08:00', amount: 157,  status: 'pending'    },
+  { id: 'BKG-001', user: 'Juan dela Cruz',   court: 'Court 1', date: '2026-07-12', time: '09:00–11:00', amount: 420,  status: 'confirmed'  },
+  { id: 'BKG-002', user: 'Maria Santos',     court: 'Court 2', date: '2026-07-12', time: '14:00–15:30', amount: 315,  status: 'pending'    },
+  { id: 'BKG-003', user: 'Pedro Reyes',      court: 'Court 3', date: '2026-07-11', time: '16:00–18:00', amount: 378,  status: 'completed'  },
+  { id: 'BKG-004', user: 'Ana Gonzales',     court: 'Court 1', date: '2026-07-10', time: '10:00–12:00', amount: 462,  status: 'cancelled'  },
+  { id: 'BKG-005', user: 'Jose Rizal',       court: 'Court 2', date: '2026-07-10', time: '08:00–09:00', amount: 126,  status: 'confirmed'  },
+  { id: 'BKG-006', user: 'Andres Bonifacio', court: 'Court 3', date: '2026-07-09', time: '17:00–19:00', amount: 420,  status: 'completed'  },
+  { id: 'BKG-007', user: 'Emilio Aguinaldo', court: 'Court 1', date: '2026-07-09', time: '07:00–08:00', amount: 157,  status: 'pending'    },
 ];
 
 const STATUS_COLOR: Record<Status, { bg: string; text: string }> = {
@@ -147,20 +147,20 @@ const styles = StyleSheet.create({
   header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   title:        { fontSize: 22, fontWeight: '800', color: '#fff' },
   count:        { fontSize: 13, color: '#9CA3AF' },
-  searchWrap:   { flexDirection: 'row', alignItems: 'center', backgroundColor: CARD, borderRadius: Radius.md, marginHorizontal: Spacing.md, marginBottom: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: 11 },
+  searchWrap:   { flexDirection: 'row', alignItems: 'center', backgroundColor: CARD, borderRadius: 12, marginHorizontal: Spacing.md, marginBottom: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: 11 },
   searchIcon:   { fontSize: 14, marginRight: 8 },
   searchInput:  { flex: 1, fontSize: 14, color: '#fff' },
   tabsWrap:     { marginBottom: Spacing.sm },
-  chip:         { paddingHorizontal: 14, paddingVertical: 7, borderRadius: Radius.full, backgroundColor: CARD, borderWidth: 1, borderColor: '#3D3A55' },
+  chip:         { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 100, backgroundColor: CARD, borderWidth: 1, borderColor: '#3D3A55' },
   chipActive:   { backgroundColor: PURPLE, borderColor: PURPLE },
   chipText:     { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
   chipTextActive:{ color: '#fff', fontWeight: '700' },
   list:         { paddingHorizontal: Spacing.md, gap: Spacing.sm, paddingBottom: 32 },
   empty:        { color: '#6B7280', textAlign: 'center', marginTop: 40 },
-  card:         { backgroundColor: CARD, borderRadius: Radius.md, padding: Spacing.md },
+  card:         { backgroundColor: CARD, borderRadius: 14, padding: Spacing.md },
   cardTop:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   bookingId:    { fontSize: 11, color: '#6B7280', fontFamily: 'monospace' },
-  badge:        { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.full },
+  badge:        { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
   badgeText:    { fontSize: 11, fontWeight: '700' },
   userName:     { fontSize: 16, fontWeight: '700', color: '#fff' },
   meta:         { fontSize: 13, color: '#9CA3AF', marginTop: 2 },

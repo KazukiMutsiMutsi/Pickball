@@ -1,19 +1,20 @@
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Layout, Palette, Spacing } from '@/constants/theme';
 import { useAuth } from '@/src/hooks/useAuth';
 import { shadow } from '@/src/utils/shadow';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // ─── Google icon (pure RN) ────────────────────────────────────────────────────
@@ -104,7 +105,12 @@ export default function LoginScreen() {
           <View style={styles.heroBlobBottom} />
           <View style={styles.heroContent}>
             <View style={styles.logoWrap}>
-              <Text style={styles.logoEmoji}>🏓</Text>
+              <Image
+                source={require('../../assets/images/logo.png')}
+                style={styles.logoImage}
+                contentFit="cover"
+                accessibilityLabel="PicklePro logo"
+              />
             </View>
             <Text style={styles.appName}>PicklePro</Text>
             <Text style={styles.heroTagline}>Your court awaits</Text>
@@ -112,7 +118,8 @@ export default function LoginScreen() {
         </View>
 
         {/* ── Card ── */}
-        <View style={[styles.card, shadow('lg')]}>
+        <View style={[styles.pageWrap]}>
+          <View style={[styles.card, shadow('lg')]}>
           <Text style={styles.cardTitle}>Welcome back</Text>
           <Text style={styles.cardSubtitle}>Sign in to your account</Text>
 
@@ -201,7 +208,8 @@ export default function LoginScreen() {
             <GoogleIcon />
             <Text style={styles.socialLabelGoogle}>Continue with Google</Text>
           </TouchableOpacity>
-        </View>
+          </View>{/* card */}
+        </View>{/* pageWrap */}
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -218,51 +226,52 @@ export default function LoginScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  flex:             { flex: 1, backgroundColor: Palette.grey100 },
+  flex:             { flex: 1, backgroundColor: '#F8FAFC' },
   container:        { flexGrow: 1 },
 
-  hero:             { height: 240, backgroundColor: Palette.primary, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  heroBlobTop:      { position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.1)' },
-  heroBlobBottom:   { position: 'absolute', bottom: -80, left: -40, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,255,255,0.07)' },
+  hero:             { height: 260, backgroundColor: Palette.primary, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  heroBlobTop:      { position: 'absolute', top: -70, right: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(255,255,255,0.12)' },
+  heroBlobBottom:   { position: 'absolute', bottom: -90, left: -50, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(255,255,255,0.08)' },
   heroContent:      { alignItems: 'center', zIndex: 1 },
-  logoWrap:         { width: 76, height: 76, borderRadius: 38, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  logoEmoji:        { fontSize: 40 },
-  appName:          { fontSize: 30, fontWeight: '900', color: '#fff', letterSpacing: 1 },
-  heroTagline:      { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  logoWrap:         { width: 90, height: 90, borderRadius: 45, overflow: 'hidden', marginBottom: 12, borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)' },
+  logoImage:        { width: 90, height: 90 },
+  appName:          { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: 1 },
+  heroTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.78)', marginTop: 5 },
 
-  card:             { backgroundColor: '#fff', marginHorizontal: Spacing.md, marginTop: -28, borderRadius: 20, padding: Spacing.lg },
-  cardTitle:        { fontSize: 22, fontWeight: '800', color: Palette.grey900 },
-  cardSubtitle:     { fontSize: 14, color: Palette.grey600, marginTop: 2, marginBottom: Spacing.md },
+  pageWrap:         { alignSelf: 'center', width: '100%', maxWidth: Layout.maxWidth },
+  card:             { backgroundColor: '#fff', marginHorizontal: Spacing.md, marginTop: -32, borderRadius: 24, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
+  cardTitle:        { fontSize: 22, fontWeight: '800', color: '#0F172A' },
+  cardSubtitle:     { fontSize: 14, color: '#64748B', marginTop: 2, marginBottom: Spacing.md },
 
-  errorBanner:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FDECEA', borderRadius: Radius.md, padding: Spacing.sm, marginBottom: Spacing.sm, gap: Spacing.sm, borderLeftWidth: 3, borderLeftColor: Palette.danger },
+  errorBanner:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FDECEA', borderRadius: 12, padding: Spacing.sm, marginBottom: Spacing.sm, gap: Spacing.sm, borderLeftWidth: 3, borderLeftColor: '#EF4444' },
   errorIcon:        { fontSize: 14 },
-  errorText:        { flex: 1, color: Palette.danger, fontSize: 13, lineHeight: 18 },
+  errorText:        { flex: 1, color: '#EF4444', fontSize: 13, lineHeight: 18 },
 
   fieldGroup:       { marginBottom: Spacing.md },
   labelRow:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  label:            { fontSize: 13, fontWeight: '700', color: Palette.grey700 },
+  label:            { fontSize: 13, fontWeight: '700', color: '#64748B' },
   forgotLink:       { fontSize: 13, color: Palette.primary, fontWeight: '600' },
-  inputWrap:        { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: Palette.grey300, borderRadius: Radius.md, backgroundColor: Palette.grey50, paddingHorizontal: Spacing.md },
+  inputWrap:        { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, backgroundColor: '#F8FAFC', paddingHorizontal: Spacing.md },
   inputWrapFocused: { borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
   inputIcon:        { fontSize: 16, marginRight: 8 },
-  input:            { flex: 1, fontSize: 15, color: Palette.grey900, paddingVertical: 14 },
-  validTick:        { fontSize: 15, color: Palette.success, fontWeight: '700' },
+  input:            { flex: 1, fontSize: 15, color: '#0F172A', paddingVertical: 15 },
+  validTick:        { fontSize: 15, color: '#10B981', fontWeight: '700' },
   eyeBtn:           { padding: 4, marginLeft: 4 },
   eyeIcon:          { fontSize: 16 },
 
-  loginBtn:         { backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 16, alignItems: 'center', marginTop: Spacing.sm, marginBottom: Spacing.md },
+  loginBtn:         { backgroundColor: '#0D1F35', borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.sm, marginBottom: Spacing.md },
   loginBtnDisabled: { opacity: 0.6 },
   loginBtnText:     { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
 
   divider:          { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, gap: Spacing.sm },
-  dividerLine:      { flex: 1, height: 1, backgroundColor: Palette.grey200 },
-  dividerText:      { fontSize: 12, color: Palette.grey500 },
+  dividerLine:      { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
+  dividerText:      { fontSize: 12, color: '#64748B' },
 
-  socialBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md, paddingVertical: 14, gap: 10 },
-  socialBtnGoogle:  { backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#DADCE0' },
-  socialLabelGoogle:{ color: '#3C4043', fontWeight: '600', fontSize: 15 },
+  socialBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, height: 48, gap: 10 },
+  socialBtnGoogle:  { backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#E2E8F0' },
+  socialLabelGoogle:{ color: '#0F172A', fontWeight: '600', fontSize: 15 },
 
   footer:           { flexDirection: 'row', justifyContent: 'center', paddingVertical: Spacing.xl },
-  footerText:       { fontSize: 14, color: Palette.grey600 },
+  footerText:       { fontSize: 14, color: '#64748B' },
   footerLink:       { fontSize: 14, color: Palette.primary, fontWeight: '700' },
 });

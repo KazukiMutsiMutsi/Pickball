@@ -1,141 +1,264 @@
-import { Palette } from '@/constants/theme';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    Easing,
-    Platform,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Easing,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const { width: W, height: H } = Dimensions.get('window');
 
-function FloatingBall({ size, color, startX, startY, delay }: {
-  size: number; color: string; startX: number; startY: number; delay: number;
-}) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0.15)).current;
-
+// ─── Loading dots ─────────────────────────────────────────────────────────────
+function Dots({ on }: { on: boolean }) {
+  const [n, setN] = useState(1);
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          Animated.timing(translateY, { toValue: -30, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0.35, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(translateY, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0.15, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ]),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, []);
-
+    if (!on) return;
+    const t = setInterval(() => setN(x => (x % 3) + 1), 450);
+    return () => clearInterval(t);
+  }, [on]);
+  if (!on) return null;
   return (
-    <Animated.View style={{
-      position: 'absolute', left: startX, top: startY,
-      width: size, height: size, borderRadius: size / 2,
-      backgroundColor: color, opacity, transform: [{ translateY }],
-    }} />
-  );
-}
-
-const BALLS = [
-  { size: 120, color: '#fff', startX: -40,         startY: height * 0.05, delay: 0   },
-  { size: 80,  color: '#fff', startX: width * 0.7,  startY: height * 0.1,  delay: 400 },
-  { size: 60,  color: '#fff', startX: width * 0.4,  startY: height * 0.78, delay: 800 },
-  { size: 100, color: '#fff', startX: width * 0.75, startY: height * 0.65, delay: 200 },
-  { size: 50,  color: '#fff', startX: width * 0.15, startY: height * 0.55, delay: 600 },
-];
-
-export default function SplashScreen() {
-  const router = useRouter();
-  const logoOpacity    = useRef(new Animated.Value(0)).current;
-  const logoScale      = useRef(new Animated.Value(0.6)).current;
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const taglineY       = useRef(new Animated.Value(20)).current;
-  const progressWidth  = useRef(new Animated.Value(0)).current;
-  const progressOpacity= useRef(new Animated.Value(0)).current;
-  const shimmer        = useRef(new Animated.Value(0)).current;
-  const shimmerRotate  = shimmer.interpolate({ inputRange: [0, 1], outputRange: ['-10deg', '10deg'] });
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(logoScale, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }),
-      Animated.timing(logoOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-    ]).start(() => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(shimmer, { toValue: 1, duration: 600, useNativeDriver: true }),
-          Animated.timing(shimmer, { toValue: 0, duration: 600, useNativeDriver: true }),
-        ]),
-        { iterations: 2 }
-      ).start();
-      Animated.parallel([
-        Animated.timing(taglineOpacity, { toValue: 1, duration: 500, delay: 200, useNativeDriver: true }),
-        Animated.timing(taglineY, { toValue: 0, duration: 500, delay: 200, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      ]).start();
-      Animated.sequence([
-        Animated.timing(progressOpacity, { toValue: 1, duration: 300, delay: 400, useNativeDriver: false }),
-        Animated.timing(progressWidth, { toValue: 1, duration: 1400, delay: 100, easing: Easing.inOut(Easing.quad), useNativeDriver: false }),
-      ]).start();
-    });
-
-    const timer = setTimeout(() => router.replace('/(auth)/login'), 3200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const barWidth = progressWidth.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-
-  return (
-    <View style={styles.container}>
-      {BALLS.map((b, i) => <FloatingBall key={i} {...b} />)}
-      <View style={styles.topArc} />
-      <View style={styles.bottomArc} />
-      <View style={styles.content}>
-        <Animated.View style={[styles.iconWrap, { opacity: logoOpacity, transform: [{ scale: logoScale }, { rotate: shimmerRotate }] }]}>
-          <View style={styles.iconGlow} />
-          <Text style={styles.iconEmoji}>🏓</Text>
-        </Animated.View>
-        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
-          <Text style={[styles.appName, Platform.OS === 'web' ? { textShadow: '0 2px 6px rgba(0,0,0,0.15)' } as any : { textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6 }]}>PicklePro</Text>
-          <View style={styles.nameDivider} />
-        </Animated.View>
-        <Animated.Text style={[styles.tagline, { opacity: taglineOpacity, transform: [{ translateY: taglineY }] }]}>
-          Book your court.{'\n'}Play your game.
-        </Animated.Text>
-      </View>
-      <Animated.View style={[styles.bottomBar, { opacity: progressOpacity }]}>
-        <Text style={styles.loadingText}>Loading…</Text>
-        <View style={styles.progressTrack}>
-          <Animated.View style={[styles.progressFill, { width: barWidth }]} />
-        </View>
-        <Text style={styles.version}>v1.0.0</Text>
-      </Animated.View>
+    <View style={dot.wrap}>
+      <Text style={dot.text}>Preparing the Court{'.'.repeat(n)}</Text>
     </View>
   );
 }
+const dot = StyleSheet.create({
+  wrap: { position: 'absolute', bottom: H * 0.1, alignSelf: 'center' },
+  text: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.78)',
+    fontWeight: '600',
+    letterSpacing: 1.2,
+  },
+});
 
-const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  topArc:       { position: 'absolute', top: -height * 0.18, right: -width * 0.25, width: width * 0.85, height: width * 0.85, borderRadius: (width * 0.85) / 2, backgroundColor: 'rgba(255,255,255,0.08)' },
-  bottomArc:    { position: 'absolute', bottom: -height * 0.12, left: -width * 0.2, width: width * 0.75, height: width * 0.75, borderRadius: (width * 0.75) / 2, backgroundColor: 'rgba(255,255,255,0.06)' },
-  content:      { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  iconWrap:     { alignItems: 'center', justifyContent: 'center', marginBottom: 20, position: 'relative' },
-  iconGlow:     { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.18)' },
-  iconEmoji:    { fontSize: 88, zIndex: 1 },
-  appName:      { fontSize: 46, fontWeight: '900', color: '#fff', letterSpacing: 2, textAlign: 'center' },
-  nameDivider:  { height: 3, width: 60, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.5)', alignSelf: 'center', marginTop: 8, marginBottom: 16 },
-  tagline:      { fontSize: 17, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 26, letterSpacing: 0.4 },
-  bottomBar:    { position: 'absolute', bottom: 50, left: 40, right: 40, alignItems: 'center' },
-  loadingText:  { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: 1 },
-  progressTrack:{ width: '100%', height: 4, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#fff', borderRadius: 2 },
-  version:      { fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 10 },
+// ─── Splash screen ────────────────────────────────────────────────────────────
+export default function SplashScreen() {
+  const router = useRouter();
+
+  const bgOp   = useRef(new Animated.Value(0)).current;
+  const logoOp = useRef(new Animated.Value(0)).current;
+  const logoSc = useRef(new Animated.Value(0.75)).current;
+  const logoPu = useRef(new Animated.Value(1)).current;
+  const txtOp  = useRef(new Animated.Value(0)).current;
+  const txtY   = useRef(new Animated.Value(22)).current;
+
+  const [show, setShow] = useState(false);
+
+  // Glow pulse on the ring around the logo
+  const glowOp = useRef(new Animated.Value(0.4)).current;
+
+  const combinedScale = Animated.multiply(logoSc, logoPu);
+
+  useEffect(() => {
+    // 1 – fade in background + spring the logo in
+    Animated.parallel([
+      Animated.timing(bgOp, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOp, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoSc, {
+        toValue: 1,
+        friction: 5,
+        tension: 70,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // 2 – slide up the text
+      Animated.parallel([
+        Animated.timing(txtOp, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(txtY, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      setShow(true);
+
+      // 3 – pulse the golden ring
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowOp, {
+            toValue: 1,
+            duration: 900,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowOp, {
+            toValue: 0.3,
+            duration: 900,
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+
+      // 4 – after a short wait, pulse-scale the logo then navigate
+      setTimeout(() => {
+        Animated.sequence([
+          Animated.timing(logoPu, {
+            toValue: 1.06,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+          Animated.timing(logoPu, {
+            toValue: 1.0,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setTimeout(() => router.replace('/(auth)/login'), 300);
+        });
+      }, 1800);
+    });
+  }, []);
+
+  return (
+    <Animated.View style={[s.container, { opacity: bgOp }]}>
+      {/* Background layers */}
+      <View style={s.bgBase} />
+      <View style={s.bgTop} />
+      <View style={s.bgBottom} />
+
+      {/* Decorative rings */}
+      <View style={[s.decRing, { width: 420, height: 420, top: -110, right: -110 }]} />
+      <View style={[s.decRing, { width: 260, height: 260, bottom: -70, left: -70 }]} />
+
+      {/* Logo image */}
+      <View style={s.centerWrap}>
+        {/* Animated golden glow ring behind the image */}
+        <Animated.View style={[s.glowRing, { opacity: glowOp }]} />
+
+        <Animated.View
+          style={{
+            opacity: logoOp,
+            transform: [{ scale: combinedScale }],
+          }}
+        >
+          <View style={s.logoCircle}>
+            <Image
+              source={require('../assets/images/logo.png')}
+              style={s.logoImage}
+              contentFit="cover"
+            />
+          </View>
+        </Animated.View>
+      </View>
+
+      {/* App name + tagline */}
+      <Animated.View
+        style={[s.txtWrap, { opacity: txtOp, transform: [{ translateY: txtY }] }]}
+      >
+        <Text style={s.appName}>PicklePro</Text>
+        <View style={s.divider} />
+        <Text style={s.tagline}>Book · Play · Win 🇵🇭</Text>
+      </Animated.View>
+
+      <Dots on={show} />
+    </Animated.View>
+  );
+}
+
+const LOGO_SIZE = Math.min(W * 0.82, 340);
+
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0D1F35',
+  },
+  bgBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0D1F35',
+  },
+  bgTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: H * 0.55,
+    backgroundColor: '#132B48',
+    borderBottomLeftRadius: W * 0.6,
+    borderBottomRightRadius: W * 0.6,
+    opacity: 0.7,
+  },
+  bgBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: H * 0.25,
+    backgroundColor: '#071422',
+    opacity: 0.5,
+  },
+  decRing: {
+    position: 'absolute',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.1)',
+  },
+  centerWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowRing: {
+    position: 'absolute',
+    width: LOGO_SIZE + 24,
+    height: LOGO_SIZE + 24,
+    borderRadius: (LOGO_SIZE + 24) / 2,
+    borderWidth: 4,
+    borderColor: '#FFD700',
+  },
+  // Clips the image into a perfect circle
+  logoCircle: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    borderRadius: LOGO_SIZE / 2,
+    overflow: 'hidden',
+    backgroundColor: '#0D1F35',
+  },
+  logoImage: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+  },
+  txtWrap: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  appName: {
+    fontSize: 38,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 3,
+  },
+  divider: {
+    height: 3,
+    width: 52,
+    backgroundColor: '#FFD700',
+    borderRadius: 2,
+    marginVertical: 8,
+  },
+  tagline: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 1.5,
+    fontWeight: '500',
+  },
 });

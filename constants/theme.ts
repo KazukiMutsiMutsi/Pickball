@@ -85,3 +85,25 @@ export const Radius = {
   xl: 24,
   full: 9999,
 };
+
+// Typography scale
+export const Typography = {
+  xs:   { fontSize: 11, lineHeight: 16 },
+  sm:   { fontSize: 13, lineHeight: 18 },
+  base: { fontSize: 15, lineHeight: 22 },
+  md:   { fontSize: 17, lineHeight: 24 },
+  lg:   { fontSize: 20, lineHeight: 28 },
+  xl:   { fontSize: 24, lineHeight: 32 },
+  xxl:  { fontSize: 28, lineHeight: 36 },
+  h1:   { fontSize: 34, lineHeight: 42 },
+};
+
+// Web layout — centered max-width container
+export const Layout = {
+  maxWidth: 480,
+  contentPadding: 16,
+};
+
+// Currency formatter — Philippine Peso
+export const formatPHP = (amount: number): string =>
+  `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

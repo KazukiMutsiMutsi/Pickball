@@ -28,9 +28,17 @@ export default function RootLayout() {
         <Stack.Screen name="booking/summary" />
         <Stack.Screen name="booking/payment" />
         <Stack.Screen name="booking/confirmation" />
+        <Stack.Screen name="booking/subscription" />
         <Stack.Screen name="booking/history" />
+        <Stack.Screen name="booking/qr-ticket" />
 
         {/* Standalone */}
+        <Stack.Screen name="availability" />
+        <Stack.Screen name="(admin)/scanner" />
+        <Stack.Screen name="profile-edit" />
+        <Stack.Screen name="notification-settings" />
+        <Stack.Screen name="help-support" />
+        <Stack.Screen name="terms-privacy" />
         <Stack.Screen name="profile" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="settings" />

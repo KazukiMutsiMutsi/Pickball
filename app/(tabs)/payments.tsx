@@ -16,14 +16,14 @@ type PayTab = 'pending' | 'history';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const PENDING = [
-  { id: 'BKG-002', court: 'Riverside Courts',  date: '2026-07-15', time: '2:00 PM', amount: 23.63 },
+  { id: 'BKG-002', court: 'Court 2', date: '2026-07-15', time: '2:00 PM', amount: 23.63 },
 ];
 
 const HISTORY = [
-  { id: 'PAY-101', court: 'Downtown Center',  date: '2026-07-12', amount: 42.00,  method: 'GCash',       status: 'paid'     },
-  { id: 'PAY-100', court: 'Sunset Pavilion',  date: '2026-07-05', amount: 37.80,  method: 'Credit Card', status: 'paid'     },
-  { id: 'PAY-099', court: 'Northpark Arena',  date: '2026-06-28', amount: 46.20,  method: 'Maya',        status: 'paid'     },
-  { id: 'PAY-098', court: 'Bayview Courts',   date: '2026-06-15', amount: 12.60,  method: 'GCash',       status: 'refunded' },
+  { id: 'PAY-101', court: 'Court 1', date: '2026-07-12', amount: 42.00, method: 'GCash',       status: 'paid'     },
+  { id: 'PAY-100', court: 'Court 3', date: '2026-07-05', amount: 37.80, method: 'Credit Card', status: 'paid'     },
+  { id: 'PAY-099', court: 'Court 2', date: '2026-06-28', amount: 46.20, method: 'Maya',        status: 'paid'     },
+  { id: 'PAY-098', court: 'Court 1', date: '2026-06-15', amount: 12.60, method: 'GCash',       status: 'refunded' },
 ];
 
 const METHODS = [
@@ -98,12 +98,12 @@ const cf = StyleSheet.create({
   cardBottom:  { flexDirection: 'row', justifyContent: 'space-between' },
   cardLabel:   { fontSize: 10, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' },
   cardValue:   { fontSize: 13, color: '#fff', fontWeight: '600', marginTop: 2 },
-  fieldLabel:  { fontSize: 12, fontWeight: '600', color: Palette.grey700, marginBottom: 4, marginTop: Spacing.sm },
-  input:       { borderWidth: 1.5, borderColor: Palette.grey300, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: 12, fontSize: 15, color: Palette.grey900, backgroundColor: Palette.grey50 },
+  fieldLabel:  { fontSize: 12, fontWeight: '600', color: '#64748B', marginBottom: 4, marginTop: Spacing.sm },
+  input:       { borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 14, paddingHorizontal: Spacing.md, paddingVertical: 12, fontSize: 15, color: '#0F172A', backgroundColor: '#F8FAFC' },
   row2:        { flexDirection: 'row', gap: Spacing.sm },
-  secureNote:  { flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.grey50, borderRadius: Radius.md, padding: Spacing.sm, marginTop: Spacing.md, gap: 8 },
+  secureNote:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 14, padding: Spacing.sm, marginTop: Spacing.md, gap: 8 },
   secureIcon:  { fontSize: 14 },
-  secureText:  { fontSize: 12, color: Palette.grey600 },
+  secureText:  { fontSize: 12, color: '#64748B' },
 });
 
 // ─── Payments Screen ──────────────────────────────────────────────────────────
@@ -243,58 +243,58 @@ export default function PaymentsTab() {
 }
 
 const styles = StyleSheet.create({
-  safe:              { flex: 1, backgroundColor: Palette.grey100 },
-  header:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
-  title:             { fontSize: 22, fontWeight: '900', color: Palette.grey900 },
+  safe:              { flex: 1, backgroundColor: '#F8FAFC' },
+  header:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  title:             { fontSize: 22, fontWeight: '900', color: '#0F172A' },
 
-  summaryCard:       { margin: Spacing.md, backgroundColor: Palette.primary, borderRadius: Radius.lg, padding: Spacing.lg },
+  summaryCard:       { margin: Spacing.md, backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
   summaryRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   summaryLabel:      { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   summaryAmount:     { fontSize: 32, fontWeight: '900', color: '#fff', marginTop: 4 },
-  summaryIcon:       { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  payAllBtn:         { backgroundColor: '#fff', borderRadius: Radius.md, paddingVertical: 12, alignItems: 'center' },
+  summaryIcon:       { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  payAllBtn:         { backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   payAllBtnText:     { color: Palette.primary, fontWeight: '800', fontSize: 15 },
 
-  tabRow:            { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
+  tabRow:            { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   tabBtn:            { flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabBtnActive:      { borderBottomColor: Palette.primary },
-  tabText:           { fontSize: 13, color: Palette.grey500, fontWeight: '500' },
+  tabText:           { fontSize: 13, color: '#64748B', fontWeight: '500' },
   tabTextActive:     { color: Palette.primary, fontWeight: '700' },
 
   section:           { padding: Spacing.md, gap: Spacing.sm },
-  sectionTitle:      { fontSize: 15, fontWeight: '800', color: Palette.grey900, marginTop: Spacing.sm, marginBottom: Spacing.xs },
+  sectionTitle:      { fontSize: 15, fontWeight: '800', color: '#0F172A', marginTop: Spacing.sm, marginBottom: Spacing.xs },
 
-  pendingCard:       { backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md, borderLeftWidth: 3, borderLeftColor: Palette.warning },
+  pendingCard:       { backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, borderLeftWidth: 3, borderLeftColor: '#F59E0B', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   pendingTop:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  pendingCourt:      { fontSize: 15, fontWeight: '700', color: Palette.grey900 },
-  pendingAmount:     { fontSize: 18, fontWeight: '900', color: Palette.grey900 },
-  pendingMeta:       { fontSize: 13, color: Palette.grey600 },
-  pendingId:         { fontSize: 10, color: Palette.grey400, marginTop: 4 },
+  pendingCourt:      { fontSize: 15, fontWeight: '700', color: '#0F172A' },
+  pendingAmount:     { fontSize: 18, fontWeight: '900', color: '#0F172A' },
+  pendingMeta:       { fontSize: 13, color: '#64748B' },
+  pendingId:         { fontSize: 10, color: '#64748B', marginTop: 4 },
 
-  methodRow:         { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: Radius.md, borderWidth: 1.5, borderColor: Palette.grey300, backgroundColor: '#fff', marginBottom: Spacing.sm },
+  methodRow:         { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: 14, borderWidth: 1.5, borderColor: '#E2E8F0', backgroundColor: '#fff', marginBottom: Spacing.sm },
   methodRowActive:   { borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
   methodIcon:        { fontSize: 22, marginRight: Spacing.md },
-  methodLabel:       { flex: 1, fontSize: 14, color: Palette.grey800 },
-  radio:             { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: Palette.grey400, alignItems: 'center', justifyContent: 'center' },
+  methodLabel:       { flex: 1, fontSize: 14, color: '#0F172A' },
+  radio:             { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center' },
   radioDot:          { width: 10, height: 10, borderRadius: 5 },
 
-  payBtn:            { backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 16, alignItems: 'center', marginTop: Spacing.md },
-  payBtnText:        { color: '#fff', fontSize: 17, fontWeight: '800' },
-  secureFooter:      { textAlign: 'center', fontSize: 12, color: Palette.grey500, marginTop: Spacing.sm },
+  payBtn:            { backgroundColor: Palette.primary, borderRadius: 14, height: 56, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
+  payBtnText:        { color: '#fff', fontSize: 18, fontWeight: '800' },
+  secureFooter:      { textAlign: 'center', fontSize: 12, color: '#64748B', marginTop: Spacing.sm },
 
   empty:             { alignItems: 'center', paddingTop: 40, paddingBottom: Spacing.lg },
   emptyEmoji:        { fontSize: 52 },
-  emptyTitle:        { fontSize: 18, fontWeight: '800', color: Palette.grey900, marginTop: Spacing.md },
-  emptySub:          { fontSize: 14, color: Palette.grey500, marginTop: 6 },
+  emptyTitle:        { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: Spacing.md },
+  emptySub:          { fontSize: 14, color: '#64748B', marginTop: 6 },
 
-  historyCard:       { backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md },
+  historyCard:       { backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   historyTop:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  historyCourt:      { fontSize: 14, fontWeight: '700', color: Palette.grey900 },
-  historyAmount:     { fontSize: 16, fontWeight: '800', color: Palette.success },
-  historyMeta:       { fontSize: 12, color: Palette.grey600, marginBottom: 6 },
+  historyCourt:      { fontSize: 14, fontWeight: '700', color: '#0F172A' },
+  historyAmount:     { fontSize: 16, fontWeight: '800', color: '#10B981' },
+  historyMeta:       { fontSize: 12, color: '#64748B', marginBottom: 6 },
   historyFooter:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  historyId:         { fontSize: 10, color: Palette.grey400 },
-  historyBadge:      { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.full },
+  historyId:         { fontSize: 10, color: '#64748B' },
+  historyBadge:      { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
   historyBadgePaid:  { backgroundColor: '#E8F8EF' },
   historyBadgeRefund:{ backgroundColor: '#FFF8E1' },
   historyBadgeText:  { fontSize: 11, fontWeight: '700' },
