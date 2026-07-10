@@ -2,7 +2,6 @@
 
 export type BookingStatus =
   | 'confirmed'
-  | 'pending'
   | 'checked_in'
   | 'completed'
   | 'cancelled'
@@ -38,6 +37,7 @@ export interface StaffBooking {
   startTime: string;   // HH:MM (24h)
   endTime: string;     // HH:MM (24h)
   durationHrs: number;
+  companions: number;  // additional people with the booker (0 = solo)
   amount: number;
   paid: boolean;
   status: BookingStatus;

@@ -6,16 +6,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DURATIONS = [1, 1.5, 2, 2.5, 3];
 
+// Operating hours: 9:00 AM – 12:00 AM (midnight)
+const CLOSE_HOUR = 24;  // 00:00 (midnight)
+
 const START_TIMES = [
-  '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
+  '09:00', '09:30',
   '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
   '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
   '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
-  '19:00', '19:30', '20:00', '20:30',
+  '19:00', '19:30', '20:00', '20:30', '21:00', '21:30',
+  '22:00', '22:30', '23:00', '23:30',
 ];
 
 // Mock some unavailable slots
-const UNAVAILABLE = new Set(['09:00', '09:30', '14:00', '18:00']);
+const UNAVAILABLE = new Set(['14:00', '18:00']);
 
 function to12h(time: string) {
   const [h, m] = time.split(':').map(Number);
@@ -109,7 +113,11 @@ export default function SelectTimeScreen() {
         {/* Time grid */}
         <Text style={styles.sectionTitle}>Start Time</Text>
         <View style={styles.timeGrid}>
-          {START_TIMES.map((t) => {
+          {START_TIMES.filter((t) => {
+            const [h, m] = t.split(':').map(Number);
+            const endMins = h * 60 + m + duration * 60;
+            return endMins <= CLOSE_HOUR * 60; // end must not exceed midnight
+          }).map((t) => {
             const unavail = UNAVAILABLE.has(t);
             const selected = selectedTime === t;
             return (

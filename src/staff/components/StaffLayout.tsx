@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useStaffAuth } from '../context/StaffAuthContext';
 import type { StaffPage } from '../types';
 
+const LOGO_URI = '/lapickle.png';
+
 const NAV_ITEMS: { id: StaffPage; label: string; icon: string }[] = [
   { id: 'dashboard', label: 'Dashboard',        icon: '⊞'  },
-  { id: 'schedule',  label: "Today's Schedule",  icon: '📅' },
+  { id: 'schedule',  label: 'Schedule',           icon: '📅' },
   { id: 'courts',    label: 'Court Status',      icon: '🏓' },
-  { id: 'checkin',   label: 'Check-In',          icon: '✅' },
+  { id: 'checkin',   label: 'Response',          icon: '✅' },
   { id: 'players',   label: 'Players',           icon: '👥' },
 ];
 
@@ -34,7 +36,7 @@ export default function StaffLayout({ page, onNavigate, children }: Props) {
       {/* ── Sidebar ── */}
       <aside style={{ ...sh.sidebar, width: collapsed ? 60 : 220 }}>
         <div style={sh.brand}>
-          <span style={sh.brandEmoji}>🏓</span>
+          <img src={LOGO_URI} alt="PicklePro logo" style={sh.brandLogo} />
           {!collapsed && (
             <div>
               <div style={sh.brandName}>PicklePro</div>
@@ -138,7 +140,7 @@ const sh: Record<string, React.CSSProperties> = {
     transition: 'width 180ms ease', zIndex: 20,
   },
   brand:     { display: 'flex', alignItems: 'center', gap: 10, padding: '20px 14px 16px' },
-  brandEmoji:{ fontSize: 26, flexShrink: 0 },
+  brandLogo: { width: 36, height: 36, objectFit: 'contain' as const, flexShrink: 0 },
   brandName: { fontSize: 15, fontWeight: 800, color: '#fff', lineHeight: 1.2 },
   brandRole: { fontSize: 10, color: '#475569', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' },
   divider:   { height: 1, background: '#1e293b', margin: '0 12px' },
