@@ -20,6 +20,12 @@ export default function SelectDateScreen() {
   const params = useLocalSearchParams<{ courtId: string; courtName: string; price: string }>();
 
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Max advance booking: 30 days from today
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + 30);
+
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -27,11 +33,18 @@ export default function SelectDateScreen() {
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfWeek(viewYear, viewMonth);
 
+  // Only allow going back to current month
+  const canGoPrev = viewYear > today.getFullYear() || viewMonth > today.getMonth();
+  // Only allow going forward while max date is in a later month
+  const canGoNext = new Date(viewYear, viewMonth + 1, 1) <= maxDate;
+
   const prevMonth = () => {
+    if (!canGoPrev) return;
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
     else setViewMonth(m => m - 1);
   };
   const nextMonth = () => {
+    if (!canGoNext) return;
     if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
     else setViewMonth(m => m + 1);
   };
@@ -39,11 +52,9 @@ export default function SelectDateScreen() {
   const toISO = (day: number) =>
     `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const isPast = (day: number) => {
+  const isDisabled = (day: number) => {
     const d = new Date(viewYear, viewMonth, day);
-    d.setHours(0, 0, 0, 0);
-    const t = new Date(); t.setHours(0, 0, 0, 0);
-    return d < t;
+    return d < today || d > maxDate;
   };
 
   const formatSelected = (iso: string) => {
@@ -93,15 +104,16 @@ export default function SelectDateScreen() {
 
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.courtName}>{params.courtName}</Text>
+        <Text style={styles.advanceNote}>📅 You can book up to <Text style={styles.advanceBold}>30 days</Text> in advance</Text>
 
         {/* Month nav */}
         <View style={styles.monthNav}>
-          <TouchableOpacity onPress={prevMonth} style={styles.navBtn} accessibilityLabel="Previous month">
-            <Text style={styles.navIcon}>‹</Text>
+          <TouchableOpacity onPress={prevMonth} style={[styles.navBtn, !canGoPrev && styles.navBtnDisabled]} disabled={!canGoPrev} accessibilityLabel="Previous month">
+            <Text style={[styles.navIcon, !canGoPrev && styles.navIconDisabled]}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.monthLabel}>{MONTHS[viewMonth]} {viewYear}</Text>
-          <TouchableOpacity onPress={nextMonth} style={styles.navBtn} accessibilityLabel="Next month">
-            <Text style={styles.navIcon}>›</Text>
+          <TouchableOpacity onPress={nextMonth} style={[styles.navBtn, !canGoNext && styles.navBtnDisabled]} disabled={!canGoNext} accessibilityLabel="Next month">
+            <Text style={[styles.navIcon, !canGoNext && styles.navIconDisabled]}>›</Text>
           </TouchableOpacity>
         </View>
 
@@ -117,18 +129,18 @@ export default function SelectDateScreen() {
           {cells.map((day, idx) => {
             if (!day) return <View key={`empty-${idx}`} style={styles.dayCell} />;
             const iso = toISO(day);
-            const past = isPast(day);
+            const disabled = isDisabled(day);
             const selected = selectedDate === iso;
             return (
               <TouchableOpacity
                 key={iso}
-                style={[styles.dayCell, selected && styles.dayCellSelected, past && styles.dayCellPast]}
-                onPress={() => !past && setSelectedDate(iso)}
-                disabled={past}
+                style={[styles.dayCell, selected && styles.dayCellSelected, disabled && styles.dayCellPast]}
+                onPress={() => !disabled && setSelectedDate(iso)}
+                disabled={disabled}
                 accessibilityRole="button"
                 accessibilityLabel={`${MONTHS[viewMonth]} ${day}`}
               >
-                <Text style={[styles.dayText, selected && styles.dayTextSelected, past && styles.dayTextPast]}>
+                <Text style={[styles.dayText, selected && styles.dayTextSelected, disabled && styles.dayTextPast]}>
                   {day}
                 </Text>
               </TouchableOpacity>
@@ -183,11 +195,15 @@ const styles = StyleSheet.create({
   progressLabelActive: { color: Palette.primary, fontWeight: '700' },
 
   body: { padding: Spacing.md },
-  courtName: { fontSize: 16, fontWeight: '700', color: Palette.grey900, marginBottom: Spacing.md },
+  courtName: { fontSize: 16, fontWeight: '700', color: Palette.grey900, marginBottom: Spacing.sm },
+  advanceNote: { fontSize: 12, color: Palette.grey600, marginBottom: Spacing.md, backgroundColor: Palette.primaryLight, padding: Spacing.sm, borderRadius: Radius.sm },
+  advanceBold: { fontWeight: '700', color: Palette.primary },
 
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
   navBtn: { padding: Spacing.sm },
+  navBtnDisabled: { opacity: 0.3 },
   navIcon: { fontSize: 28, color: Palette.primary },
+  navIconDisabled: { color: Palette.grey400 },
   monthLabel: { fontSize: 17, fontWeight: '700', color: Palette.grey900 },
 
   weekRow: { flexDirection: 'row', marginBottom: Spacing.sm },

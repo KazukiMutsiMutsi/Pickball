@@ -17,20 +17,22 @@ export default function StaffDashboard() {
   const todayBookings = STAFF_BOOKINGS.filter((b) => b.date === TODAY);
   const total         = todayBookings.length;
   const checkedIn     = todayBookings.filter((b) => b.status === 'checked_in').length;
+  const pending       = todayBookings.filter((b) => b.status === 'pending').length;
   const completed     = todayBookings.filter((b) => b.status === 'completed').length;
   const reschedules   = todayBookings.filter((b) => b.status === 'reschedule_requested').length;
   const activeCourts  = STAFF_COURTS.filter((c) => c.active).length;
 
   const upcoming = [...todayBookings]
-    .filter((b) => b.status === 'confirmed' || b.status === 'reschedule_requested')
+    .filter((b) => b.status === 'confirmed' || b.status === 'pending' || b.status === 'reschedule_requested')
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
     .slice(0, 5);
 
   const stats = [
     { icon: '📅', label: "Today's Bookings", value: total,        sub: `${completed} completed`,          accent: '#2563eb' },
     { icon: '✅', label: 'On Court',         value: checkedIn,    sub: `${total - checkedIn} remaining`,  accent: '#16a34a' },
-    { icon: '↻',  label: 'Reschedules',       value: reschedules,  sub: 'Customer requests',               accent: '#7c3aed' },
-    { icon: '🏓', label: 'Active Courts',     value: activeCourts, sub: `of ${STAFF_COURTS.length} total`, accent: '#0284c7' },
+    { icon: '⏳', label: 'Pending',          value: pending,      sub: 'Awaiting approval',               accent: '#d97706' },
+    { icon: '↻',  label: 'Reschedules',      value: reschedules,  sub: 'Customer requests',               accent: '#7c3aed' },
+    { icon: '🏓', label: 'Active Courts',    value: activeCourts, sub: `of ${STAFF_COURTS.length} total`, accent: '#0284c7' },
   ];
 
   return (
@@ -58,8 +60,8 @@ export default function StaffDashboard() {
           </div>
           <div style={s.bannerRole}>Staff Employee</div>
           <div style={s.bannerSub}>
-            {reschedules > 0
-              ? `${reschedules} reschedule request${reschedules !== 1 ? 's' : ''} · ${total - completed} bookings remaining`
+            {pending > 0 || reschedules > 0
+              ? `${pending} pending · ${reschedules} reschedule request${reschedules !== 1 ? 's' : ''} · ${total - completed} bookings remaining`
               : `All caught up · ${total} bookings today`}
           </div>
           <div style={s.bannerChips}>

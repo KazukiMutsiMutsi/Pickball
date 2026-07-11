@@ -16,12 +16,99 @@
 # Install dependencies
 npm install
 
-# Start dev server (web)
+# Start dev server (web — staff portal accessible at /staff)
 npx expo start --web
 
 # Start dev server (all platforms)
 npx expo start
 ```
+
+> **Note:** Run commands from inside the `Pickball` folder, not the parent directory.
+
+---
+
+## Screens
+
+### Customer (Mobile + Web)
+- Splash → Login / Register → Home → Courts (map) → Court Detail → Book Date → Book Time → Summary → Payment → Confirmation → History
+
+### Staff Portal (Web only — `/staff`)
+- Login → Dashboard → Schedule → Court Status → Response → Players
+
+### Admin
+- Dashboard → Bookings → Courts → Users → Settings
+
+---
+
+## Staff Portal
+
+Accessible at `http://localhost:8081/staff` (web only).
+On native (iOS/Android), the route redirects to the customer login screen.
+
+**Demo credentials:**
+- Email: `staff@picklepro.com`
+- Password: `staff123`
+
+### Pages
+
+| Page | Description |
+|---|---|
+| Dashboard | Live KPI cards, upcoming bookings table, court overview, hero banner |
+| Schedule | Month / Day / List views with booking management |
+| Court Status | Toggle courts open/closed with close reason |
+| Response | Today's check-in workflow — Approve, On Court, Complete, Reschedule |
+| Players | 3-column view grouped by court with full booking details |
+
+### Booking Status Flow
+
+```
+Customer books → pending
+       ↓
+Staff approves → confirmed
+       ↓
+Player arrives → checked_in (On Court)
+       ↓
+Session ends   → completed
+
+Alternate paths:
+confirmed → no_show              (player didn't arrive)
+confirmed/pending → cancelled    (staff declined)
+any → reschedule_requested       (customer asked to change time/court)
+```
+
+### Courts
+- 3 courts: Court 1, Court 2, Court 3
+- All Indoor, located at Pajo, Lapu-Lapu City
+- Operating hours: **9:00 AM – 12:00 AM (midnight)**
+- Bookings are whole hours only (no 30-minute slots)
+
+### Booking Rules
+- Advance booking: up to **30 days** from today
+- Same-day bookings require at least **1 hour** lead time
+- Conflict detection: unavailable slots are greyed out on the time picker
+- Race condition guard: conflict is re-checked at payment before confirming
+
+---
+
+## Booking Conflict Logic
+
+Three layers of protection against double-booking:
+
+1. **UI layer** — slots that overlap existing bookings are shown as greyed out (✕) on the time picker, updated live as duration changes
+2. **Same-day filter** — hides start times within 1 hour of now for today's bookings
+3. **Payment guard** — re-checks for conflicts right before payment is processed; if the slot was taken while the user filled in payment details, an error is shown and the booking is blocked
+
+Overlap rule: `newStart < existingEnd AND newEnd > existingStart`
+
+---
+
+## Tech Stack
+- **Framework:** Expo SDK 54 + Expo Router 6
+- **Language:** TypeScript
+- **UI:** React Native (mobile) + plain React with inline styles (staff web portal)
+- **Maps:** OpenStreetMap (Leaflet.js) on web, Google Maps deep-link on native
+- **Payments UI:** GCash / Maya / Credit Card / PayPal (mock — needs PayMongo integration)
+- **State:** In-memory mock store (`src/booking/bookingStore.ts`) — shared between customer and staff
 
 ---
 
@@ -84,18 +171,20 @@ EXPO_PUBLIC_GOOGLE_MAPS_KEY=your_google_maps_api_key
 
 ---
 
-## Tech Stack
-- **Framework:** Expo SDK 54 + Expo Router 6
-- **Language:** TypeScript
-- **UI:** React Native (no Tailwind — pure StyleSheet)
-- **Maps:** OpenStreetMap (Leaflet.js) on web, Google Maps deep-link on native
-- **Payments UI:** GCash / Maya / Credit Card / PayPal (mock — needs PayMongo integration)
+## Recent Changes
 
----
+### Staff Portal — July 2026
 
-## Screens
-### User
-- Splash → Login / Register → Home (booking calendar) → Courts (map) → Court Details → Book → Pay → Confirm → History
-
-### Admin
-- Dashboard → Bookings → Courts → Users → Settings
+- **Schedule Day view** redesigned from horizontal timeline to 3-column layout (one column per court) showing booking cards sorted by time
+- **Players tab** redesigned to match the same 3-column layout with full booking detail cards (companions, amount, duration, payment status, date, time slot, booking ID)
+- **Pending status** restored — staff must approve bookings before they become confirmed
+- **Operating hours** enforced: 9:00 AM – 12:00 AM, whole hours only, no 30-minute slots
+- **Booking conflict detection** implemented across 3 layers (UI greyout, same-day filter, payment guard)
+- **Advance booking limit** set to 30 days from today
+- **Dashboard banner** updated to `#0D1F35` background with left/right photo panels (qwerty.jpg + imageg1.webp) fading into the center
+- **Logo** updated to `lapickle.png` served from `public/` folder
+- **"Checked In" renamed** to "On Court" across all staff screens
+- **Live clock** added to the staff topbar (updates every second)
+- **Date added** to each booking card in the Response tab
+- **Court types** standardised to Indoor only (3 courts)
+- **Total courts** reduced from 5 to 3

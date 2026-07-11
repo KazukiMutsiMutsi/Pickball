@@ -47,6 +47,7 @@ export default function StaffCheckIn() {
   const todayActive = todayAll
     .filter((b) =>
       b.status === 'confirmed' ||
+      b.status === 'pending'   ||
       b.status === 'checked_in' ||
       b.status === 'reschedule_requested',
     )
@@ -63,6 +64,7 @@ export default function StaffCheckIn() {
 
   const confirmedCount  = todayAll.filter((b) => b.status === 'confirmed').length;
   const checkedInCount  = todayAll.filter((b) => b.status === 'checked_in').length;
+  const pendingCount    = todayAll.filter((b) => b.status === 'pending').length;
   const rescheduleCount = todayAll.filter((b) => b.status === 'reschedule_requested').length;
 
   // Reports
@@ -78,6 +80,7 @@ export default function StaffCheckIn() {
         {[
           { label: 'Awaiting Check-In', value: confirmedCount,  color: '#2563eb', bg: '#dbeafe' },
           { label: 'On Court',          value: checkedInCount,  color: '#15803d', bg: '#dcfce7' },
+          { label: 'Pending Approval',  value: pendingCount,    color: '#b45309', bg: '#fef3c7' },
           { label: 'Reschedule Req.',   value: rescheduleCount, color: '#7c3aed', bg: '#fdf4ff' },
         ].map((stat) => (
           <div key={stat.label} style={{ ...s.summaryCard, background: stat.bg, borderColor: stat.color + '44' }}>
@@ -118,6 +121,7 @@ export default function StaffCheckIn() {
                 borderLeft: `4px solid ${
                   b.status === 'reschedule_requested' ? '#7c3aed'
                   : b.status === 'checked_in'         ? '#16a34a'
+                  : b.status === 'pending'             ? '#d97706'
                   : '#2563eb'
                 }`,
               }}
@@ -157,6 +161,7 @@ export default function StaffCheckIn() {
 
               {/* Booking details */}
               <div style={s.checkDetails}>
+                <div style={s.checkDetail}><span>📅</span> {new Date(b.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 <div style={s.checkDetail}><span>🏓</span> {b.courtName}</div>
                 <div style={s.checkDetail}><span>🕐</span> {fmt12(b.startTime)} – {fmt12(b.endTime)} · {b.durationHrs}hr</div>
                 <div style={s.checkDetail}>
@@ -170,6 +175,12 @@ export default function StaffCheckIn() {
               {/* Standard workflow actions (non-reschedule) */}
               {b.status !== 'reschedule_requested' && (
                 <div style={s.checkActions}>
+                  {b.status === 'pending' && (
+                    <>
+                      <button style={s.btnGreen} onClick={() => updateStatus(b.id, 'confirmed')}>✓ Approve</button>
+                      <button style={s.btnRed}   onClick={() => updateStatus(b.id, 'cancelled')}>✕ Decline</button>
+                    </>
+                  )}
                   {b.status === 'confirmed' && (
                     <>
                       <button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>✅ On Court</button>
@@ -195,6 +206,7 @@ export default function StaffCheckIn() {
         <div style={s.reportGrid}>
           {[
             { icon: '✅', label: 'Completed', value: completedCount, color: '#15803d', bg: '#dcfce7' },
+            { icon: '⏳', label: 'Pending',   value: pendingCount,   color: '#b45309', bg: '#fef3c7' },
             { icon: '🚫', label: 'No Show',   value: noShowCount,    color: '#dc2626', bg: '#fee2e2' },
             { icon: '✕',  label: 'Cancelled', value: cancelledCount, color: '#64748b', bg: '#f1f5f9' },
           ].map((r) => (
@@ -263,6 +275,7 @@ const s: Record<string, React.CSSProperties> = {
 
   btnGreen: { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   btnBlue:  { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
+  btnRed:   { flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   btnGhost: { flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
 
   reportCard:      { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' },
