@@ -1,25 +1,21 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getUnavailableSlots } from '@/src/booking/bookingStore';
 
-const DURATIONS = [1, 1.5, 2, 2.5, 3];
+const DURATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 // Operating hours: 9:00 AM – 12:00 AM (midnight)
-const CLOSE_HOUR = 24;  // 00:00 (midnight)
+const CLOSE_HOUR = 24;
 
-const START_TIMES = [
-  '09:00', '09:30',
-  '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-  '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
-  '19:00', '19:30', '20:00', '20:30', '21:00', '21:30',
-  '22:00', '22:30', '23:00', '23:30',
+const ALL_START_TIMES = [
+  '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00',
+  '17:00', '18:00', '19:00', '20:00',
+  '21:00', '22:00', '23:00',
 ];
-
-// Mock some unavailable slots
-const UNAVAILABLE = new Set(['14:00', '18:00']);
 
 function to12h(time: string) {
   const [h, m] = time.split(':').map(Number);
@@ -48,6 +44,36 @@ export default function SelectTimeScreen() {
 
   const endTime = selectedTime ? addHours(selectedTime, duration) : null;
   const total = parseFloat(params.price ?? '0') * duration;
+
+  // For same-day bookings: require at least 1 hour lead time
+  const today = new Date().toISOString().slice(0, 10);
+  const isToday = params.date === today;
+  const nowHour = new Date().getHours() + 1; // 1hr buffer
+
+  // Slots filtered by: within operating hours + end ≤ midnight + same-day buffer
+  const visibleSlots = useMemo(() =>
+    ALL_START_TIMES.filter((t) => {
+      const [h] = t.split(':').map(Number);
+      const endMins = h * 60 + duration * 60;
+      if (endMins > CLOSE_HOUR * 60) return false;   // exceeds midnight
+      if (isToday && h < nowHour) return false;        // too soon today
+      return true;
+    }),
+    [duration, isToday, nowHour],
+  );
+
+  // Real conflict detection from booking store
+  const unavailableSlots = useMemo(() =>
+    getUnavailableSlots(params.courtId, params.date, duration, visibleSlots),
+    [params.courtId, params.date, duration, visibleSlots],
+  );
+
+  // Reset selected time if it becomes unavailable after duration change
+  React.useEffect(() => {
+    if (selectedTime && unavailableSlots.has(selectedTime)) {
+      setSelectedTime(null);
+    }
+  }, [unavailableSlots, selectedTime]);
 
   const handleContinue = () => {
     if (!selectedTime || !endTime) return;
@@ -112,13 +138,14 @@ export default function SelectTimeScreen() {
 
         {/* Time grid */}
         <Text style={styles.sectionTitle}>Start Time</Text>
+        {isToday && (
+          <Text style={styles.sameDayNote}>⏰ Same-day bookings require at least 1 hour notice</Text>
+        )}
         <View style={styles.timeGrid}>
-          {START_TIMES.filter((t) => {
-            const [h, m] = t.split(':').map(Number);
-            const endMins = h * 60 + m + duration * 60;
-            return endMins <= CLOSE_HOUR * 60; // end must not exceed midnight
-          }).map((t) => {
-            const unavail = UNAVAILABLE.has(t);
+          {visibleSlots.length === 0 ? (
+            <Text style={styles.noSlots}>No available slots for this duration today.</Text>
+          ) : visibleSlots.map((t) => {
+            const unavail = unavailableSlots.has(t);
             const selected = selectedTime === t;
             return (
               <TouchableOpacity
@@ -191,6 +218,8 @@ const styles = StyleSheet.create({
   courtName: { fontSize: 16, fontWeight: '700', color: Palette.grey900 },
   dateLabel: { fontSize: 13, color: Palette.grey600, marginTop: 4, marginBottom: Spacing.md },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: Palette.grey900, marginBottom: Spacing.sm, marginTop: Spacing.sm },
+  sameDayNote: { fontSize: 12, color: Palette.warning, marginBottom: Spacing.sm, backgroundColor: '#FFF8E6', padding: Spacing.sm, borderRadius: Radius.sm },
+  noSlots: { fontSize: 13, color: Palette.grey500, fontStyle: 'italic', padding: Spacing.sm },
 
   durRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.md },
   durChip: { paddingHorizontal: 18, paddingVertical: 9, borderRadius: Radius.full, backgroundColor: Palette.grey100, borderWidth: 1, borderColor: Palette.grey300 },

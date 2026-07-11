@@ -15,6 +15,7 @@ const ROW_H  = 80;   // px per court row — taller blocks
 
 const STATUS_COLOR: Record<string, string> = {
   confirmed:            '#2563eb',
+  pending:              '#d97706',
   checked_in:           '#16a34a',
   completed:            '#64748b',
   cancelled:            '#dc2626',
@@ -43,7 +44,7 @@ function minsRemaining(endTime: string, now: Date): number {
 
 /** Is this booking currently in progress right now? */
 function isNowPlaying(b: StaffBooking, now: Date): boolean {
-  if (b.status !== 'checked_in' && b.status !== 'confirmed') return false;
+  if (b.status !== 'checked_in' && b.status !== 'confirmed' && b.status !== 'pending') return false;
   const nowMin = now.getHours() * 60 + now.getMinutes();
   return nowMin >= toMin(b.startTime) && nowMin < toMin(b.endTime);
 }
@@ -114,6 +115,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const STATUS_DOT: Record<string, string> = {
   confirmed:            '#2563eb',
+  pending:              '#d97706',
   checked_in:           '#16a34a',
   completed:            '#94a3b8',
   reschedule_requested: '#7c3aed',
@@ -339,6 +341,7 @@ export default function StaffSchedule() {
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)} style={s.select} aria-label="Filter status">
               <option value="all">All Statuses</option>
               <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
               <option value="checked_in">On Court</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
@@ -364,78 +367,83 @@ export default function StaffSchedule() {
         />
       )}
 
-      {/* ══ DAY / TIMELINE VIEW ══ */}
+      {/* ══ DAY / COLUMN VIEW ══ */}
       {view === 'day' && (
         <div style={s.calCard}>
-          {/* Legend — compact, one line */}
-          <div style={s.legend}>
-            {[
-              { color: '#16a34a', label: 'On Court' },
-              { color: '#2563eb', label: 'Confirmed' },
-              { color: '#7c3aed', label: 'Reschedule' },
-              { color: '#64748b', label: 'Completed' },
-              { color: '#dc2626', label: 'No Show' },
-            ].map(({ color, label }) => (
-              <div key={label} style={s.legendItem}>
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: color }} />
-                <span style={s.legendLabel}>{label}</span>
-              </div>
-            ))}
-            <div style={s.legendItem}>
-              <div style={{ width: 2, height: 16, background: '#ef4444', borderRadius: 1 }} />
-              <span style={s.legendLabel}>Now</span>
-            </div>
-            <div style={s.legendItem}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 0 3px #bbf7d0' }} />
-              <span style={s.legendLabel}>Now Playing</span>
-            </div>
+
+          {/* Date heading */}
+          <div style={s.dayHeader}>
+            <span style={s.dayTitle}>
+              {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+            {selectedDate === TODAY && <span style={s.todayPill}>Today</span>}
           </div>
 
-          {/* Scrollable grid */}
-          <div style={{ overflowX: 'auto', overflowY: 'hidden' }} ref={calRef}>
-            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 148 + HOURS.length * HOUR_W }}>
+          {/* 3-column grid — one per court */}
+          <div style={s.courtColumns}>
+            {STAFF_COURTS.map((court) => {
+              const courtBookings = todayBookings
+                .filter((b) => b.courtId === court.id && b.status !== 'cancelled')
+                .sort((a, b) => a.startTime.localeCompare(b.startTime));
+              const hasPlaying = courtBookings.some((b) => isNowPlaying(b, now));
 
-              {/* Header row: empty corner + hour labels */}
-              <div style={{ display: 'flex', height: 36, borderBottom: '2px solid #e2e8f0', background: '#f8fafc', position: 'sticky', top: 0, zIndex: 5 }}>
-                <div style={{ flexShrink: 0, width: 148, borderRight: '1px solid #e2e8f0' }} />
-                {HOURS.map((h) => (
-                  <div key={h} style={{ width: HOUR_W, flexShrink: 0, fontSize: 11, fontWeight: 700, color: '#64748b', display: 'flex', alignItems: 'center', paddingLeft: 8, borderLeft: '1px solid #f1f5f9' }}>
-                    {h % 12 || 12}{h < 12 ? ' am' : ' pm'}
-                  </div>
-                ))}
-              </div>
-
-              {/* Court rows: label + lane side by side */}
-              {activeCourts.map((court) => {
-                const courtBookings = todayBookings.filter((b) => b.courtId === court.id && b.status !== 'cancelled');
-                const playing = courtBookings.some((b) => isNowPlaying(b, now));
-                return (
-                  <div key={court.id} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
-                    {/* Court label — single source, no duplication */}
-                    <div style={{ flexShrink: 0, width: 148, height: ROW_H, display: 'flex', alignItems: 'center', padding: '0 14px', gap: 8, background: playing ? '#f0fdf4' : '#fff', borderRight: '1px solid #e2e8f0' }}>
-                      {playing
-                        ? <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#16a34a', flexShrink: 0, boxShadow: '0 0 0 3px #bbf7d0' }} />
-                        : <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#e2e8f0', flexShrink: 0 }} />
+              return (
+                <div key={court.id} style={s.courtCol}>
+                  {/* Column header */}
+                  <div style={{ ...s.courtColHead, background: hasPlaying ? '#f0fdf4' : '#f8fafc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {hasPlaying
+                        ? <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 0 3px #bbf7d0', flexShrink: 0 }} />
+                        : <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e2e8f0', flexShrink: 0 }} />
                       }
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{court.name.split(' ').slice(0, 2).join(' ')}</div>
-                        <div style={{ fontSize: 10, color: '#94a3b8' }}>{court.type}</div>
-                      </div>
+                      <span style={s.courtColName}>{court.name}</span>
                     </div>
-
-                    {/* Timeline lane */}
-                    <div style={{ position: 'relative', flex: 1, height: ROW_H }}>
-                      <CourtRow bookings={courtBookings} now={now} totalW={HOURS.length * HOUR_W} onBlock={setSelected} />
-                      {/* Now line — only within the lane */}
-                      {nowX >= 0 && nowX <= HOURS.length * HOUR_W && (
-                        <div style={{ position: 'absolute', left: nowX, top: 0, bottom: 0, width: 2, background: '#ef4444', zIndex: 4, pointerEvents: 'none' }} />
-                      )}
-                    </div>
+                    <span style={s.courtColCount}>{courtBookings.length} booking{courtBookings.length !== 1 ? 's' : ''}</span>
                   </div>
-                );
-              })}
 
-            </div>
+                  {/* Booking cards */}
+                  <div style={s.courtColBody}>
+                    {courtBookings.length === 0 ? (
+                      <div style={s.courtColEmpty}>No bookings</div>
+                    ) : courtBookings.map((b) => {
+                      const color = STATUS_COLOR[b.status] ?? '#64748b';
+                      const playing = isNowPlaying(b, now);
+                      const mLeft = playing ? minsRemaining(b.endTime, now) : null;
+                      return (
+                        <div
+                          key={b.id}
+                          style={{ ...s.bookingCard, borderLeft: `4px solid ${color}`, background: playing ? '#f0fdf4' : '#fff' }}
+                          onClick={() => setSelected(b)}
+                        >
+                          {/* Player name + status */}
+                          <div style={s.bookingCardTop}>
+                            <div style={s.bookingAvatar}>{b.playerName[0]}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={s.bookingName}>{b.playerName}</div>
+                              <div style={s.bookingPhone}>{b.playerPhone}</div>
+                            </div>
+                            <StatusBadge status={b.status} size="sm" />
+                          </div>
+                          {/* Time */}
+                          <div style={s.bookingTime}>
+                            🕐 {fmt12(b.startTime)} – {fmt12(b.endTime)} · {b.durationHrs}hr
+                          </div>
+                          {/* Amount */}
+                          <div style={s.bookingAmt}>
+                            💰 ₱{b.amount.toLocaleString()}
+                            <span style={b.paid ? s.paidTag : s.unpaidTag}>{b.paid ? 'Paid' : 'Unpaid'}</span>
+                          </div>
+                          {/* Time remaining if playing */}
+                          {mLeft !== null && mLeft > 0 && (
+                            <div style={s.playingTag}>⏱ {mLeft}m remaining</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* ── Selected booking detail panel ── */}
@@ -458,17 +466,21 @@ export default function StaffSchedule() {
                 {isNowPlaying(selected, now) && (
                   <div style={s.detailItem}>
                     <span style={s.detailIcon}>⏱</span>
-                    <span style={{ color: '#16a34a', fontWeight: 700 }}>
-                      {minsRemaining(selected.endTime, now)}m remaining
-                    </span>
+                    <span style={{ color: '#16a34a', fontWeight: 700 }}>{minsRemaining(selected.endTime, now)}m remaining</span>
                   </div>
                 )}
               </div>
               <div style={s.detailActions}>
+                {selected.status === 'pending' && (
+                  <>
+                    <button style={s.btnGreen} onClick={() => { updateStatus(selected.id, 'confirmed'); setSelected(null); }}>✓ Approve</button>
+                    <button style={s.btnRed}   onClick={() => { updateStatus(selected.id, 'cancelled'); setSelected(null); }}>✕ Decline</button>
+                  </>
+                )}
                 {selected.status === 'confirmed' && (
                   <>
-                    <button style={s.btnGreen}  onClick={() => { updateStatus(selected.id, 'checked_in'); setSelected(null); }}>On Court</button>
-                    <button style={s.btnGhost}  onClick={() => { updateStatus(selected.id, 'no_show');    setSelected(null); }}>No Show</button>
+                    <button style={s.btnGreen} onClick={() => { updateStatus(selected.id, 'checked_in'); setSelected(null); }}>On Court</button>
+                    <button style={s.btnGhost} onClick={() => { updateStatus(selected.id, 'no_show');    setSelected(null); }}>No Show</button>
                   </>
                 )}
                 {selected.status === 'checked_in' && (
@@ -530,6 +542,7 @@ export default function StaffSchedule() {
                       <td style={s.td}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
                           {b.status === 'reschedule_requested' && <button style={s.btnViolet} onClick={() => setRescheduleTarget(b)}>↻ Review</button>}
+                          {b.status === 'pending'    && <><button style={s.btnGreen} onClick={() => updateStatus(b.id, 'confirmed')}>✓ Approve</button><button style={s.btnRed} onClick={() => updateStatus(b.id, 'cancelled')}>✕ Decline</button></>}
                           {b.status === 'confirmed'  && <><button style={s.btnGreen} onClick={() => updateStatus(b.id, 'checked_in')}>On Court</button><button style={s.btnGhost} onClick={() => updateStatus(b.id, 'no_show')}>No Show</button></>}
                           {b.status === 'checked_in' && <button style={s.btnBlue} onClick={() => updateStatus(b.id, 'completed')}>Complete</button>}
                         </div>
@@ -568,7 +581,28 @@ const s: Record<string, React.CSSProperties> = {
   legendItem:  { display: 'flex', alignItems: 'center', gap: 5 },
   legendLabel: { fontSize: 11, color: '#64748b', textTransform: 'capitalize' },
 
-  detailPanel:   { borderTop: '1px solid #e2e8f0', padding: '16px 20px', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 },
+  // Day column view
+  dayHeader:     { display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderBottom: '1px solid #f1f5f9' },
+  dayTitle:      { fontSize: 15, fontWeight: 700, color: '#0f172a' },
+  todayPill:     { fontSize: 11, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', padding: '2px 10px', borderRadius: 99 },
+  courtColumns:  { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 },
+  courtCol:      { borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' as const },
+  courtColHead:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e2e8f0' },
+  courtColName:  { fontSize: 13, fontWeight: 800, color: '#0f172a' },
+  courtColCount: { fontSize: 11, color: '#94a3b8', fontWeight: 600 },
+  courtColBody:  { display: 'flex', flexDirection: 'column' as const, gap: 10, padding: 14, flex: 1 },
+  courtColEmpty: { fontSize: 13, color: '#94a3b8', textAlign: 'center' as const, padding: '24px 0' },
+  bookingCard:   { border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', cursor: 'pointer', display: 'flex', flexDirection: 'column' as const, gap: 6 },
+  bookingCardTop:{ display: 'flex', alignItems: 'center', gap: 8 },
+  bookingAvatar: { width: 32, height: 32, borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0 },
+  bookingName:   { fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  bookingPhone:  { fontSize: 11, color: '#64748b' },
+  bookingTime:   { fontSize: 11, color: '#475569' },
+  bookingAmt:    { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#475569' },
+  paidTag:       { padding: '1px 7px', borderRadius: 99, fontSize: 10, fontWeight: 700, background: '#dcfce7', color: '#15803d' },
+  unpaidTag:     { padding: '1px 7px', borderRadius: 99, fontSize: 10, fontWeight: 700, background: '#fef3c7', color: '#b45309' },
+  playingTag:    { fontSize: 11, fontWeight: 700, color: '#15803d', background: '#dcfce7', borderRadius: 6, padding: '2px 8px', alignSelf: 'flex-start' as const },
+
   detailHeader:  { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' },
   detailName:    { fontSize: 15, fontWeight: 800, color: '#0f172a' },
   detailSub:     { fontSize: 12, color: '#64748b', marginTop: 2 },
@@ -592,6 +626,7 @@ const s: Record<string, React.CSSProperties> = {
   unpaidBadge: { display: 'inline-block', padding: '2px 9px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: '#fef3c7', color: '#b45309' },
 
   btnGreen:  { padding: '5px 12px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
+  btnRed:    { padding: '5px 12px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
   btnBlue:   { padding: '5px 12px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
   btnViolet: { padding: '5px 12px', borderRadius: 6, border: 'none', background: '#7c3aed', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
   btnGhost:  { padding: '5px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer' },

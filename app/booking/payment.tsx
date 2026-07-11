@@ -11,6 +11,8 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { addBooking, hasConflict } from '@/src/booking/bookingStore';
+import type { StaffBooking } from '@/src/staff/types';
 
 type PaymentMethod = 'card' | 'paypal' | 'apple' | 'google';
 
@@ -56,15 +58,45 @@ export default function PaymentScreen() {
       const err = validateCard();
       if (err) { setError(err); return; }
     }
+
+    // ── Layer 2: server-side conflict re-check before confirming ──
+    const endTime = params.endTime;
+    if (hasConflict(params.courtId, params.date, params.startTime, endTime)) {
+      setError(
+        '⚠️ This slot was just taken by another player. Please go back and choose a different time.',
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      // TODO: integrate payment gateway (Stripe, etc.)
+      // TODO: integrate real payment gateway (Stripe, etc.)
       await new Promise((r) => setTimeout(r, 1500));
+
+      // Register the booking in the shared store
+      const bookingId = `BKG-${Date.now().toString(36).toUpperCase()}`;
+      const newBooking: StaffBooking = {
+        id:          bookingId,
+        playerName:  'Customer',
+        playerPhone: '',
+        courtId:     params.courtId,
+        courtName:   params.courtName,
+        date:        params.date,
+        startTime:   params.startTime,
+        endTime:     endTime,
+        durationHrs: parseFloat(params.duration ?? '1'),
+        companions:  0,
+        amount:      parseFloat(params.grandTotal ?? '0'),
+        paid:        true,
+        status:      'confirmed',
+      };
+      addBooking(newBooking);
+
       router.replace({
         pathname: '/booking/confirmation',
         params: {
           ...params,
-          bookingId: `BKG-${Date.now().toString(36).toUpperCase()}`,
+          bookingId,
           paymentMethod: method,
         },
       });

@@ -21,6 +21,13 @@ interface Props {
 export default function StaffLayout({ page, onNavigate, children }: Props) {
   const { user, logout } = useStaffAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  // Update clock every second
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const initials = (user?.name ?? 'ST')
     .split(' ')
@@ -30,6 +37,9 @@ export default function StaffLayout({ page, onNavigate, children }: Props) {
     .toUpperCase();
 
   const currentNav = NAV_ITEMS.find((n) => n.id === page);
+
+  const formattedDate = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const formattedTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
     <div style={sh.root}>
@@ -107,10 +117,13 @@ export default function StaffLayout({ page, onNavigate, children }: Props) {
             <span style={sh.pageIcon}>{currentNav?.icon}</span>
             <h1 style={sh.pageTitle}>{currentNav?.label}</h1>
             <span style={sh.datePill}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {formattedDate}
             </span>
           </div>
-          <div style={sh.shiftBadge}>🟢 On Shift</div>
+          <div style={sh.topbarRight}>
+            <span style={sh.timePill}>{formattedTime}</span>
+            <div style={sh.shiftBadge}>🟢 On Shift</div>
+          </div>
         </header>
 
         <main style={sh.content} role="main">
@@ -179,9 +192,11 @@ const sh: Record<string, React.CSSProperties> = {
   main:    { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' },
   topbar:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 28px', background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 10, gap: 12 },
   topbarLeft:{ display: 'flex', alignItems: 'center', gap: 10 },
+  topbarRight: { display: 'flex', alignItems: 'center', gap: 10 },
   pageIcon:  { fontSize: 18 },
   pageTitle: { fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 },
   datePill:  { fontSize: 12, color: '#64748b', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 10px' },
+  timePill:  { fontSize: 12, fontWeight: 700, fontFamily: 'monospace', color: '#0f172a', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 10px' },
   shiftBadge:{ fontSize: 12, fontWeight: 700, color: '#15803d', background: '#dcfce7', padding: '4px 12px', borderRadius: 99 },
   content:   { flex: 1, overflowY: 'auto', padding: '24px 28px' },
 };

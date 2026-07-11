@@ -2,7 +2,8 @@ import type { BookingStatus } from '../types';
 
 const CONFIG: Record<BookingStatus, { label: string; bg: string; color: string }> = {
   confirmed:             { label: 'Confirmed',    bg: '#dbeafe', color: '#1d4ed8' },
-  checked_in:            { label: 'On Court',   bg: '#dcfce7', color: '#15803d' },
+  pending:               { label: 'Pending',      bg: '#fef3c7', color: '#b45309' },
+  checked_in:            { label: 'On Court',     bg: '#dcfce7', color: '#15803d' },
   completed:             { label: 'Completed',    bg: '#f1f5f9', color: '#475569' },
   cancelled:             { label: 'Cancelled',    bg: '#fee2e2', color: '#dc2626' },
   no_show:               { label: 'No Show',      bg: '#fee2e2', color: '#dc2626' },

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { STAFF_BOOKINGS, STAFF_COURTS } from '../data/mock';
 import type { BookingStatus, StaffBooking } from '../types';
 import { fmt12 } from '../utils/time';
 
-// ── Per-court player entry derived from a booking ────────────────────────────
 interface CourtPlayer {
   bookingId:   string;
   name:        string;
@@ -12,13 +11,12 @@ interface CourtPlayer {
   startTime:   string;
   endTime:     string;
   durationHrs: number;
-  companions:  number;   // people accompanying the booker
+  companions:  number;
   amount:      number;
   paid:        boolean;
   status:      BookingStatus;
 }
 
-// Build courtId → CourtPlayer[] (one entry per booking, not deduplicated)
 function buildCourtPlayers(): Map<string, CourtPlayer[]> {
   const map = new Map<string, CourtPlayer[]>();
   STAFF_COURTS.forEach((c) => map.set(c.id, []));
@@ -41,7 +39,6 @@ function buildCourtPlayers(): Map<string, CourtPlayer[]> {
     });
   });
 
-  // Sort each court's list by date then start time
   map.forEach((list) => list.sort((a, b) =>
     a.date !== b.date
       ? a.date.localeCompare(b.date)
@@ -55,7 +52,8 @@ const COURT_PLAYERS = buildCourtPlayers();
 
 const STATUS_STYLE: Record<BookingStatus, { bg: string; color: string; label: string }> = {
   confirmed:            { bg: '#dbeafe', color: '#1d4ed8', label: 'Confirmed'    },
-  checked_in:           { bg: '#dcfce7', color: '#15803d', label: 'On Court'    },
+  pending:              { bg: '#fef3c7', color: '#b45309', label: 'Pending'      },
+  checked_in:           { bg: '#dcfce7', color: '#15803d', label: 'On Court'     },
   completed:            { bg: '#f1f5f9', color: '#475569', label: 'Completed'    },
   cancelled:            { bg: '#fee2e2', color: '#dc2626', label: 'Cancelled'    },
   no_show:              { bg: '#fee2e2', color: '#dc2626', label: 'No Show'      },
@@ -63,9 +61,6 @@ const STATUS_STYLE: Record<BookingStatus, { bg: string; color: string; label: st
 };
 
 export default function StaffPlayers() {
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  const toggle = (id: string) => setOpen((prev) => ({ ...prev, [id]: !prev[id] }));
-
   return (
     <div style={s.page}>
       <div style={s.infoBox}>
@@ -75,82 +70,77 @@ export default function StaffPlayers() {
         </span>
       </div>
 
-      <div style={s.list}>
+      {/* 3-column grid */}
+      <div style={s.columns}>
         {STAFF_COURTS.map((court) => {
           const players = COURT_PLAYERS.get(court.id) ?? [];
-          const isOpen  = !!open[court.id];
           const totalRevenue = players.filter((p) => p.paid).reduce((sum, p) => sum + p.amount, 0);
 
           return (
-            <div key={court.id} style={s.card}>
-              {/* ── Dropdown header ── */}
-              <button style={s.header} onClick={() => toggle(court.id)} aria-expanded={isOpen}>
-                <div style={s.headerLeft}>
+            <div key={court.id} style={s.col}>
+              {/* Column header */}
+              <div style={s.colHead}>
+                <div style={s.colHeadLeft}>
                   <span style={s.courtIcon}>🏓</span>
                   <span style={s.courtName}>{court.name}</span>
                   <span style={s.typeBadge}>{court.type}</span>
                 </div>
-                <div style={s.headerRight}>
+                <div style={s.colHeadRight}>
                   <span style={s.playerCount}>{players.length} booking{players.length !== 1 ? 's' : ''}</span>
-                  <span style={s.revenue}>₱{totalRevenue.toLocaleString()} collected</span>
-                  <span style={{ ...s.chevron, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                 </div>
-              </button>
+              </div>
 
-              {/* ── Player list ── */}
-              {isOpen && (
-                <div style={s.playerList}>
-                  {players.length === 0 ? (
-                    <div style={s.empty}>No bookings for this court.</div>
-                  ) : (
-                    players.map((p) => {
-                      const st = STATUS_STYLE[p.status];
-                      return (
-                        <div key={p.bookingId} style={s.playerRow}>
-                          {/* Avatar */}
+              {/* Revenue sub-header */}
+              <div style={s.revenueRow}>
+                💰 <span style={s.revenueAmt}>₱{totalRevenue.toLocaleString()}</span> collected
+              </div>
+
+              {/* Player cards */}
+              <div style={s.colBody}>
+                {players.length === 0 ? (
+                  <div style={s.empty}>No bookings for this court.</div>
+                ) : (
+                  players.map((p) => {
+                    const st = STATUS_STYLE[p.status];
+                    return (
+                      <div key={p.bookingId} style={s.card}>
+                        {/* Top: avatar + name + status */}
+                        <div style={s.cardTop}>
                           <div style={s.avatar}>{p.name[0]}</div>
-
-                          {/* Main info */}
-                          <div style={s.playerBody}>
-                            {/* Row 1: name + status badge */}
-                            <div style={s.rowTop}>
-                              <div style={s.playerName}>{p.name}</div>
-                              <span style={{ ...s.statusBadge, background: st.bg, color: st.color }}>{st.label}</span>
-                            </div>
-
-                            {/* Row 2: phone */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={s.playerName}>{p.name}</div>
                             <div style={s.playerPhone}>📞 {p.phone}</div>
-
-                            {/* Row 3: stats chips */}
-                            <div style={s.chips}>
-                              {/* Date & time slot */}
-                              <span style={s.chip}>📅 {p.date} · {fmt12(p.startTime)}–{fmt12(p.endTime)}</span>
-                              {/* Hours booked */}
-                              <span style={s.chip}>⏱ {p.durationHrs}hr{p.durationHrs !== 1 ? 's' : ''}</span>
-                              {/* Companions */}
-                              <span style={s.chip}>
-                                👥 {p.companions === 0 ? 'Solo' : `+${p.companions} companion${p.companions > 1 ? 's' : ''}`}
-                              </span>
-                              {/* Amount + payment status */}
-                              <span style={{
-                                ...s.chip,
-                                background: p.paid ? '#dcfce7' : '#fef3c7',
-                                color:      p.paid ? '#15803d' : '#b45309',
-                                fontWeight: 700,
-                              }}>
-                                💰 ₱{p.amount.toLocaleString()} · {p.paid ? 'Paid ✓' : 'Unpaid'}
-                              </span>
-                            </div>
-
-                            {/* Row 4: booking ID */}
-                            <div style={s.bookingId}>{p.bookingId}</div>
                           </div>
+                          <span style={{ ...s.statusBadge, background: st.bg, color: st.color }}>
+                            {st.label}
+                          </span>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
+
+                        {/* Chips row */}
+                        <div style={s.chips}>
+                          <span style={s.chip}>📅 {p.date}</span>
+                          <span style={s.chip}>🕐 {fmt12(p.startTime)}–{fmt12(p.endTime)}</span>
+                          <span style={s.chip}>⏱ {p.durationHrs}hr{p.durationHrs !== 1 ? 's' : ''}</span>
+                          <span style={s.chip}>
+                            👥 {p.companions === 0 ? 'Solo' : `+${p.companions} companion${p.companions > 1 ? 's' : ''}`}
+                          </span>
+                          <span style={{
+                            ...s.chip,
+                            background: p.paid ? '#dcfce7' : '#fef3c7',
+                            color:      p.paid ? '#15803d' : '#b45309',
+                            fontWeight: 700,
+                          }}>
+                            💰 ₱{p.amount.toLocaleString()} · {p.paid ? 'Paid ✓' : 'Unpaid'}
+                          </span>
+                        </div>
+
+                        {/* Booking ID */}
+                        <div style={s.bookingId}>{p.bookingId}</div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           );
         })}
@@ -160,35 +150,36 @@ export default function StaffPlayers() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page:        { display: 'flex', flexDirection: 'column', gap: 20 },
-  infoBox:     { display: 'flex', alignItems: 'flex-start', gap: 10, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#1e40af' },
-  infoText:    { lineHeight: 1.5 },
-  list:        { display: 'flex', flexDirection: 'column', gap: 12 },
+  page:    { display: 'flex', flexDirection: 'column', gap: 20 },
+  infoBox: { display: 'flex', alignItems: 'flex-start', gap: 10, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#1e40af' },
+  infoText:{ lineHeight: 1.5 },
 
-  card:        { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' },
-  header:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' as const },
-  headerLeft:  { display: 'flex', alignItems: 'center', gap: 10 },
-  headerRight: { display: 'flex', alignItems: 'center', gap: 14 },
-  courtIcon:   { fontSize: 18 },
-  courtName:   { fontSize: 15, fontWeight: 700, color: '#0f172a' },
-  typeBadge:   { fontSize: 11, fontWeight: 700, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: 99, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
-  playerCount: { fontSize: 12, color: '#64748b', fontWeight: 600 },
-  revenue:     { fontSize: 12, color: '#15803d', fontWeight: 700, background: '#dcfce7', padding: '2px 10px', borderRadius: 99 },
-  chevron:     { fontSize: 16, color: '#94a3b8', transition: 'transform 200ms ease', display: 'inline-block' },
+  // 3-column grid
+  columns: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' },
+  col:     { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' as const },
 
-  playerList:  { borderTop: '1px solid #f1f5f9' },
-  playerRow:   { display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 20px', borderBottom: '1px solid #f8fafc' },
-  avatar:      { width: 40, height: 40, borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0, marginTop: 2 },
+  colHead:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' },
+  colHeadLeft:  { display: 'flex', alignItems: 'center', gap: 10 },
+  colHeadRight: { display: 'flex', alignItems: 'center', gap: 8 },
+  courtIcon:    { fontSize: 20 },
+  courtName:    { fontSize: 17, fontWeight: 800, color: '#0f172a' },
+  typeBadge:    { fontSize: 11, fontWeight: 700, background: '#e2e8f0', color: '#475569', padding: '3px 9px', borderRadius: 99, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
+  playerCount:  { fontSize: 13, color: '#94a3b8', fontWeight: 600 },
 
-  playerBody:  { flex: 1, display: 'flex', flexDirection: 'column', gap: 5 },
-  rowTop:      { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const },
-  playerName:  { fontSize: 14, fontWeight: 800, color: '#0f172a' },
-  statusBadge: { fontSize: 10, fontWeight: 700, padding: '2px 9px', borderRadius: 99, whiteSpace: 'nowrap' as const },
-  playerPhone: { fontSize: 12, color: '#64748b' },
+  revenueRow:  { display: 'flex', alignItems: 'center', gap: 4, padding: '10px 20px', borderBottom: '1px solid #f1f5f9', fontSize: 13, color: '#64748b', background: '#f0fdf4' },
+  revenueAmt:  { fontWeight: 800, color: '#15803d', fontSize: 14 },
 
-  chips:       { display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 2 },
-  chip:        { fontSize: 11, color: '#475569', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '3px 9px', whiteSpace: 'nowrap' as const },
+  colBody: { display: 'flex', flexDirection: 'column' as const, gap: 14, padding: 16 },
+  empty:   { fontSize: 14, color: '#94a3b8', textAlign: 'center' as const, padding: '32px 0' },
 
-  bookingId:   { fontSize: 10, fontFamily: 'monospace', color: '#94a3b8', marginTop: 2 },
-  empty:       { padding: '20px', fontSize: 13, color: '#94a3b8' },
+  card:        { border: '1px solid #e2e8f0', borderRadius: 12, padding: '16px 18px', display: 'flex', flexDirection: 'column' as const, gap: 10 },
+  cardTop:     { display: 'flex', alignItems: 'center', gap: 12 },
+  avatar:      { width: 44, height: 44, borderRadius: '50%', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 800, flexShrink: 0 },
+  playerName:  { fontSize: 15, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  playerPhone: { fontSize: 13, color: '#64748b', marginTop: 2 },
+  statusBadge: { fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99, whiteSpace: 'nowrap' as const, flexShrink: 0 },
+
+  chips:     { display: 'flex', flexWrap: 'wrap' as const, gap: 7 },
+  chip:      { fontSize: 12, color: '#475569', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 7, padding: '4px 10px', whiteSpace: 'nowrap' as const },
+  bookingId: { fontSize: 11, fontFamily: 'monospace', color: '#94a3b8', marginTop: 2 },
 };
