@@ -1,6 +1,6 @@
 import { Palette, Spacing } from '@/constants/theme';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Dimensions,
     ScrollView,
@@ -57,7 +57,8 @@ function buildSlots(courtId: string, dayKey: string) {
   }));
 }
 
-const SLOT_W = (W - Spacing.md * 4 - Spacing.sm * 4) / 3;
+const CONTAINER_W = Math.min(W, 480) - Spacing.md * 2; // capped at 480 (card inner width)
+const SLOT_W = (CONTAINER_W - Spacing.sm * 2) / 3;
 
 export function BookingCalendar() {
   const router = useRouter();
@@ -183,7 +184,7 @@ export function BookingCalendar() {
       {selSlot && (
         <TouchableOpacity
           style={cal.bookBtn}
-          onPress={() => router.push({ pathname: '/booking/date', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour } })}
+          onPress={() => router.push({ pathname: '/booking/time', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour, date: new Date().toISOString().slice(0, 10) } })}
           accessibilityRole="button"
           accessibilityLabel={`Book ${court.name} at ${selSlot} on ${dayLbl}`}
         >
@@ -195,7 +196,7 @@ export function BookingCalendar() {
 }
 
 const cal = StyleSheet.create({
-  wrap:          { marginHorizontal: Spacing.md, backgroundColor: '#fff', borderRadius: 20, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  wrap:          { marginHorizontal: Spacing.md, backgroundColor: '#fff', borderRadius: 20, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2, maxWidth: 480, alignSelf: 'center', width: '100%' },
   cardHead:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   cardTitle:     { fontSize: 18, fontWeight: '700', color: '#0F172A' },
   cardSub:       { fontSize: 12, color: '#64748B', marginTop: 2 },

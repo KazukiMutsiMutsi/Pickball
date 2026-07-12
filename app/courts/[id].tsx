@@ -2,7 +2,7 @@ import { Palette, Radius, Spacing } from '@/constants/theme';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Platform,
     ScrollView,
@@ -361,7 +361,7 @@ export default function CourtDetailsScreen() {
         </View>
         <TouchableOpacity
           style={styles.bookBtn}
-          onPress={() => router.push({ pathname: '/booking/date', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour } })}
+          onPress={() => router.push({ pathname: '/booking/time', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour, date: new Date().toISOString().slice(0, 10) } })}
           accessibilityRole="button"
           accessibilityLabel="Book this court"
         >

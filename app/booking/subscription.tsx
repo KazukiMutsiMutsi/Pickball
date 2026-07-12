@@ -1,7 +1,7 @@
 import { Palette, Spacing } from '@/constants/theme';
 import { shadowMd, shadowSm } from '@/src/utils/shadow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Dimensions,
     ScrollView,
@@ -279,7 +279,7 @@ export default function SubscriptionScreen() {
           </Text>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 24 }} />
       </ScrollView>
 
       {/* Subscribe button */}
@@ -303,11 +303,11 @@ export default function SubscriptionScreen() {
 
 const s = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: '#F8FAFC' },
-  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   backBtn: { width: 40 },
   backIcon:{ fontSize: 30, color: Palette.primary, lineHeight: 34 },
   title:   { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  body:    { padding: Spacing.md, gap: Spacing.sm },
+  body:    { padding: Spacing.md, gap: Spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 480 },
 
   // Court banner
   courtBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, gap: Spacing.md },
@@ -353,7 +353,7 @@ const s = StyleSheet.create({
 
   // Duration
   durationGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  durCard:         { width: (W - Spacing.md * 2 - Spacing.sm * 2) / 2 - 1, backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, borderWidth: 1.5, borderColor: '#E2E8F0', alignItems: 'center' },
+  durCard:         { width: (Math.min(W, 480) - Spacing.md * 2 - Spacing.sm * 2) / 2 - 1, backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, borderWidth: 1.5, borderColor: '#E2E8F0', alignItems: 'center' },
   durCardActive:   { borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
   durLabel:        { fontSize: 15, fontWeight: '700', color: '#0F172A' },
   durSessions:     { fontSize: 11, color: '#64748B', marginTop: 4 },
@@ -380,7 +380,7 @@ const s = StyleSheet.create({
   termsText:   { fontSize: 12, color: '#92400E', lineHeight: 18 },
 
   // Footer
-  footer:          { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.md, paddingVertical: Spacing.md },
+  footer:          { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, maxWidth: 480, alignSelf: 'center', width: '100%' },
   footerTotal:     { fontSize: 22, fontWeight: '900', color: '#0F172A' },
   footerLabel:     { fontSize: 12, color: '#64748B', marginTop: 2 },
   subscribeBtn:    { backgroundColor: Palette.primary, paddingHorizontal: Spacing.lg, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

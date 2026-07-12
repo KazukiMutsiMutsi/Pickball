@@ -2,7 +2,7 @@ import { Palette, Spacing } from '@/constants/theme';
 import { generateQRMatrix, makeBookingToken } from '@/src/utils/qr';
 import { shadowMd } from '@/src/utils/shadow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
     ScrollView,
     Share,
@@ -172,13 +172,13 @@ export default function QRTicketScreen() {
 
 const s = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#F8FAFC' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   backBtn:  { width: 40 },
   backIcon: { fontSize: 30, color: Palette.primary, lineHeight: 34 },
   title:    { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
   shareBtn: { width: 40, alignItems: 'flex-end' },
   shareIcon:{ fontSize: 20 },
-  body:     { padding: Spacing.md, alignItems: 'center' },
+  body:     { padding: Spacing.md, alignItems: 'center', alignSelf: 'center', width: '100%', maxWidth: 480 },
 
   // Ticket
   ticket:           { width: '100%', backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', marginBottom: Spacing.md },

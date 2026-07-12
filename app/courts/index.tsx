@@ -3,7 +3,7 @@ import { shadowSm } from '@/src/utils/shadow';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dimensions,
   Linking,
@@ -315,7 +315,7 @@ const s = StyleSheet.create({
   mapHintText:    { fontSize: 13, color: Palette.primary, fontWeight: '700' },
 
   // Location card
-  locCard:        { backgroundColor: '#fff', padding: Spacing.md, borderTopWidth: 1, borderTopColor: Palette.grey200 },
+  locCard:        { backgroundColor: '#fff', padding: Spacing.md, borderTopWidth: 1, borderTopColor: Palette.grey200, maxWidth: 480, alignSelf: 'center', width: '100%' },
   locRow:         { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, marginBottom: Spacing.md },
   locIconWrap:    { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center' },
   locName:        { fontSize: 15, fontWeight: '800', color: Palette.grey900 },

@@ -1,4 +1,6 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
+import { addBooking, hasConflict } from '@/src/booking/bookingStore';
+import type { StaffBooking } from '@/src/staff/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -6,25 +8,15 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { addBooking, hasConflict } from '@/src/booking/bookingStore';
-import type { StaffBooking } from '@/src/staff/types';
 
-type PaymentMethod = 'card' | 'paypal' | 'apple' | 'google';
+type PaymentMethod = 'gcash';
 
-function formatCardNumber(raw: string) {
-  return raw.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
-}
-
-function formatExpiry(raw: string) {
-  const digits = raw.replace(/\D/g, '').slice(0, 4);
-  if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return digits;
-}
+function formatCardNumber(raw: string) { return raw; }
+function formatExpiry(raw: string) { return raw; }
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -33,31 +25,14 @@ export default function PaymentScreen() {
     endTime: string; duration: string; grandTotal: string;
   }>();
 
-  const [method, setMethod] = useState<PaymentMethod>('card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardName, setCardName] = useState('');
+  const [method, setMethod] = useState<PaymentMethod>('gcash');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const grandTotal = parseFloat(params.grandTotal ?? '0');
 
-  const validateCard = () => {
-    const digits = cardNumber.replace(/\s/g, '');
-    if (digits.length !== 16) return 'Card number must be 16 digits.';
-    if (expiry.length !== 5) return 'Enter a valid expiry date (MM/YY).';
-    if (cvv.length < 3) return 'CVV must be 3–4 digits.';
-    if (!cardName.trim()) return 'Enter the name on the card.';
-    return null;
-  };
-
   const handlePay = async () => {
     setError('');
-    if (method === 'card') {
-      const err = validateCard();
-      if (err) { setError(err); return; }
-    }
 
     // ── Layer 2: server-side conflict re-check before confirming ──
     const endTime = params.endTime;
@@ -108,10 +83,7 @@ export default function PaymentScreen() {
   };
 
   const METHODS: { id: PaymentMethod; label: string; icon: string }[] = [
-    { id: 'card', label: 'Credit / Debit Card', icon: '💳' },
-    { id: 'paypal', label: 'PayPal', icon: '🅿️' },
-    { id: 'apple', label: 'Apple Pay', icon: '🍎' },
-    { id: 'google', label: 'Google Pay', icon: '🔵' },
+    { id: 'gcash', label: 'GCash', icon: '📱' },
   ];
 
   return (
@@ -126,15 +98,15 @@ export default function PaymentScreen() {
 
       {/* Progress */}
       <View style={styles.progress}>
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 1, 2].map((i) => (
           <React.Fragment key={i}>
             <View style={[styles.dot, styles.dotActive]} />
-            {i < 3 && <View style={[styles.line, styles.lineActive]} />}
+            {i < 2 && <View style={[styles.line, styles.lineActive]} />}
           </React.Fragment>
         ))}
       </View>
       <View style={styles.progressLabels}>
-        {['Date', 'Time', 'Summary', 'Payment'].map((s) => (
+        {['Time', 'Summary', 'Payment'].map((s) => (
           <Text key={s} style={[styles.progressLabel, styles.progressLabelActive]}>{s}</Text>
         ))}
       </View>
@@ -144,7 +116,7 @@ export default function PaymentScreen() {
         <View style={styles.orderBanner}>
           <Text style={styles.orderLabel}>Paying for</Text>
           <Text style={styles.orderCourt}>{params.courtName}</Text>
-          <Text style={styles.orderAmount}>${grandTotal.toFixed(2)}</Text>
+          <Text style={styles.orderAmount}>₱{grandTotal.toFixed(2)}</Text>
         </View>
 
         {/* Payment method selection */}
@@ -166,78 +138,12 @@ export default function PaymentScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Card form */}
-        {method === 'card' && (
-          <View style={styles.cardForm}>
-            {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-            <Text style={styles.fieldLabel}>Card Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1234 5678 9012 3456"
-              placeholderTextColor={Palette.grey400}
-              value={cardNumber}
-              onChangeText={(t) => setCardNumber(formatCardNumber(t))}
-              keyboardType="numeric"
-              maxLength={19}
-              accessibilityLabel="Card number"
-            />
-
-            <View style={styles.row2}>
-              <View style={styles.halfField}>
-                <Text style={styles.fieldLabel}>Expiry</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  placeholderTextColor={Palette.grey400}
-                  value={expiry}
-                  onChangeText={(t) => setExpiry(formatExpiry(t))}
-                  keyboardType="numeric"
-                  maxLength={5}
-                  accessibilityLabel="Expiry date"
-                />
-              </View>
-              <View style={styles.halfField}>
-                <Text style={styles.fieldLabel}>CVV</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="•••"
-                  placeholderTextColor={Palette.grey400}
-                  value={cvv}
-                  onChangeText={(t) => setCvv(t.replace(/\D/g, '').slice(0, 4))}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  secureTextEntry
-                  accessibilityLabel="CVV"
-                />
-              </View>
-            </View>
-
-            <Text style={styles.fieldLabel}>Name on Card</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Jane Smith"
-              placeholderTextColor={Palette.grey400}
-              value={cardName}
-              onChangeText={setCardName}
-              autoCapitalize="words"
-              accessibilityLabel="Name on card"
-            />
-
-            <View style={styles.secureNote}>
-              <Text style={styles.secureIcon}>🔒</Text>
-              <Text style={styles.secureText}>Your payment info is encrypted and secure.</Text>
-            </View>
-          </View>
-        )}
-
-        {method !== 'card' && (
-          <View style={styles.altMethodNote}>
-            <Text style={styles.altMethodText}>
-              You'll be redirected to complete payment via {METHODS.find(m => m.id === method)?.label}.
-            </Text>
-          </View>
-        )}
+        {/* GCash note */}
+        <View style={styles.altMethodNote}>
+          <Text style={styles.altMethodText}>
+            You'll receive a GCash payment request to complete your booking.
+          </Text>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -246,12 +152,12 @@ export default function PaymentScreen() {
           onPress={handlePay}
           disabled={loading}
           accessibilityRole="button"
-          accessibilityLabel={`Pay $${grandTotal.toFixed(2)}`}
+          accessibilityLabel={`Pay ₱${grandTotal.toFixed(2)}`}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.payBtnText}>Pay ${grandTotal.toFixed(2)}</Text>
+            <Text style={styles.payBtnText}>Pay ₱{grandTotal.toFixed(2)}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -261,21 +167,21 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Palette.grey200 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Palette.grey200, maxWidth: 480, alignSelf: 'center', width: '100%' },
   backBtn: { width: 40 },
   backIcon: { fontSize: 30, color: Palette.primary, lineHeight: 34 },
   title: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: Palette.grey900 },
 
-  progress: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.md },
+  progress: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, maxWidth: 480, alignSelf: 'center', width: '100%' },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Palette.grey300 },
   dotActive: { backgroundColor: Palette.primary },
   line: { flex: 1, height: 2, backgroundColor: Palette.grey300 },
   lineActive: { backgroundColor: Palette.primary },
-  progressLabels: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, marginBottom: Spacing.md },
+  progressLabels: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, marginBottom: Spacing.md, maxWidth: 480, alignSelf: 'center', width: '100%' },
   progressLabel: { fontSize: 11, color: Palette.grey500, flex: 1, textAlign: 'center' },
   progressLabelActive: { color: Palette.primary, fontWeight: '700' },
 
-  body: { padding: Spacing.md },
+  body: { padding: Spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },
 
   orderBanner: { backgroundColor: Palette.primary, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.md, alignItems: 'center' },
   orderLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
@@ -306,7 +212,7 @@ const styles = StyleSheet.create({
   altMethodNote: { marginTop: Spacing.md, backgroundColor: Palette.grey50, borderRadius: Radius.md, padding: Spacing.md },
   altMethodText: { fontSize: 13, color: Palette.grey700, textAlign: 'center' },
 
-  footer: { padding: Spacing.md, borderTopWidth: 1, borderTopColor: Palette.grey200 },
+  footer: { padding: Spacing.md, borderTopWidth: 1, borderTopColor: Palette.grey200, maxWidth: 480, alignSelf: 'center', width: '100%' },
   payBtn: { backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 16, alignItems: 'center' },
   payBtnDisabled: { opacity: 0.6 },
   payBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },

@@ -1,13 +1,13 @@
 import { Palette, Spacing } from '@/constants/theme';
 import { shadowMd } from '@/src/utils/shadow';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -202,19 +202,19 @@ export default function BookingsTab() {
 
 const styles = StyleSheet.create({
   safe:          { flex: 1, backgroundColor: '#F8FAFC' },
-  header:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  header:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   title:         { fontSize: 22, fontWeight: '900', color: '#0F172A' },
   headerBtns:    { flexDirection: 'row', gap: Spacing.sm },
   repeatBtn:     { backgroundColor: Palette.primaryLight, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 100 },
   repeatBtnText: { color: Palette.primary, fontWeight: '700', fontSize: 13 },
   newBtn:        { backgroundColor: Palette.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100 },
   newBtnText:    { color: '#fff', fontWeight: '700', fontSize: 13 },
-  tabRow:        { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  tabRow:        { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   tabBtn:        { flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabBtnActive:  { borderBottomColor: Palette.primary },
   tabText:       { fontSize: 12, color: '#64748B', fontWeight: '500' },
   tabTextActive: { color: Palette.primary, fontWeight: '700' },
-  list:          { padding: Spacing.md, gap: 12, paddingBottom: 32 },
+  list:          { padding: Spacing.md, gap: 12, paddingBottom: 32, alignSelf: 'center', width: '100%', maxWidth: 480 },
   empty:         { alignItems: 'center', paddingTop: 60, paddingHorizontal: Spacing.lg },
   emptyEmoji:    { fontSize: 52 },
   emptyTitle:    { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: Spacing.md },

@@ -23,7 +23,6 @@ export default function RootLayout() {
         {/* Booking flow */}
         <Stack.Screen name="courts/index" />
         <Stack.Screen name="courts/[id]" />
-        <Stack.Screen name="booking/date" />
         <Stack.Screen name="booking/time" />
         <Stack.Screen name="booking/summary" />
         <Stack.Screen name="booking/payment" />

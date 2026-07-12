@@ -1,7 +1,7 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { shadowMd, shadowSm } from '@/src/utils/shadow';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -27,10 +27,7 @@ const HISTORY = [
 ];
 
 const METHODS = [
-  { id: 'gcash',  label: 'GCash',         icon: '📱', color: '#007BFF' },
-  { id: 'maya',   label: 'Maya',          icon: '💚', color: '#00B4A0' },
-  { id: 'card',   label: 'Credit / Debit Card', icon: '💳', color: '#6C63FF' },
-  { id: 'paypal', label: 'PayPal',        icon: '🅿️', color: '#003087' },
+  { id: 'gcash', label: 'GCash', icon: '📱', color: '#007BFF' },
 ];
 
 // ─── Google-Pay-style card input ──────────────────────────────────────────────
@@ -244,10 +241,10 @@ export default function PaymentsTab() {
 
 const styles = StyleSheet.create({
   safe:              { flex: 1, backgroundColor: '#F8FAFC' },
-  header:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  header:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   title:             { fontSize: 22, fontWeight: '900', color: '#0F172A' },
 
-  summaryCard:       { margin: Spacing.md, backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
+  summaryCard:       { marginHorizontal: Spacing.md, marginVertical: Spacing.md, backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4, maxWidth: 480 - Spacing.md * 2, alignSelf: 'center', width: `calc(100% - ${Spacing.md * 2}px)` as any },
   summaryRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   summaryLabel:      { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   summaryAmount:     { fontSize: 32, fontWeight: '900', color: '#fff', marginTop: 4 },
@@ -255,13 +252,13 @@ const styles = StyleSheet.create({
   payAllBtn:         { backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   payAllBtnText:     { color: Palette.primary, fontWeight: '800', fontSize: 15 },
 
-  tabRow:            { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  tabRow:            { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   tabBtn:            { flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabBtnActive:      { borderBottomColor: Palette.primary },
   tabText:           { fontSize: 13, color: '#64748B', fontWeight: '500' },
   tabTextActive:     { color: Palette.primary, fontWeight: '700' },
 
-  section:           { padding: Spacing.md, gap: Spacing.sm },
+  section:           { padding: Spacing.md, gap: Spacing.sm, maxWidth: 480, alignSelf: 'center', width: '100%' },
   sectionTitle:      { fontSize: 15, fontWeight: '800', color: '#0F172A', marginTop: Spacing.sm, marginBottom: Spacing.xs },
 
   pendingCard:       { backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, borderLeftWidth: 3, borderLeftColor: '#F59E0B', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },

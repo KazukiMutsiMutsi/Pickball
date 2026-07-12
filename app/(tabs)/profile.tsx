@@ -1,7 +1,6 @@
 import { Palette, Spacing } from '@/constants/theme';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import React from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -93,7 +92,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F8FAFC' },
 
   // Hero
-  hero:           { alignItems: 'center', paddingBottom: Spacing.lg, backgroundColor: '#fff', marginBottom: Spacing.sm, overflow: 'hidden' },
+  hero:           { alignItems: 'center', paddingBottom: Spacing.lg, backgroundColor: '#fff', marginBottom: Spacing.sm, overflow: 'hidden', maxWidth: 480, alignSelf: 'center', width: '100%' },
   heroBg:         { position: 'absolute', top: 0, left: 0, right: 0, height: 120, backgroundColor: Palette.primary },
   avatarWrap:     { marginTop: Spacing.xl, position: 'relative' },
   avatar:         { width: 96, height: 96, borderRadius: 48, backgroundColor: Palette.primaryDark, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' },
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
   editProfileText:{ color: Palette.primary, fontWeight: '700', fontSize: 13 },
 
   // Menu
-  menuCard:      { backgroundColor: '#fff', borderRadius: 14, marginHorizontal: Spacing.md, overflow: 'hidden', marginBottom: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  menuCard:      { backgroundColor: '#fff', borderRadius: 14, marginHorizontal: Spacing.md, overflow: 'hidden', marginBottom: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2, maxWidth: 480 - Spacing.md * 2, alignSelf: 'center', width: `calc(100% - ${Spacing.md * 2}px)` as any },
   menuRow:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, height: 56 },
   menuRowBorder: { borderTopWidth: 1, borderTopColor: '#E2E8F0' },
   menuIcon:      { fontSize: 18, width: 28 },
@@ -119,6 +118,6 @@ const styles = StyleSheet.create({
   menuChevron:   { fontSize: 20, color: '#64748B' },
 
   // Logout
-  logoutBtn:  { marginHorizontal: Spacing.md, marginBottom: Spacing.sm, borderWidth: 1.5, borderColor: '#EF4444', borderRadius: 12, height: 50, alignItems: 'center', justifyContent: 'center' },
+  logoutBtn:  { marginHorizontal: Spacing.md, marginBottom: Spacing.sm, borderWidth: 1.5, borderColor: '#EF4444', borderRadius: 12, height: 50, alignItems: 'center', justifyContent: 'center', maxWidth: 480 - Spacing.md * 2, alignSelf: 'center', width: `calc(100% - ${Spacing.md * 2}px)` as any },
   logoutText: { color: '#EF4444', fontSize: 15, fontWeight: '700' },
 });
