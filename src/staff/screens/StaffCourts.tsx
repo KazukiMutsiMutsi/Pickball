@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
+import { getAllBookings, getAllCourts, updateCourt } from '@/src/booking/bookingStore';
+import { TODAY } from '../data/mock';
 import type { StaffCourt } from '../types';
 
 type CloseReason = 'Court Maintenance' ;
@@ -101,30 +102,29 @@ const m: Record<string, React.CSSProperties> = {
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function StaffCourts() {
-  const [courts,       setCourts]       = useState<CourtState[]>(STAFF_COURTS);
-  const [pendingClose, setPendingClose] = useState<string | null>(null); // courtId awaiting reason
+  const [courts,       setCourts]       = useState<CourtState[]>(getAllCourts());
+  const [pendingClose, setPendingClose] = useState<string | null>(null);
 
   const handleToggle = (id: string, currentlyActive: boolean) => {
     if (currentlyActive) {
-      // Turning OFF → ask for reason first
       setPendingClose(id);
     } else {
-      // Turning ON → open immediately, clear reason
-      setCourts((prev) => prev.map((c) => c.id === id ? { ...c, active: true, closeReason: undefined } : c));
+      updateCourt(id, { active: true });
+      setCourts(getAllCourts());
     }
   };
 
   const handleCloseConfirm = (reason: CloseReason) => {
     if (!pendingClose) return;
-    setCourts((prev) => prev.map((c) => c.id === pendingClose ? { ...c, active: false, closeReason: reason } : c));
+    updateCourt(pendingClose, { active: false });
+    setCourts(getAllCourts());
     setPendingClose(null);
   };
 
   const totalActive   = courts.filter((c) => c.active).length;
   const totalInactive = courts.filter((c) => !c.active).length;
-  const totalBookings = STAFF_BOOKINGS.filter((b) => b.date === TODAY && b.status !== 'cancelled').length;
+  const totalBookings = getAllBookings().filter((b) => b.date === TODAY && b.status !== 'cancelled').length;
 
-  // Current time for "now playing" check
   const now    = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const toMin  = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -151,12 +151,11 @@ export default function StaffCourts() {
         {courts.map((court) => {
           const tc = TYPE_COLOR[court.type] ?? { bg: '#f1f5f9', color: '#475569' };
 
-          const todayBookings = STAFF_BOOKINGS.filter(
+          const todayBookings = getAllBookings().filter(
             (b) => b.courtId === court.id && b.date === TODAY && b.status !== 'cancelled',
           );
 
-          // Players currently on court right now
-          const nowPlaying = STAFF_BOOKINGS.filter(
+          const nowPlaying = getAllBookings().filter(
             (b) =>
               b.courtId === court.id &&
               b.date    === TODAY &&

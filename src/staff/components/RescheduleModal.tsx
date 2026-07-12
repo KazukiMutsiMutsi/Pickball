@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { STAFF_COURTS } from '../data/mock';
+import { getAllCourts } from '@/src/booking/bookingStore';
 import type { StaffBooking } from '../types';
 
 interface Props {
@@ -24,7 +24,7 @@ export default function RescheduleModal({ booking, onConfirm, onDecline, onClose
   const [courtId,   setCourtId]   = useState(booking.courtId);
   const [error,     setError]     = useState('');
 
-  const selectedCourt = STAFF_COURTS.find((c) => c.id === courtId);
+  const selectedCourt = getAllCourts().find((c) => c.id === courtId);
 
   const calcDuration = (start: string, end: string): number => {
     const [sh, sm] = start.split(':').map(Number);
@@ -167,7 +167,7 @@ export default function RescheduleModal({ booking, onConfirm, onDecline, onClose
               onChange={(e) => { setCourtId(e.target.value); setError(''); }}
               style={s.select}
             >
-              {STAFF_COURTS.filter((c) => c.active).map((c) => (
+              {getAllCourts().filter((c) => c.active).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} — ₱{c.pricePerHour}/hr ({c.type})
                 </option>

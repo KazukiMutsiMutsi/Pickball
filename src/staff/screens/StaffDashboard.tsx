@@ -1,6 +1,7 @@
 import React from 'react';
 import StatusBadge from '../components/StatusBadge';
-import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
+import { getAllBookings, getAllCourts } from '@/src/booking/bookingStore';
+import { TODAY } from '../data/mock';
 import { fmt12 } from '../utils/time';
 
 const IMG_LEFT  = '/qwerty.jpg';
@@ -14,6 +15,8 @@ function getTimeOfDay() {
 }
 
 export default function StaffDashboard() {
+  const STAFF_BOOKINGS = getAllBookings();
+  const STAFF_COURTS   = getAllCourts();
   const todayBookings = STAFF_BOOKINGS.filter((b) => b.date === TODAY);
   const total         = todayBookings.length;
   const checkedIn     = todayBookings.filter((b) => b.status === 'checked_in').length;
