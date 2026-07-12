@@ -82,11 +82,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login({ email, password });
-      if (email.toLowerCase().startsWith('admin')) {
-        router.replace('/(admin)');
-      } else {
-        router.replace('/(tabs)');
-      }
+      router.replace('/(tabs)');
     } catch (e: any) {
       setError(e.message ?? 'Incorrect email or password. Please try again.');
       shake();
