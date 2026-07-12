@@ -1,5 +1,5 @@
 import React from 'react';
-import { STAFF_BOOKINGS, STAFF_COURTS } from '../data/mock';
+import { getAllBookings, getAllCourts } from '@/src/booking/bookingStore';
 import type { BookingStatus, StaffBooking } from '../types';
 import { fmt12 } from '../utils/time';
 
@@ -19,9 +19,9 @@ interface CourtPlayer {
 
 function buildCourtPlayers(): Map<string, CourtPlayer[]> {
   const map = new Map<string, CourtPlayer[]>();
-  STAFF_COURTS.forEach((c) => map.set(c.id, []));
+  getAllCourts().forEach((c) => map.set(c.id, []));
 
-  STAFF_BOOKINGS.forEach((b: StaffBooking) => {
+  getAllBookings().forEach((b: StaffBooking) => {
     const list = map.get(b.courtId);
     if (!list) return;
     list.push({
@@ -72,7 +72,7 @@ export default function StaffPlayers() {
 
       {/* 3-column grid */}
       <div style={s.columns}>
-        {STAFF_COURTS.map((court) => {
+        {getAllCourts().map((court) => {
           const players = COURT_PLAYERS.get(court.id) ?? [];
           const totalRevenue = players.filter((p) => p.paid).reduce((sum, p) => sum + p.amount, 0);
 

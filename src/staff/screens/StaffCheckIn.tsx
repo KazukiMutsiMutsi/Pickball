@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import RescheduleModal from '../components/RescheduleModal';
 import StatusBadge from '../components/StatusBadge';
-import { STAFF_BOOKINGS, TODAY } from '../data/mock';
+import { getAllBookings, updateBooking } from '@/src/booking/bookingStore';
+import { TODAY } from '../data/mock';
 import type { BookingStatus, StaffBooking } from '../types';
 import { fmt12 } from '../utils/time';
 
 export default function StaffCheckIn() {
-  const [bookings,         setBookings]         = useState<StaffBooking[]>(STAFF_BOOKINGS);
+  const [bookings,         setBookings]         = useState<StaffBooking[]>(getAllBookings());
   const [search,           setSearch]           = useState('');
   const [rescheduleTarget, setRescheduleTarget] = useState<StaffBooking | null>(null);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
-  const updateStatus = (id: string, status: BookingStatus) =>
-    setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
+  const updateStatus = (id: string, status: BookingStatus) => {
+    updateBooking(id, { status });
+    setBookings(getAllBookings());
+  };
 
   // Accept customer reschedule request → open reschedule modal
   const handleAcceptReschedule = (booking: StaffBooking) =>
@@ -27,17 +30,15 @@ export default function StaffCheckIn() {
     updated: Pick<StaffBooking, 'date'|'startTime'|'endTime'|'durationHrs'|'courtId'|'courtName'>,
   ) => {
     if (!rescheduleTarget) return;
-    setBookings((prev) => prev.map((b) =>
-      b.id === rescheduleTarget.id
-        ? { ...b, ...updated, status: 'confirmed', rescheduleNote: undefined }
-        : b,
-    ));
+    updateBooking(rescheduleTarget.id, { ...updated, status: 'confirmed', rescheduleNote: undefined });
+    setBookings(getAllBookings());
     setRescheduleTarget(null);
   };
 
   const handleRescheduleModalDecline = () => {
     if (!rescheduleTarget) return;
-    updateStatus(rescheduleTarget.id, 'confirmed');
+    updateBooking(rescheduleTarget.id, { status: 'confirmed' });
+    setBookings(getAllBookings());
     setRescheduleTarget(null);
   };
 

@@ -1,31 +1,59 @@
 /**
- * bookingStore.ts
+ * bookingStore.ts — Single source of truth for all bookings.
  *
- * Single source of truth for all bookings in the app.
- * In production this would call an API. For now it wraps
- * the staff mock data so both the customer and staff sides
- * share the same in-memory list.
+ * All three portals (Customer, Staff, Admin) read and write through
+ * this module. In production this would be replaced by API calls.
+ *
+ * Shared data flow:
+ *   Customer books  → addBooking()      → visible in Staff + Admin
+ *   Staff approves  → updateBooking()   → visible in Admin
+ *   Admin cancels   → updateBooking()   → visible in Staff + Customer history
  */
 
-import { STAFF_BOOKINGS } from '../staff/data/mock';
-import type { StaffBooking } from '../staff/types';
+import { STAFF_BOOKINGS, STAFF_COURTS } from '../staff/data/mock';
+import type { StaffBooking, StaffCourt } from '../staff/types';
 
-// In-memory store — starts from mock data
+// ── In-memory stores ──────────────────────────────────────────────────────────
 let bookings: StaffBooking[] = [...STAFF_BOOKINGS];
+let courts:   StaffCourt[]   = [...STAFF_COURTS];
 
-/** Return all non-cancelled bookings for a given court + date */
+// ── Bookings ──────────────────────────────────────────────────────────────────
+
+/** Get all bookings */
+export function getAllBookings(): StaffBooking[] {
+  return bookings;
+}
+
+/** Get bookings for a specific court + date */
 export function getBookingsForSlot(courtId: string, date: string): StaffBooking[] {
   return bookings.filter(
     (b) =>
       b.courtId === courtId &&
-      b.date === date &&
-      b.status !== 'cancelled' &&
-      b.status !== 'no_show',
+      b.date    === date    &&
+      b.status  !== 'cancelled' &&
+      b.status  !== 'no_show',
   );
 }
 
+/** Add a new booking (customer checkout) */
+export function addBooking(booking: StaffBooking): void {
+  bookings = [booking, ...bookings];
+}
+
+/** Update a booking's fields (staff/admin actions) */
+export function updateBooking(id: string, changes: Partial<StaffBooking>): void {
+  bookings = bookings.map((b) => (b.id === id ? { ...b, ...changes } : b));
+}
+
+/** Remove a booking by ID (admin hard-delete) */
+export function deleteBooking(id: string): void {
+  bookings = bookings.filter((b) => b.id !== id);
+}
+
+// ── Conflict detection ────────────────────────────────────────────────────────
+
 /**
- * Check if a requested slot overlaps any existing confirmed booking.
+ * Returns true if the requested slot overlaps an existing active booking.
  * Overlap rule: newStart < existingEnd AND newEnd > existingStart
  */
 export function hasConflict(
@@ -44,19 +72,19 @@ export function hasConflict(
 
   return bookings.some(
     (b) =>
-      b.id       !== excludeId &&
-      b.courtId  === courtId &&
-      b.date     === date &&
-      b.status   !== 'cancelled' &&
-      b.status   !== 'no_show' &&
-      newStart    <  toMin(b.endTime) &&
-      newEnd      >  toMin(b.startTime),
+      b.id      !== excludeId &&
+      b.courtId === courtId  &&
+      b.date    === date     &&
+      b.status  !== 'cancelled' &&
+      b.status  !== 'no_show'   &&
+      newStart   <  toMin(b.endTime) &&
+      newEnd     >  toMin(b.startTime),
   );
 }
 
 /**
- * Returns the set of start times that are UNAVAILABLE for a given
- * court, date, and chosen duration (whole hours).
+ * Returns the set of start times unavailable for a given court/date/duration.
+ * Used to grey out slots on the customer time picker.
  */
 export function getUnavailableSlots(
   courtId: string,
@@ -76,12 +104,14 @@ export function getUnavailableSlots(
   return unavailable;
 }
 
-/** Add a new booking (called after successful payment) */
-export function addBooking(booking: StaffBooking): void {
-  bookings = [booking, ...bookings];
+// ── Courts ────────────────────────────────────────────────────────────────────
+
+/** Get all courts */
+export function getAllCourts(): StaffCourt[] {
+  return courts;
 }
 
-/** Get all bookings (for staff portal) */
-export function getAllBookings(): StaffBooking[] {
-  return bookings;
+/** Update a court's fields (admin edit / staff close) */
+export function updateCourt(id: string, changes: Partial<StaffCourt>): void {
+  courts = courts.map((c) => (c.id === id ? { ...c, ...changes } : c));
 }
