@@ -191,6 +191,21 @@ export function BookingCalendar() {
           <Text style={cal.bookBtnText}>📅  Book {court.name}  ·  {selSlot}  ·  {dayLbl}</Text>
         </TouchableOpacity>
       )}
+
+      {/* Advanced Booking button */}
+      <TouchableOpacity
+        style={cal.advanceBtn}
+        onPress={() => router.push({ pathname: '/booking/advance', params: { courtId: court.id, courtName: court.name, price: String(court.pricePerHour) } })}
+        accessibilityRole="button"
+        accessibilityLabel="Advanced booking — pick any date"
+      >
+        <Text style={cal.advanceBtnIcon}>🗓️</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={cal.advanceBtnText}>Advanced Booking</Text>
+          <Text style={cal.advanceBtnSub}>Pick a date up to 30 days ahead</Text>
+        </View>
+        <Text style={cal.advanceBtnArrow}>›</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -230,4 +245,9 @@ const cal = StyleSheet.create({
   slotLbl:       { fontSize: 10, fontWeight: '700' },
   bookBtn:       { marginTop: Spacing.md, backgroundColor: Palette.primary, borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center' },
   bookBtnText:   { color: '#fff', fontSize: 13, fontWeight: '800' },
+  advanceBtn:    { marginTop: Spacing.sm, flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.primaryLight, borderRadius: 12, padding: Spacing.md, gap: Spacing.sm, borderWidth: 1.5, borderColor: Palette.primary },
+  advanceBtnIcon:{ fontSize: 22 },
+  advanceBtnText:{ fontSize: 14, fontWeight: '700', color: Palette.primary },
+  advanceBtnSub: { fontSize: 11, color: Palette.grey600, marginTop: 2 },
+  advanceBtnArrow:{ fontSize: 22, color: Palette.primary },
 });

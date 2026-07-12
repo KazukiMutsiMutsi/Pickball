@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="courts/index" />
         <Stack.Screen name="courts/[id]" />
         <Stack.Screen name="booking/time" />
+        <Stack.Screen name="booking/advance" />
         <Stack.Screen name="booking/summary" />
         <Stack.Screen name="booking/payment" />
         <Stack.Screen name="booking/confirmation" />

@@ -1,10 +1,11 @@
 import { formatPHP, Layout, Palette, Spacing } from '@/constants/theme';
+import { getAllBookings } from '@/src/booking/bookingStore';
 import { BookingCalendar } from '@/src/components/BookingCalendar';
 import { useAuth } from '@/src/hooks/useAuth';
 import { shadow, shadowSm } from '@/src/utils/shadow';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
     Dimensions,
     ScrollView,
@@ -23,13 +24,6 @@ const QUICK_ACTIONS = [
   { icon: '📋', label: 'My Bookings', color: '#FFF3E0', accent: '#F39C12', route: '/(tabs)/bookings'  },
   { icon: '💳', label: 'Pay Online',  color: '#F3E5F5', accent: '#8E44AD', route: '/(tabs)/payments'  },
   { icon: '🔔', label: 'Alerts',      color: '#FCE4EC', accent: '#E91E63', route: '/notifications'    },
-];
-
-// ─── Upcoming bookings ────────────────────────────────────────────────────────
-const UPCOMING = [
-  { id: '1', court: 'Court 1', date: 'Today',    time: '6:00 PM', status: 'confirmed', amount: 420 },
-  { id: '2', court: 'Court 2', date: 'Tomorrow', time: '9:00 AM', status: 'confirmed', amount: 315 },
-  { id: '3', court: 'Court 3', date: 'Jul 15',   time: '7:00 PM', status: 'pending',   amount: 378 },
 ];
 
 
@@ -61,21 +55,25 @@ const sh = StyleSheet.create({
 });
 
 // ─── Upcoming booking card ────────────────────────────────────────────────────
-function BookingCard({ item, onPress }: { item: typeof UPCOMING[0]; onPress: () => void }) {
-  const c = item.status === 'pending' ? Palette.warning : Palette.success;
+function BookingCard({ item, onPress }: { item: { id: string; courtName: string; date: string; startTime: string; amount: number; status: string }; onPress: () => void }) {
+  const c = item.status === 'confirmed' ? Palette.success : Palette.warning;
+  const to12h = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  };
   return (
-    <TouchableOpacity style={[bk.card, shadowSm]} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.court}>
+    <TouchableOpacity style={[bk.card, shadowSm]} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.courtName}>
       <View style={[bk.accent, { backgroundColor: c }]} />
       <View style={bk.body}>
         <View style={bk.row}>
-          <Text style={bk.court} numberOfLines={1}>{item.court}</Text>
+          <Text style={bk.court} numberOfLines={1}>{item.courtName}</Text>
           <View style={[bk.badge, { backgroundColor: c + '22' }]}>
             <Text style={[bk.badgeText, { color: c }]}>
               {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
             </Text>
           </View>
         </View>
-        <Text style={bk.meta}>📅 {item.date} · 🕐 {item.time}</Text>
+        <Text style={bk.meta}>📅 {item.date} · 🕐 {to12h(item.startTime)}</Text>
         <Text style={bk.amount}>{formatPHP(item.amount)}</Text>
       </View>
       <Text style={bk.chevron}>›</Text>
@@ -100,6 +98,21 @@ export default function HomeScreen() {
   const router    = useRouter();
   const { user }  = useAuth();
   const firstName = user?.name?.split(' ')[0] ?? 'Player';
+
+  // Load upcoming bookings from the shared store — refresh on every focus
+  const [upcoming, setUpcoming] = useState<ReturnType<typeof getAllBookings>>([]);
+  const [calOpen,  setCalOpen]  = useState(false); // calendar collapsed by default
+
+  useFocusEffect(
+    useCallback(() => {
+      const today = new Date().toISOString().slice(0, 10);
+      const live = getAllBookings()
+        .filter(b => b.status !== 'cancelled' && b.status !== 'no_show' && b.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
+        .slice(0, 3); // show max 3 on home
+      setUpcoming(live);
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -144,9 +157,36 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Booking Calendar */}
-        <SH title="Book a Slot" onSeeAll={() => router.push('/availability')} />
-        <BookingCalendar />
+        {/* Upcoming Bookings */}
+        {upcoming.length > 0 && (
+          <>
+            <SH title="Upcoming Bookings" onSeeAll={() => router.push('/(tabs)/bookings')} />
+            {upcoming.map(item => (
+              <BookingCard
+                key={item.id}
+                item={item}
+                onPress={() => router.push('/(tabs)/bookings')}
+              />
+            ))}
+          </>
+        )}
+
+        {/* Book a Slot — collapsible */}
+        <TouchableOpacity
+          style={styles.calHeader}
+          onPress={() => setCalOpen(v => !v)}
+          accessibilityRole="button"
+          accessibilityLabel={calOpen ? 'Collapse Book a Slot' : 'Expand Book a Slot'}
+        >
+          <Text style={sh.title}>Book a Slot</Text>
+          <View style={styles.calHeaderRight}>
+            <TouchableOpacity onPress={() => router.push('/availability')} accessibilityLabel="See all slots">
+              <Text style={sh.link}>See all →</Text>
+            </TouchableOpacity>
+            <Text style={styles.calChevron}>{calOpen ? '▲' : '▼'}</Text>
+          </View>
+        </TouchableOpacity>
+        {calOpen && <BookingCalendar />}
 
         <View style={{ height: Spacing.xxl }} />
         </View>{/* pageWrap */}
@@ -175,6 +215,9 @@ const styles = StyleSheet.create({
   heroSub:      { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
   heroLogoWrap: { width: 64, height: 64, borderRadius: 32, overflow: 'hidden', borderWidth: 2, borderColor: '#FFD700' },
   heroLogo:     { width: 64, height: 64 },
+  calHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, marginBottom: Spacing.sm, marginTop: Spacing.lg },
+  calHeaderRight:{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  calChevron:   { fontSize: 12, color: Palette.grey500, marginLeft: 4 },
   actionsGrid:  { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: Spacing.md, gap: Spacing.sm },
   actionBtn:    { width: (W - Spacing.md * 2 - Spacing.sm * 2) / 4, borderRadius: 12, paddingVertical: Spacing.md, paddingHorizontal: 4, alignItems: 'center', gap: 6 },
   actionIcon:   { fontSize: 22 },
