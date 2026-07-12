@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import RescheduleModal from '../components/RescheduleModal';
 import StatusBadge from '../components/StatusBadge';
-import { STAFF_BOOKINGS, STAFF_COURTS, TODAY } from '../data/mock';
+import { getAllBookings, getAllCourts, updateBooking } from '@/src/booking/bookingStore';
+import { TODAY } from '../data/mock';
 import type { BookingStatus, StaffBooking } from '../types';
 import { fmt12 } from '../utils/time';
 
@@ -261,7 +262,7 @@ const mg: Record<string, React.CSSProperties> = {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 export default function StaffSchedule() {
-  const [bookings,         setBookings]         = useState<StaffBooking[]>(STAFF_BOOKINGS);
+  const [bookings,         setBookings]         = useState<StaffBooking[]>(getAllBookings());
   const [view,             setView]             = useState<ViewMode>('month');
   const [selectedDate,     setSelectedDate]     = useState<string>(TODAY);
   const [filterCourt,      setFilterCourt]      = useState('all');
@@ -270,6 +271,8 @@ export default function StaffSchedule() {
   const [rescheduleTarget, setRescheduleTarget] = useState<StaffBooking | null>(null);
   const [now,              setNow]              = useState(new Date());
   const calRef = useRef<HTMLDivElement>(null);
+
+  const STAFF_COURTS = getAllCourts();
 
   // Real-time clock — ticks every minute
   useEffect(() => {
@@ -286,21 +289,23 @@ export default function StaffSchedule() {
   }, [view]);
 
   // ── Status updater ────────────────────────────────────────────────────────
-  const updateStatus = (id: string, status: BookingStatus) =>
-    setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
+  const updateStatus = (id: string, status: BookingStatus) => {
+    updateBooking(id, { status });
+    setBookings(getAllBookings());
+  };
 
   // ── Reschedule confirm (customer-requested) ───────────────────────────────
   const handleRescheduleConfirm = (updated: Pick<StaffBooking,'date'|'startTime'|'endTime'|'durationHrs'|'courtId'|'courtName'>) => {
     if (!rescheduleTarget) return;
-    setBookings((prev) => prev.map((b) =>
-      b.id === rescheduleTarget.id ? { ...b, ...updated, status: 'confirmed', rescheduleNote: undefined } : b,
-    ));
+    updateBooking(rescheduleTarget.id, { ...updated, status: 'confirmed', rescheduleNote: undefined });
+    setBookings(getAllBookings());
     setRescheduleTarget(null);
   };
 
   const handleRescheduleDecline = () => {
     if (!rescheduleTarget) return;
-    updateStatus(rescheduleTarget.id, 'confirmed');
+    updateBooking(rescheduleTarget.id, { status: 'confirmed' });
+    setBookings(getAllBookings());
     setRescheduleTarget(null);
   };
 
