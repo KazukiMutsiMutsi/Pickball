@@ -3,7 +3,7 @@ import { useAuth } from '@/src/hooks/useAuth';
 import { shadow } from '@/src/utils/shadow';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -82,7 +82,11 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login({ email, password });
-      router.replace('/(tabs)');
+      if (email.toLowerCase().startsWith('admin')) {
+        router.replace('/(admin)');
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (e: any) {
       setError(e.message ?? 'Incorrect email or password. Please try again.');
       shake();
