@@ -17,9 +17,6 @@ export default function RootLayout() {
         {/* User dashboard (tab bar) */}
         <Stack.Screen name="(tabs)" />
 
-        {/* Admin dashboard (tab bar) */}
-        <Stack.Screen name="(admin)" />
-
         {/* Booking flow */}
         <Stack.Screen name="courts/index" />
         <Stack.Screen name="courts/[id]" />
@@ -34,7 +31,6 @@ export default function RootLayout() {
 
         {/* Standalone */}
         <Stack.Screen name="availability" />
-        <Stack.Screen name="(admin)/scanner" />
         <Stack.Screen name="profile-edit" />
         <Stack.Screen name="notification-settings" />
         <Stack.Screen name="help-support" />
