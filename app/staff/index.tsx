@@ -7,7 +7,7 @@
  * Run with:  npx expo start --web
  */
 
-import StaffApp from '@/src/staff/StaffApp';
+import StaffApp from './StaffApp';
 import { Redirect } from 'expo-router';
 import { Platform } from 'react-native';
 
