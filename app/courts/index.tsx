@@ -5,14 +5,14 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
-  Dimensions,
-  Linking,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Linking,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -142,7 +142,7 @@ export default function CourtsScreen() {
 
       {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Go back">
+        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={s.backBtn} accessibilityLabel="Go home">
           <Text style={s.backIcon}>‹</Text>
         </TouchableOpacity>
         <Text style={s.title}>Court Location</Text>
@@ -158,7 +158,7 @@ export default function CourtsScreen() {
 
       {/* ── MAP VIEW ── */}
       {mapView && (
-        <View style={s.mapWrap}>
+        <ScrollView style={s.mapWrap} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
           {Platform.OS === 'web' ? (
             <View style={s.mapFrame}>
               {/* @ts-ignore — iframe works in React Native Web */}
@@ -217,18 +217,8 @@ export default function CourtsScreen() {
                 <Text style={s.locBtnTextDark}>Street View</Text>
               </TouchableOpacity>
             </View>
-
-            {/* View court button */}
-            <TouchableOpacity
-              style={s.viewCourtBtn}
-              onPress={() => router.push(`/courts/${COURT.id}` as any)}
-              accessibilityRole="button"
-              accessibilityLabel="View court details"
-            >
-              <Text style={s.viewCourtBtnText}>📋 View Court Details & Book Now →</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       )}
 
       {/* ── INFO VIEW ── */}
@@ -330,6 +320,7 @@ const s = StyleSheet.create({
   locBtnTextDark: { color: Palette.grey800, fontSize: 12, fontWeight: '600' },
   viewCourtBtn:   { backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center' },
   viewCourtBtnText:{ color: '#fff', fontSize: 14, fontWeight: '800' },
+  calendarWrap:   { paddingVertical: Spacing.md },
 
   // Info view
   infoScroll:     { padding: Spacing.md, paddingBottom: 40 },

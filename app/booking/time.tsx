@@ -3,6 +3,7 @@ import { getBookingsForSlot } from '@/src/booking/bookingStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInUp, Layout, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Every hour from 6 AM to midnight
@@ -164,14 +165,18 @@ export default function SelectTimeScreen() {
           <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: Palette.primaryLight }]} /><Text style={s.legendText}>Range</Text></View>
         </View>
 
-        {/* Instruction */}
-        <Text style={s.instruction}>
+        {/* Instruction — animates when startSlot changes */}
+        <Animated.Text
+          key={startSlot ?? 'none'}
+          entering={FadeInDown.duration(250).springify()}
+          style={s.instruction}
+        >
           {!startSlot
             ? '👆 Tap a slot to set your start time'
             : !endSlot
             ? '👆 Now tap a later slot to set your end time'
             : `✅ ${to12h(startSlot)} → ${to12h(endSlot)}`}
-        </Text>
+        </Animated.Text>
 
         {/* Slot list */}
         <View style={s.slotList}>
@@ -184,20 +189,23 @@ export default function SelectTimeScreen() {
             const isLast    = idx === ALL_SLOTS.length - 1;
 
             return (
-              <TouchableOpacity
+              <Animated.View
                 key={t}
-                style={[
-                  s.slot,
-                  isFirst && s.slotFirst,
-                  isLast  && s.slotLast,
-                  st === 'free'     && s.slotFree,
-                  st === 'booked'   && s.slotBooked,
-                  st === 'past'     && s.slotPast,
-                  isStart           && s.slotStart,
-                  isEnd             && s.slotEnd,
-                  isInRange         && s.slotRange,
-                ]}
-                onPress={() => handleTap(t)}
+                layout={Layout.springify()}
+              >
+                <TouchableOpacity
+                  style={[
+                    s.slot,
+                    isFirst && s.slotFirst,
+                    isLast  && s.slotLast,
+                    st === 'free'     && s.slotFree,
+                    st === 'booked'   && s.slotBooked,
+                    st === 'past'     && s.slotPast,
+                    isStart           && s.slotStart,
+                    isEnd             && s.slotEnd,
+                    isInRange         && s.slotRange,
+                  ]}
+                  onPress={() => handleTap(t)}
                 disabled={st === 'past' || st === 'booked'}
                 accessibilityRole="button"
                 accessibilityLabel={`${to12h(t)} ${st}`}
@@ -217,14 +225,14 @@ export default function SelectTimeScreen() {
                 {/* Right badge */}
                 <View style={s.slotBadgeWrap}>
                   {isStart && (
-                    <View style={[s.badge, s.badgeStart]}>
+                    <Animated.View entering={ZoomIn.duration(200)} style={[s.badge, s.badgeStart]}>
                       <Text style={s.badgeText}>Start</Text>
-                    </View>
+                    </Animated.View>
                   )}
                   {isEnd && (
-                    <View style={[s.badge, s.badgeEnd]}>
+                    <Animated.View entering={ZoomIn.duration(200)} style={[s.badge, s.badgeEnd]}>
                       <Text style={s.badgeText}>End</Text>
-                    </View>
+                    </Animated.View>
                   )}
                   {!isStart && !isEnd && st === 'free' && (
                     <Text style={s.slotStatusFree}>Free</Text>
@@ -233,20 +241,21 @@ export default function SelectTimeScreen() {
                     <Text style={s.slotStatusBooked}>Booked</Text>
                   )}
                   {!isStart && !isEnd && isInRange && (
-                    <Text style={s.slotStatusRange}>✓</Text>
+                    <Animated.Text entering={ZoomIn.duration(150)} style={s.slotStatusRange}>✓</Animated.Text>
                   )}
                   {st === 'past' && (
                     <Text style={s.slotStatusPast}>Past</Text>
                   )}
                 </View>
               </TouchableOpacity>
+              </Animated.View>
             );
           })}
         </View>
 
-        {/* Summary */}
+        {/* Summary — slides in when selection is complete */}
         {canContinue && (
-          <View style={s.summaryBox}>
+          <Animated.View entering={FadeInUp.duration(350).springify()} style={s.summaryBox}>
             <View style={s.summaryRow}>
               <Text style={s.summaryLabel}>Time</Text>
               <Text style={s.summaryValue}>{to12h(startSlot!)} – {to12h(endSlot!)}</Text>
@@ -259,7 +268,7 @@ export default function SelectTimeScreen() {
               <Text style={s.summaryLabel}>Subtotal</Text>
               <Text style={s.summaryTotal}>₱{total.toFixed(2)}</Text>
             </View>
-          </View>
+          </Animated.View>
         )}
 
         <View style={{ height: 24 }} />

@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   header:            { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', maxWidth: 480, alignSelf: 'center', width: '100%' },
   title:             { fontSize: 22, fontWeight: '900', color: '#0F172A' },
 
-  summaryCard:       { marginHorizontal: Spacing.md, marginVertical: Spacing.md, backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4, maxWidth: 480 - Spacing.md * 2, alignSelf: 'center', width: `calc(100% - ${Spacing.md * 2}px)` as any },
+  summaryCard:       { marginHorizontal: Spacing.md, marginVertical: Spacing.md, backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.lg, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4 },
   summaryRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   summaryLabel:      { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   summaryAmount:     { fontSize: 32, fontWeight: '900', color: '#fff', marginTop: 4 },

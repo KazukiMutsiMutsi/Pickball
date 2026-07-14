@@ -84,16 +84,6 @@ export default function AdminSettings() {
           <input style={s.input} type="number" min={0} value={settings.sameDayBufferHours} onChange={e=>update('sameDayBufferHours',Number(e.target.value))} />
         </Field>
       </Section>
-
-      <Section title="🎟️ Promo Code">
-        <Field label="Promo Code">
-          <input style={s.input} type="text" value={settings.promoCode} onChange={e=>update('promoCode',e.target.value.toUpperCase())} />
-        </Field>
-        <Field label="Discount (%)" description="Discount applied when promo code is used">
-          <input style={s.input} type="number" min={0} max={100} value={settings.promoDiscount} onChange={e=>update('promoDiscount',Number(e.target.value))} />
-        </Field>
-      </Section>
-
       <Section title="🚫 Cancellation Policy">
         <Field label="Free Cancellation Window (hours)" description="Cancellation is free if done this many hours before start">
           <input style={s.input} type="number" min={0} value={settings.cancellationHours} onChange={e=>update('cancellationHours',Number(e.target.value))} />

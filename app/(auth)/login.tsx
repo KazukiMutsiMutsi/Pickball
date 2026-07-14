@@ -83,7 +83,7 @@ export default function LoginScreen() {
     try {
       await login({ email, password });
       if (email.toLowerCase().startsWith('admin')) {
-        router.replace('/(admin)');
+        router.replace('/(admin)' as any);
       } else {
         router.replace('/(tabs)');
       }
