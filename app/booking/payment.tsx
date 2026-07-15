@@ -1,6 +1,6 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
+import type { StaffBooking } from '@/src/booking/bookingStore';
 import { addBooking, hasConflict } from '@/src/booking/bookingStore';
-import type { StaffBooking } from '@/src/staff/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
