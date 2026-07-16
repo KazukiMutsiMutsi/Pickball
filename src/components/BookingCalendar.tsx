@@ -12,23 +12,43 @@ import {
 
 const { width: W } = Dimensions.get('window');
 
-const CAL_COURTS = [
-  { id: '1', name: 'Court 1', pricePerHour: 20 },
-  { id: '2', name: 'Court 2', pricePerHour: 15 },
-  { id: '3', name: 'Court 3', pricePerHour: 18 },
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const COURTS = [
+  { id: '1', label: 'CRT1', pricePerHour: 500 },
+  { id: '2', label: 'CRT2', pricePerHour: 500 },
+  { id: '3', label: 'CRT3', pricePerHour: 500 },
 ];
 
 const HOURS = [
-  '6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
-  '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM',
-  '6:00 PM','7:00 PM','8:00 PM','9:00 PM',
+  { label: '6AM–7AM',   icon: '🌅', key: '06' },
+  { label: '7AM–8AM',   icon: '🌅', key: '07' },
+  { label: '8AM–9AM',   icon: '🌅', key: '08' },
+  { label: '9AM–10AM',  icon: '☀️', key: '09' },
+  { label: '10AM–11AM', icon: '☀️', key: '10' },
+  { label: '11AM–12PM', icon: '☀️', key: '11' },
+  { label: '12PM–1PM',  icon: '☀️', key: '12' },
+  { label: '1PM–2PM',   icon: '☀️', key: '13' },
+  { label: '2PM–3PM',   icon: '☀️', key: '14' },
+  { label: '3PM–4PM',   icon: '☀️', key: '15' },
+  { label: '4PM–5PM',   icon: '☀️', key: '16' },
+  { label: '5PM–6PM',   icon: '☀️', key: '17' },
+  { label: '6PM–7PM',   icon: '🌙', key: '18' },
+  { label: '7PM–8PM',   icon: '🌙', key: '19' },
+  { label: '8PM–9PM',   icon: '🌙', key: '20' },
+  { label: '9PM–10PM',  icon: '🌙', key: '21' },
+  { label: '10PM–11PM', icon: '🌙', key: '22' },
+  { label: '11PM–12AM', icon: '🌙', key: '23' },
+  { label: '12AM–1AM',  icon: '🌙', key: '00' },
 ];
 
+// courtId → dayKey → booked hour keys
 const MOCK_BOOKED: Record<string, Record<string, string[]>> = {
-  '1': { '0': ['9:00 AM','10:00 AM'],              '1': ['7:00 AM','2:00 PM'],             '2': ['6:00 PM','7:00 PM'] },
-  '2': { '0': ['7:00 AM','3:00 PM'],               '1': ['9:00 AM','10:00 AM','11:00 AM'], '2': ['8:00 AM'] },
-  '3': { '0': ['6:00 PM','7:00 PM','8:00 PM'],     '1': ['10:00 AM'],                      '2': ['1:00 PM','2:00 PM'] },
+  '1': { '0': ['09','10'],              '1': ['07','14'],             '2': ['18','19'] },
+  '2': { '0': ['07','13','14','15'],    '1': ['09','10','11'],        '2': ['08'] },
+  '3': { '0': ['18','19','20'],         '1': ['10'],                  '2': ['13','14'] },
 };
+
+type SlotStatus = 'open' | 'booked' | 'past' | 'start' | 'end' | 'range';
 
 function buildDays() {
   return Array.from({ length: 7 }, (_, i) => {
@@ -38,216 +58,430 @@ function buildDays() {
       key:     i.toString(),
       short:   d.toLocaleDateString('en-US', { weekday: 'short' }),
       num:     d.getDate(),
-      label:   i === 0 ? 'Today' : i === 1 ? 'Tomorrow'
-               : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+      fullLabel: i === 0
+        ? `Today, ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
       isToday: i === 0,
     };
   });
 }
 const CAL_DAYS = buildDays();
 
-function buildSlots(courtId: string, dayKey: string) {
-  const booked  = MOCK_BOOKED[courtId]?.[dayKey] ?? [];
-  const pastIdx = dayKey === '0' ? Math.max(0, new Date().getHours() - 6) : -1;
-  return HOURS.map((time, idx) => ({
-    time,
-    status: (dayKey === '0' && idx <= pastIdx) ? 'past'
-          : booked.includes(time)              ? 'booked'
-          : 'available',
-  }));
+function getSlotStatus(
+  courtId: string,
+  dayKey: string,
+  hourKey: string,
+  nowHour: number,
+  startSel: { courtId: string; hourKey: string } | null,
+  endSel:   { courtId: string; hourKey: string } | null,
+): SlotStatus {
+  const booked = MOCK_BOOKED[courtId]?.[dayKey] ?? [];
+  if (booked.includes(hourKey)) return 'booked';
+  if (dayKey === '0' && parseInt(hourKey, 10) <= nowHour) return 'past';
+
+  const hNum = parseInt(hourKey, 10);
+
+  if (startSel?.courtId === courtId && startSel.hourKey === hourKey) return 'start';
+  if (endSel?.courtId   === courtId && endSel.hourKey   === hourKey) return 'end';
+
+  // highlight range between start and end (same court)
+  if (
+    startSel?.courtId === courtId &&
+    endSel?.courtId   === courtId
+  ) {
+    const sNum = parseInt(startSel.hourKey, 10);
+    const eNum = parseInt(endSel.hourKey, 10);
+    if (hNum > sNum && hNum < eNum) return 'range';
+  }
+
+  return 'open';
 }
 
-const CONTAINER_W = Math.min(W, 480) - Spacing.md * 2; // capped at 480 (card inner width)
-const SLOT_W = (CONTAINER_W - Spacing.sm * 2) / 3;
-
+// ─── Component ────────────────────────────────────────────────────────────────
 export function BookingCalendar() {
   const router = useRouter();
-  const [selDay,   setSelDay]   = useState('0');
-  const [selCourt, setSelCourt] = useState('1');
-  const [selSlot,  setSelSlot]  = useState<string | null>(null);
+  const [selDay, setSelDay] = useState('0');
 
-  const court   = CAL_COURTS.find((c) => c.id === selCourt) ?? CAL_COURTS[0];
-  const dayLbl  = CAL_DAYS.find((d) => d.key === selDay)?.label ?? '';
-  const slots   = buildSlots(selCourt, selDay);
-  const freeCount = slots.filter((s) => s.status === 'available').length;
-  const bookedCount = slots.filter((s) => s.status === 'booked').length;
+  // start/end selection — each holds { courtId, hourKey }
+  const [startSel, setStartSel] = useState<{ courtId: string; hourKey: string } | null>(null);
+  const [endSel,   setEndSel]   = useState<{ courtId: string; hourKey: string } | null>(null);
+
+  const nowHour   = new Date().getHours();
+  const selDayObj = CAL_DAYS.find(d => d.key === selDay)!;
+
+  const resetSelection = () => { setStartSel(null); setEndSel(null); };
+
+  const handleCellTap = (courtId: string, hourKey: string) => {
+    const hNum = parseInt(hourKey, 10);
+
+    // If no start yet → set as start
+    if (!startSel) {
+      setStartSel({ courtId, hourKey });
+      setEndSel(null);
+      return;
+    }
+
+    // Tapping same cell as start → deselect
+    if (startSel.courtId === courtId && startSel.hourKey === hourKey) {
+      resetSelection();
+      return;
+    }
+
+    // Different court → start fresh on that court
+    if (startSel.courtId !== courtId) {
+      setStartSel({ courtId, hourKey });
+      setEndSel(null);
+      return;
+    }
+
+    const startNum = parseInt(startSel.hourKey, 10);
+
+    // Must be after start
+    if (hNum > startNum) {
+      setEndSel({ courtId, hourKey });
+    } else {
+      // Tapped before or equal to start → make this the new start
+      setStartSel({ courtId, hourKey });
+      setEndSel(null);
+    }
+  };
+
+  // Derived values for the book button
+  const bookingSummary = (() => {
+    if (!startSel) return null;
+    const court    = COURTS.find(c => c.id === startSel.courtId)!;
+    const startHour = parseInt(startSel.hourKey, 10);
+    // If end is selected use it, otherwise 1-hr slot (start+1)
+    const endHour   = endSel ? parseInt(endSel.hourKey, 10) : startHour + 1;
+    const duration  = endHour - startHour; // hours
+    const startTime = `${String(startHour).padStart(2, '0')}:00`;
+    const endTime   = `${String(endHour === 24 ? 0 : endHour).padStart(2, '0')}:00`;
+    const startLabel = HOURS.find(h => h.key === startSel.hourKey)?.label ?? startSel.hourKey;
+    const endLabel   = endSel
+      ? (HOURS.find(h => h.key === endSel.hourKey)?.label ?? endSel.hourKey)
+      : null;
+    const dateISO = (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + parseInt(selDay, 10));
+      return d.toISOString().slice(0, 10);
+    })();
+    return { court, startTime, endTime, duration, startLabel, endLabel, dateISO };
+  })();
+
+  const cellBg = (status: SlotStatus) => {
+    switch (status) {
+      case 'open':  return '#fff';
+      case 'booked':return '#fff';
+      case 'past':  return '#F8FAFC';
+      case 'start': return Palette.primary;
+      case 'end':   return '#0D6EAB';
+      case 'range': return Palette.primaryLight;
+    }
+  };
+
+  const cellBorder = (status: SlotStatus) => {
+    switch (status) {
+      case 'open':  return '#E2E8F0';
+      case 'booked':return '#E2E8F0';
+      case 'past':  return '#F1F5F9';
+      case 'start': return Palette.primary;
+      case 'end':   return '#0D6EAB';
+      case 'range': return Palette.primary;
+    }
+  };
+
+  const cellTextColor = (status: SlotStatus) => {
+    switch (status) {
+      case 'open':  return Palette.success;
+      case 'booked':return Palette.grey600;
+      case 'past':  return Palette.grey400;
+      case 'start': return '#fff';
+      case 'end':   return '#fff';
+      case 'range': return Palette.primary;
+    }
+  };
+
+  const cellLabel = (status: SlotStatus, courtId: string) => {
+    switch (status) {
+      case 'open':  return 'Open';
+      case 'booked':return 'Booked';
+      case 'past':  return 'Past';
+      case 'start':
+        // If no end is picked yet for this court, show Start–End (1 hr)
+        return (endSel?.courtId === courtId) ? 'Start' : 'Start–End';
+      case 'end':   return 'End';
+      case 'range': return '✓';
+    }
+  };
 
   return (
-    <View style={cal.wrap}>
+    <View style={s.wrap}>
 
-      <View style={cal.cardHead}>
+      {/* ── Header ── */}
+      <View style={s.cardHead}>
         <View>
-          <Text style={cal.cardTitle}>Book a Slot</Text>
-          <Text style={cal.cardSub}>Choose date, court and time</Text>
+          <Text style={s.cardTitle}>Book a Slot</Text>
+          <Text style={s.cardSub}>Choose date and time</Text>
         </View>
-        <View style={cal.livePill}>
-          <View style={cal.liveDot} />
-          <Text style={cal.liveText}>Live</Text>
+        <View style={s.livePill}>
+          <View style={s.liveDot} />
+          <Text style={s.liveText}>Live</Text>
         </View>
       </View>
 
-      <Text style={cal.label}>Date</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={cal.strip}>
-        {CAL_DAYS.map((d) => (
+      {/* ── Date strip ── */}
+      <Text style={s.sectionLabel}>Date</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.strip}>
+        {CAL_DAYS.map(d => (
           <TouchableOpacity
             key={d.key}
-            style={[cal.dayChip, selDay === d.key && cal.dayChipActive]}
-            onPress={() => { setSelDay(d.key); setSelSlot(null); }}
+            style={[s.dayChip, selDay === d.key && s.dayChipActive]}
+            onPress={() => { setSelDay(d.key); resetSelection(); }}
             accessibilityRole="button"
-            accessibilityLabel={d.label}
+            accessibilityLabel={d.fullLabel}
           >
-            <Text style={[cal.dayShort, selDay === d.key && cal.activeText]}>{d.short}</Text>
-            <Text style={[cal.dayNum,   selDay === d.key && cal.activeText]}>{d.num}</Text>
-            {d.isToday && <View style={cal.todayDot} />}
+            <Text style={[s.dayShort, selDay === d.key && s.activeText]}>{d.short}</Text>
+            <Text style={[s.dayNum,   selDay === d.key && s.activeText]}>{d.num}</Text>
+            {d.isToday && <View style={s.todayDot} />}
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      <Text style={cal.label}>Court</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={cal.strip}>
-        {CAL_COURTS.map((c) => {
-          const free = buildSlots(c.id, selDay).filter((s) => s.status === 'available').length;
-          const active = selCourt === c.id;
-          return (
-            <TouchableOpacity
-              key={c.id}
-              style={[cal.courtChip, active && cal.courtChipActive]}
-              onPress={() => { setSelCourt(c.id); setSelSlot(null); }}
-              accessibilityRole="button"
-              accessibilityLabel={c.name}
-            >
-              <Text style={[cal.courtName, active && { color: Palette.primary }]} numberOfLines={1}>{c.name}</Text>
-              <Text style={free === 0 ? cal.courtFull : cal.courtFree}>
-                {free > 0 ? `${free} free` : 'Full'}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      <View style={cal.statsRow}>
-        <View style={[cal.pill, { backgroundColor: '#E8F8EF' }]}>
-          <Text style={[cal.pillText, { color: Palette.success }]}>✓ {freeCount} available</Text>
-        </View>
-        <View style={[cal.pill, { backgroundColor: '#FDECEA' }]}>
-          <Text style={[cal.pillText, { color: Palette.danger }]}>✗ {bookedCount} booked</Text>
-        </View>
-        <View style={[cal.pill, { backgroundColor: Palette.primaryLight }]}>
-          <Text style={[cal.pillText, { color: Palette.primary }]}>₱{court.pricePerHour}/hr</Text>
-        </View>
+      {/* Selected date label */}
+      <View style={s.selectedDateRow}>
+        <Text style={s.selectedDateIcon}>📅</Text>
+        <Text style={s.selectedDateText}>{selDayObj.fullLabel}</Text>
       </View>
 
-      <View style={cal.legend}>
-        {[
-          { bg: '#E8F8EF',        text: 'Available', tc: Palette.success  },
-          { bg: '#FDECEA',        text: 'Booked',    tc: Palette.danger   },
-          { bg: Palette.primary,  text: 'Selected',  tc: '#fff'           },
-          { bg: Palette.grey200,  text: 'Past',      tc: Palette.grey500  },
-        ].map((l) => (
-          <View key={l.text} style={cal.legendItem}>
-            <View style={[cal.legendDot, { backgroundColor: l.bg }]} />
-            <Text style={cal.legendText}>{l.text}</Text>
+      {/* ── Legend ── */}
+      <View style={s.legend}>
+        <View style={s.legendItem}>
+          <View style={[s.legendSwatch, { borderColor: Palette.success, backgroundColor: '#fff' }]} />
+          <Text style={s.legendText}>Open</Text>
+        </View>
+        <View style={s.legendItem}>
+          <View style={[s.legendSwatch, { borderColor: Palette.primary, backgroundColor: Palette.primary }]} />
+          <Text style={s.legendText}>Start</Text>
+        </View>
+        <View style={s.legendItem}>
+          <View style={[s.legendSwatch, { borderColor: '#0D6EAB', backgroundColor: '#0D6EAB' }]} />
+          <Text style={s.legendText}>End</Text>
+        </View>
+        <View style={s.legendItem}>
+          <View style={[s.legendSwatch, { borderColor: Palette.primary, backgroundColor: Palette.primaryLight }]} />
+          <Text style={s.legendText}>Range</Text>
+        </View>
+        <View style={s.legendItem}>
+          <View style={[s.legendSwatch, { borderColor: '#E2E8F0', backgroundColor: '#fff' }]}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: Palette.grey400 }} />
           </View>
-        ))}
+          <Text style={s.legendText}>Booked</Text>
+        </View>
       </View>
 
-      <Text style={cal.label}>Time Slot</Text>
-      <View style={cal.grid}>
-        {slots.map(({ time, status }) => {
-          const isSel  = selSlot === time;
-          const bg     = status === 'past'    ? Palette.grey100
-                       : status === 'booked'  ? '#FDECEA'
-                       : isSel               ? Palette.primary : '#E8F8EF';
-          const tc     = status === 'past'    ? Palette.grey400
-                       : status === 'booked'  ? Palette.danger
-                       : isSel               ? '#fff' : Palette.success;
-          const lbl    = status === 'past'    ? 'Past'
-                       : status === 'booked'  ? 'Booked'
-                       : isSel               ? '✓ Selected' : 'Free';
-          return (
-            <TouchableOpacity
-              key={time}
-              disabled={status !== 'available'}
-              onPress={() => setSelSlot(isSel ? null : time)}
-              style={[cal.slot, { backgroundColor: bg }, isSel && cal.slotSelected]}
-              accessibilityRole="button"
-              accessibilityLabel={`${time} ${lbl}`}
-              accessibilityState={{ disabled: status !== 'available', selected: isSel }}
-            >
-              <Text style={[cal.slotTime, { color: status === 'past' ? Palette.grey400 : Palette.grey800 }]}>{time}</Text>
-              <Text style={[cal.slotLbl, { color: tc }]}>{lbl}</Text>
-            </TouchableOpacity>
-          );
-        })}
+      {/* ── Sports tag ── */}
+      <View style={s.sportRow}>
+        <Text style={s.sportLabel}>Sport:</Text>
+        <View style={s.sportChip}>
+          <Text style={{ fontSize: 14 }}>🏓</Text>
+          <Text style={s.sportChipText}>Pickleball</Text>
+        </View>
       </View>
 
-      {selSlot && (
-        <TouchableOpacity
-          style={cal.bookBtn}
-          onPress={() => router.push({ pathname: '/booking/time', params: { courtId: court.id, courtName: court.name, price: court.pricePerHour, date: new Date().toISOString().slice(0, 10) } })}
-          accessibilityRole="button"
-          accessibilityLabel={`Book ${court.name} at ${selSlot} on ${dayLbl}`}
-        >
-          <Text style={cal.bookBtnText}>📅  Book {court.name}  ·  {selSlot}  ·  {dayLbl}</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Advanced Booking button */}
+      {/* ── Advanced Booking ── */}
       <TouchableOpacity
-        style={cal.advanceBtn}
-        onPress={() => router.push({ pathname: '/booking/advance', params: { courtId: court.id, courtName: court.name, price: String(court.pricePerHour) } })}
+        style={s.advanceBtn}
+        onPress={() =>
+          router.push({
+            pathname: '/booking/advance',
+            params: { courtId: '1', courtName: 'Pickleball Court', price: '500' },
+          })
+        }
         accessibilityRole="button"
         accessibilityLabel="Advanced booking — pick any date"
       >
-        <Text style={cal.advanceBtnIcon}>🗓️</Text>
+        <Text style={s.advanceBtnIcon}>🗓️</Text>
         <View style={{ flex: 1 }}>
-          <Text style={cal.advanceBtnText}>Advanced Booking</Text>
-          <Text style={cal.advanceBtnSub}>Pick a date up to 30 days ahead</Text>
+          <Text style={s.advanceBtnText}>Advanced Booking</Text>
+          <Text style={s.advanceBtnSub}>Pick a date up to 30 days ahead</Text>
         </View>
-        <Text style={cal.advanceBtnArrow}>›</Text>
+        <Text style={s.advanceBtnArrow}>›</Text>
       </TouchableOpacity>
+
+      {/* ── Grid table ── */}
+      <View style={s.tableWrap}>
+        {/* Table header */}
+        <View style={s.tableHeader}>
+          <View style={s.timeCol}>
+            <Text style={s.headerText}>Times</Text>
+          </View>
+          {COURTS.map(c => (
+            <View key={c.id} style={s.courtCol}>
+              <Text style={s.headerText}>{c.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Table rows */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={s.tableScroll}
+          nestedScrollEnabled
+        >
+          {HOURS.map((hour, rowIdx) => (
+            <View
+              key={hour.key}
+              style={[s.tableRow, rowIdx % 2 === 0 && s.tableRowAlt]}
+            >
+              {/* Time cell */}
+              <View style={s.timeCol}>
+                <Text style={s.timeIcon}>{hour.icon}</Text>
+                <Text style={s.timeText}>{hour.label}</Text>
+              </View>
+
+              {/* Court cells */}
+              {COURTS.map(court => {
+                const status = getSlotStatus(court.id, selDay, hour.key, nowHour, startSel, endSel);
+                const isOpen = status === 'open';
+                return (
+                  <View key={court.id} style={s.courtCol}>
+                    <TouchableOpacity
+                      style={[
+                        s.cell,
+                        { backgroundColor: cellBg(status), borderColor: cellBorder(status) },
+                        (status === 'start' || status === 'end') && s.cellSelected,
+                      ]}
+                      onPress={() => (isOpen || status === 'start' || status === 'end' || status === 'range') && handleCellTap(court.id, hour.key)}
+                      disabled={status === 'booked' || status === 'past'}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${court.label} ${hour.label} ${cellLabel(status, court.id)}`}
+                    >
+                      <Text style={[s.cellText, { color: cellTextColor(status) }]}>
+                        {cellLabel(status, court.id)}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ── Book button ── */}
+      {bookingSummary && (() => {
+        const { court, startTime, endTime, duration, startLabel, endLabel, dateISO } = bookingSummary;
+        const slotDisplay = endLabel
+          ? `${startLabel} → ${endLabel}`
+          : `${startLabel} (1 hr)`;
+        return (
+          <TouchableOpacity
+            style={s.bookBtn}
+            onPress={() =>
+              router.push({
+                pathname: '/booking/players',
+                params: {
+                  courtId:   court.id,
+                  courtName: `${court.label} – Pickleball Court`,
+                  price:     String(court.pricePerHour),
+                  date:      dateISO,
+                  startTime,
+                  endTime,
+                  duration:  String(duration),
+                  total:     String(court.pricePerHour * duration),
+                },
+              })
+            }
+            accessibilityRole="button"
+            accessibilityLabel={`Book ${court.label} ${slotDisplay}`}
+          >
+            <Text style={s.bookBtnIcon}>📅</Text>
+            <Text style={s.bookBtnText}>
+              Book {court.label}  ·  {slotDisplay}  ·  {selDayObj.fullLabel}
+            </Text>
+          </TouchableOpacity>
+        );
+      })()}
+
+
     </View>
   );
 }
 
-const cal = StyleSheet.create({
-  wrap:          { marginHorizontal: Spacing.md, backgroundColor: '#fff', borderRadius: 20, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2, maxWidth: 480, alignSelf: 'center', width: '100%' },
-  cardHead:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
-  cardTitle:     { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  cardSub:       { fontSize: 12, color: '#64748B', marginTop: 2 },
-  livePill:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FDECEA', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, gap: 4 },
-  liveDot:       { width: 7, height: 7, borderRadius: 4, backgroundColor: '#EF4444' },
-  liveText:      { fontSize: 11, color: '#EF4444', fontWeight: '700' },
-  label:         { fontSize: 12, fontWeight: '700', color: '#64748B', marginBottom: Spacing.sm, marginTop: Spacing.sm },
-  strip:         { gap: Spacing.sm, paddingBottom: 4 },
-  dayChip:       { alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 10, minWidth: 48, borderWidth: 1.5, borderColor: '#E2E8F0', position: 'relative' },
-  dayChipActive: { backgroundColor: Palette.primary, borderColor: Palette.primary },
-  dayShort:      { fontSize: 10, color: '#64748B', fontWeight: '600' },
-  dayNum:        { fontSize: 17, fontWeight: '900', color: '#0F172A' },
-  activeText:    { color: '#fff' },
-  todayDot:      { position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: 2, backgroundColor: '#EF4444' },
-  courtChip:     { backgroundColor: '#F8FAFC', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, minWidth: 110, borderWidth: 1.5, borderColor: '#E2E8F0' },
-  courtChipActive:{ borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
-  courtName:     { fontSize: 11, fontWeight: '700', color: '#0F172A', marginBottom: 3 },
-  courtFree:     { fontSize: 10, fontWeight: '600', color: '#10B981' },
-  courtFull:     { fontSize: 10, fontWeight: '600', color: '#EF4444' },
-  statsRow:      { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' },
-  pill:          { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  pillText:      { fontSize: 11, fontWeight: '700' },
-  legend:        { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm },
-  legendItem:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendDot:     { width: 10, height: 10, borderRadius: 3 },
-  legendText:    { fontSize: 10, color: '#64748B' },
-  grid:          { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: 4 },
-  slot:          { width: SLOT_W, paddingVertical: 10, borderRadius: 10, alignItems: 'center', borderWidth: 1.5, borderColor: 'transparent' },
-  slotSelected:  { borderColor: Palette.primary },
-  slotTime:      { fontSize: 11, fontWeight: '600', marginBottom: 2 },
-  slotLbl:       { fontSize: 10, fontWeight: '700' },
-  bookBtn:       { marginTop: Spacing.md, backgroundColor: Palette.primary, borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center' },
-  bookBtnText:   { color: '#fff', fontSize: 13, fontWeight: '800' },
-  advanceBtn:    { marginTop: Spacing.sm, flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.primaryLight, borderRadius: 12, padding: Spacing.md, gap: Spacing.sm, borderWidth: 1.5, borderColor: Palette.primary },
-  advanceBtnIcon:{ fontSize: 22 },
-  advanceBtnText:{ fontSize: 14, fontWeight: '700', color: Palette.primary },
-  advanceBtnSub: { fontSize: 11, color: Palette.grey600, marginTop: 2 },
-  advanceBtnArrow:{ fontSize: 22, color: Palette.primary },
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const CARD_W   = Math.min(W, 480) - Spacing.md * 2;
+const TIME_W   = 88;
+const COURT_W  = (CARD_W - TIME_W - Spacing.md * 2 - 2) / 3; // 3 equal court columns
+
+const s = StyleSheet.create({
+  wrap:             { marginHorizontal: Spacing.md, backgroundColor: '#fff', borderRadius: 20, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2, maxWidth: 480, alignSelf: 'center', width: '100%' },
+
+  // Card header
+  cardHead:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  cardTitle:        { fontSize: 18, fontWeight: '800', color: '#0F172A' },
+  cardSub:          { fontSize: 12, color: '#64748B', marginTop: 2 },
+  livePill:         { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, gap: 4 },
+  liveDot:          { width: 7, height: 7, borderRadius: 4, backgroundColor: '#EF4444' },
+  liveText:         { fontSize: 11, color: '#EF4444', fontWeight: '700' },
+
+  // Section label
+  sectionLabel:     { fontSize: 12, fontWeight: '700', color: '#64748B', marginBottom: Spacing.sm },
+
+  // Date strip
+  strip:            { gap: Spacing.sm, paddingBottom: 4 },
+  dayChip:          { alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 10, minWidth: 48, borderWidth: 1.5, borderColor: '#E2E8F0', position: 'relative' },
+  dayChipActive:    { backgroundColor: Palette.primary, borderColor: Palette.primary },
+  dayShort:         { fontSize: 10, color: '#64748B', fontWeight: '600' },
+  dayNum:           { fontSize: 17, fontWeight: '900', color: '#0F172A' },
+  activeText:       { color: '#fff' },
+  todayDot:         { position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: 2, backgroundColor: '#EF4444' },
+
+  // Selected date
+  selectedDateRow:  { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.sm, marginBottom: Spacing.sm },
+  selectedDateIcon: { fontSize: 14 },
+  selectedDateText: { fontSize: 13, fontWeight: '700', color: Palette.primary },
+
+  // Legend
+  legend:           { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: Spacing.sm },
+  legendItem:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendSwatch:     { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  legendText:       { fontSize: 11, color: '#64748B' },
+
+  // Sport
+  sportRow:         { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
+  sportLabel:       { fontSize: 13, fontWeight: '700', color: '#0F172A' },
+  sportChip:        { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Palette.primaryLight, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100, borderWidth: 1.5, borderColor: Palette.primary },
+  sportChipText:    { fontSize: 13, fontWeight: '700', color: Palette.primary },
+
+  // Table
+  tableWrap:        { borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden', marginBottom: Spacing.md },
+  tableHeader:      { flexDirection: 'row', backgroundColor: '#F8FAFC', borderBottomWidth: 1.5, borderBottomColor: '#E2E8F0' },
+  tableRow:         { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  tableRowAlt:      { backgroundColor: '#FAFAFA' },
+  tableScroll:      { maxHeight: 420 },
+
+  timeCol:          { width: TIME_W, paddingVertical: 10, paddingHorizontal: 6, flexDirection: 'row', alignItems: 'center', gap: 3 },
+  courtCol:         { width: COURT_W, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
+
+  headerText:       { fontSize: 12, fontWeight: '800', color: '#0F172A', textAlign: 'center' },
+  timeIcon:         { fontSize: 12 },
+  timeText:         { fontSize: 11, fontWeight: '600', color: '#64748B', flexShrink: 1 },
+
+  // Slot cell
+  cell:             { width: '100%', paddingVertical: 8, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
+  cellSelected:     { borderWidth: 2 },
+  cellText:         { fontSize: 11, fontWeight: '700' },
+
+  // Book button
+  bookBtn:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Palette.primary, borderRadius: 14, height: 54, marginBottom: Spacing.sm, gap: 8, paddingHorizontal: Spacing.md },
+  bookBtnIcon:      { fontSize: 16 },
+  bookBtnText:      { color: '#fff', fontSize: 13, fontWeight: '800', flexShrink: 1 },
+
+  // Advanced booking
+  advanceBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.primaryLight, borderRadius: 12, padding: Spacing.md, gap: Spacing.sm, borderWidth: 1.5, borderColor: Palette.primary },
+  advanceBtnIcon:   { fontSize: 22 },
+  advanceBtnText:   { fontSize: 14, fontWeight: '700', color: Palette.primary },
+  advanceBtnSub:    { fontSize: 11, color: '#64748B', marginTop: 2 },
+  advanceBtnArrow:  { fontSize: 22, color: Palette.primary },
 });

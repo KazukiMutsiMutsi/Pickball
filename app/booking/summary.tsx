@@ -16,19 +16,21 @@ function formatDate(iso: string) {
   });
 }
 
-const SERVICE_FEE_RATE = 0.05;
+const SERVICE_FEE_RATE = 0.05; // kept for fallback calculation
 
 export default function BookingSummaryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     courtId: string; courtName: string; price: string;
     date: string; startTime: string; endTime: string;
-    duration: string; total: string;
+    duration: string; total: string; players: string;
+    serviceFee: string; grandTotal: string;
   }>();
 
+  const players    = parseInt(params.players ?? '1');
   const subtotal   = parseFloat(params.total ?? '0');
-  const serviceFee = subtotal * SERVICE_FEE_RATE;
-  const grandTotal = subtotal + serviceFee;
+  const serviceFee = parseFloat(params.serviceFee ?? String(subtotal * 0.05));
+  const grandTotal = parseFloat(params.grandTotal ?? String(subtotal + serviceFee));
 
   const handleProceed = () => {
     router.push({
@@ -54,18 +56,18 @@ export default function BookingSummaryScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Progress: Time → Summary → Payment */}
+      {/* Progress: Time → Players → Payment */}
       <View style={styles.progress}>
         {[0, 1, 2].map((i) => (
           <React.Fragment key={i}>
-            <View style={[styles.dot, i <= 1 && styles.dotActive]} />
-            {i < 2 && <View style={[styles.line, i < 1 && styles.lineActive]} />}
+            <View style={[styles.dot, styles.dotActive]} />
+            {i < 2 && <View style={[styles.line, styles.lineActive]} />}
           </React.Fragment>
         ))}
       </View>
       <View style={styles.progressLabels}>
-        {['Time', 'Summary', 'Payment'].map((s, i) => (
-          <Text key={s} style={[styles.progressLabel, i <= 1 && styles.progressLabelActive]}>{s}</Text>
+        {['Time', 'Players', 'Payment'].map((label, i) => (
+          <Text key={label} style={[styles.progressLabel, styles.progressLabelActive]}>{label}</Text>
         ))}
       </View>
 
@@ -81,6 +83,7 @@ export default function BookingSummaryScreen() {
             <Text style={styles.courtMeta}>📅 {formatDate(params.date)}</Text>
             <Text style={styles.courtMeta}>🕐 {to12h(params.startTime)} – {to12h(params.endTime)}</Text>
             <Text style={styles.courtMeta}>⏱ {params.duration} hr{parseFloat(params.duration) !== 1 ? 's' : ''}</Text>
+            <Text style={styles.courtMeta}>👥 {players} player{players !== 1 ? 's' : ''}</Text>
           </View>
         </View>
 

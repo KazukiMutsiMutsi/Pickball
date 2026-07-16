@@ -3,15 +3,17 @@ import { getBookingsForSlot } from '@/src/booking/bookingStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 const ALL_SLOTS = [
   '06:00','07:00','08:00','09:00','10:00','11:00',
   '12:00','13:00','14:00','15:00','16:00','17:00',
-  '18:00','19:00','20:00','21:00','22:00','23:00',
+  '18:00','19:00','20:00','21:00','22:00','23:00','00:00',
 ];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function to12h(t: string) {
   const [h, m] = t.split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -19,7 +21,8 @@ function to12h(t: string) {
 
 function toMins(t: string) {
   const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
+  // treat midnight (00:xx) as hour 24 so it sorts after 23:xx
+  return (h === 0 ? 24 : h) * 60 + m;
 }
 
 function formatDate(iso: string) {
@@ -30,6 +33,7 @@ function formatDate(iso: string) {
 
 type SlotState = 'free' | 'booked' | 'start' | 'end' | 'range' | 'past';
 
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function SelectTimeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -56,7 +60,7 @@ export default function SelectTimeScreen() {
 
   const slotState = (t: string): SlotState => {
     const m = toMins(t);
-    if (isToday && m <= nowMins) return 'past';
+    if (isToday && t !== '00:00' && m <= nowMins) return 'past';
     if (isBooked(t))            return 'booked';
     if (t === startSlot)        return 'start';
     if (t === endSlot)          return 'end';
@@ -81,121 +85,162 @@ export default function SelectTimeScreen() {
     setStartSlot(t); setEndSlot(null);
   };
 
-  const duration   = useMemo(() => (!startSlot || !endSlot) ? 0 : (toMins(endSlot) - toMins(startSlot)) / 60, [startSlot, endSlot]);
-  const total      = pricePerHour * duration;
+  const duration    = useMemo(() => (!startSlot || !endSlot) ? 0 : (toMins(endSlot) - toMins(startSlot)) / 60, [startSlot, endSlot]);
+  const total       = pricePerHour * duration;
   const canContinue = !!startSlot && !!endSlot && duration > 0;
 
   const handleContinue = () => {
     if (!canContinue) return;
-    router.push({ pathname: '/booking/summary', params: { ...params, startTime: startSlot!, endTime: endSlot!, duration: String(duration), total: String(total) } });
+    router.push({
+      pathname: '/booking/players',
+      params: { ...params, startTime: startSlot!, endTime: endSlot!, duration: String(duration), total: String(total) },
+    });
   };
 
   const slotAppearance = (st: SlotState) => {
     switch (st) {
-      case 'free':   return { bg: '#E8F5E9', labelColor: '#43A047', label: 'Free',   timeColor: '#1a1a1a' };
-      case 'booked': return { bg: '#FFEBEE', labelColor: '#EF5350', label: 'Booked', timeColor: '#1a1a1a' };
-      case 'past':   return { bg: '#F1F5F9', labelColor: '#94A3B8', label: 'Past',   timeColor: '#94A3B8' };
-      case 'start':  return { bg: Palette.primary, labelColor: '#fff', label: 'Start', timeColor: '#fff'  };
-      case 'end':    return { bg: Palette.primaryDark, labelColor: '#fff', label: 'End', timeColor: '#fff' };
-      case 'range':  return { bg: '#BBDEFB', labelColor: Palette.primary, label: '✓',  timeColor: '#1a1a1a' };
+      case 'free':   return { bg: '#F0FDF4', border: '#86EFAC', label: 'Free',   labelColor: '#16A34A', timeColor: '#166534' };
+      case 'booked': return { bg: '#FEF2F2', border: '#FCA5A5', label: 'Booked', labelColor: '#DC2626', timeColor: '#9B1C1C' };
+      case 'past':   return { bg: '#F8FAFC', border: '#E2E8F0', label: 'Past',   labelColor: '#94A3B8', timeColor: '#94A3B8' };
+      case 'start':  return { bg: Palette.primary, border: Palette.primary, label: 'Start', labelColor: '#fff', timeColor: '#fff' };
+      case 'end':    return { bg: '#0D6EAB', border: '#0D6EAB', label: 'End',   labelColor: '#fff', timeColor: '#fff' };
+      case 'range':  return { bg: '#DBEAFE', border: '#93C5FD', label: '✓',    labelColor: Palette.primary, timeColor: '#1E40AF' };
     }
   };
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Go back">
           <Text style={s.backIcon}>‹</Text>
         </TouchableOpacity>
-        <Text style={s.title}>Select Time</Text>
+        <Text style={s.title}>Book a Slot</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Progress */}
-      <View style={s.progress}>
-        {[0, 1, 2].map(i => (
-          <React.Fragment key={i}>
-            <View style={[s.dot, i === 0 && s.dotActive]} />
-            {i < 2 && <View style={s.line} />}
-          </React.Fragment>
-        ))}
-      </View>
-      <View style={s.progressLabels}>
-        {['Time', 'Summary', 'Payment'].map((label, i) => (
-          <Text key={label} style={[s.progressLabel, i === 0 && s.progressLabelActive]}>{label}</Text>
-        ))}
+      {/* ── Progress ── */}
+      <View style={s.progressWrap}>
+        <View style={s.progressTrack}>
+          {['Time', 'Players', 'Payment'].map((label, i) => (
+            <React.Fragment key={label}>
+              <View style={s.progressStep}>
+                <View style={[s.progressDot, i === 0 && s.progressDotActive]}>
+                  <Text style={[s.progressDotNum, i === 0 && s.progressDotNumActive]}>{i + 1}</Text>
+                </View>
+                <Text style={[s.progressLabel, i === 0 && s.progressLabelActive]}>{label}</Text>
+              </View>
+              {i < 2 && <View style={[s.progressLine, i === 0 && s.progressLineDone]} />}
+            </React.Fragment>
+          ))}
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
 
-        <Text style={s.courtName}>{params.courtName}</Text>
-        <Text style={s.dateLabel}>📅 {formatDate(params.date)}</Text>
-
-        {/* Legend */}
-        <View style={s.legend}>
+        {/* ── Legend ── */}
+        <Animated.View entering={FadeInDown.delay(140).duration(300)} style={s.legend}>
           {[
-            { bg: '#E8F5E9', label: 'Available' },
-            { bg: '#FFEBEE', label: 'Booked'    },
-            { bg: Palette.primary, label: 'Selected' },
-            { bg: Palette.grey100, label: 'Past'     },
+            { bg: '#F0FDF4', border: '#86EFAC', label: 'Available' },
+            { bg: '#FEF2F2', border: '#FCA5A5', label: 'Booked'    },
+            { bg: Palette.primary, border: Palette.primary, label: 'Selected' },
+            { bg: '#F8FAFC', border: '#E2E8F0', label: 'Past'      },
           ].map(l => (
             <View key={l.label} style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: l.bg }]} />
+              <View style={[s.legendSwatch, { backgroundColor: l.bg, borderColor: l.border }]} />
               <Text style={s.legendText}>{l.label}</Text>
             </View>
           ))}
+        </Animated.View>
+
+        {/* ── Instruction banner ── */}
+        <Animated.View entering={FadeInDown.delay(180).duration(300)} style={s.instructionBanner}>
+          <Text style={s.instructionText}>
+            {!startSlot
+              ? '👆 Tap a slot to set your start time'
+              : !endSlot
+              ? '👆 Now tap a later slot for your end time'
+              : `✅ ${to12h(startSlot)} → ${to12h(endSlot)}`}
+          </Text>
+        </Animated.View>
+
+        {/* ── Time slots (full-width column) ── */}
+        <View style={s.sectionHeader}>
+          <Text style={s.sectionTitle}>Time Slots</Text>
         </View>
 
-        {/* Instruction */}
-        <Text style={s.instruction}>
-          {!startSlot ? '👆 Tap a slot to set your start time'
-           : !endSlot ? '👆 Now tap a later slot to set your end time'
-           : `✅ ${to12h(startSlot)} → ${to12h(endSlot)}`}
-        </Text>
+        <View style={s.slotsColumn}>
+          {ALL_SLOTS.map((t, idx) => {
+            const st       = slotState(t);
+            const app      = slotAppearance(st);
+            const disabled = st === 'past' || st === 'booked';
+            const isActive = st === 'start' || st === 'end' || st === 'range';
 
-        {/* 3-column slot grid — rendered as rows */}
-        <Text style={s.sectionLabel}>Time Slot</Text>
-        {Array.from({ length: Math.ceil(ALL_SLOTS.length / 3) }, (_, rowIdx) => (
-          <View key={rowIdx} style={s.gridRow}>
-            {ALL_SLOTS.slice(rowIdx * 3, rowIdx * 3 + 3).map(t => {
-              const st       = slotState(t);
-              const app      = slotAppearance(st);
-              const disabled = st === 'past' || st === 'booked';
-              return (
-                <TouchableOpacity
-                  key={t}
-                  style={[s.slot, { backgroundColor: app.bg }, (st === 'start' || st === 'end') && s.slotSelected]}
-                  onPress={() => handleTap(t)}
-                  disabled={disabled}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${to12h(t)} ${app.label}`}
-                  accessibilityState={{ disabled, selected: st === 'start' || st === 'end' }}
-                >
+            return (
+              <TouchableOpacity
+                key={t}
+                style={[
+                  s.slotRow,
+                  { backgroundColor: app.bg, borderColor: app.border },
+                  isActive && s.slotRowActive,
+                  idx === 0 && s.slotRowFirst,
+                  idx === ALL_SLOTS.length - 1 && s.slotRowLast,
+                ]}
+                onPress={() => handleTap(t)}
+                disabled={disabled}
+                activeOpacity={disabled ? 1 : 0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${to12h(t)} ${app.label}`}
+                accessibilityState={{ disabled, selected: isActive }}
+              >
+                {/* Time column */}
+                <View style={s.slotTimeCol}>
                   <Text style={[s.slotTime, { color: app.timeColor }]}>{to12h(t)}</Text>
-                  {(st === 'start' || st === 'end') ? (
-                    <Animated.Text entering={ZoomIn.duration(200)} style={[s.slotLabel, { color: app.labelColor }]}>
-                      {app.label}
-                    </Animated.Text>
-                  ) : (
-                    <Text style={[s.slotLabel, { color: app.labelColor }]}>{app.label}</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-            {/* Fill empty cells in last row */}
-            {ALL_SLOTS.slice(rowIdx * 3, rowIdx * 3 + 3).length < 3 &&
-              Array.from({ length: 3 - ALL_SLOTS.slice(rowIdx * 3, rowIdx * 3 + 3).length }, (_, i) => (
-                <View key={`empty-${i}`} style={s.slotEmpty} />
-              ))
-            }
-          </View>
-        ))}
+                  <Text style={s.slotDuration}>1 hr slot</Text>
+                </View>
 
-        {/* Summary */}
+                {/* Divider */}
+                <View style={[s.slotDivider, { backgroundColor: app.border }]} />
+
+                {/* Status */}
+                <View style={s.slotStatusCol}>
+                  {(st === 'start' || st === 'end') ? (
+                    <Animated.View entering={ZoomIn.duration(200)} style={[s.slotBadge, { backgroundColor: app.labelColor === '#fff' ? 'rgba(255,255,255,0.25)' : app.bg }]}>
+                      <Text style={[s.slotBadgeText, { color: app.labelColor }]}>{app.label}</Text>
+                    </Animated.View>
+                  ) : (
+                    <View style={[s.slotBadge, { backgroundColor: disabled ? 'transparent' : 'rgba(0,0,0,0.04)' }]}>
+                      <Text style={[s.slotBadgeText, { color: app.labelColor }]}>{app.label}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Right indicator */}
+                {!disabled && (
+                  <View style={[s.slotArrow, isActive && { opacity: 1 }]}>
+                    {st === 'free' && <Text style={{ fontSize: 16, color: '#94A3B8' }}>›</Text>}
+                    {st === 'range' && <Text style={{ fontSize: 16, color: Palette.primary }}>✓</Text>}
+                    {(st === 'start' || st === 'end') && <Text style={{ fontSize: 16, color: '#fff' }}>✓</Text>}
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* ── Booking summary ── */}
         {canContinue && (
           <Animated.View entering={FadeInUp.duration(350).springify()} style={s.summaryBox}>
+            <Text style={s.summaryTitle}>Booking Summary</Text>
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Court</Text>
+              <Text style={s.summaryValue}>{params.courtName}</Text>
+            </View>
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Date</Text>
+              <Text style={s.summaryValue}>{formatDate(params.date ?? todayISO)}</Text>
+            </View>
             <View style={s.summaryRow}>
               <Text style={s.summaryLabel}>Time</Text>
               <Text style={s.summaryValue}>{to12h(startSlot!)} – {to12h(endSlot!)}</Text>
@@ -204,8 +249,9 @@ export default function SelectTimeScreen() {
               <Text style={s.summaryLabel}>Duration</Text>
               <Text style={s.summaryValue}>{duration} hr{duration !== 1 ? 's' : ''}</Text>
             </View>
-            <View style={[s.summaryRow, s.summaryRowTotal]}>
-              <Text style={s.summaryLabel}>Subtotal</Text>
+            <View style={s.summaryDivider} />
+            <View style={s.summaryRow}>
+              <Text style={s.summaryTotalLabel}>Total</Text>
               <Text style={s.summaryTotal}>₱{total.toFixed(2)}</Text>
             </View>
           </Animated.View>
@@ -214,15 +260,18 @@ export default function SelectTimeScreen() {
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <View style={s.footer}>
         <TouchableOpacity
           style={[s.continueBtn, !canContinue && s.continueBtnDisabled]}
           onPress={handleContinue}
           disabled={!canContinue}
           accessibilityRole="button"
+          accessibilityLabel="Continue to summary"
         >
-          <Text style={s.continueBtnText}>Continue →</Text>
+          <Text style={s.continueBtnText}>
+            {canContinue ? `Continue  →  ₱${total.toFixed(2)}` : 'Select time to continue'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -230,45 +279,73 @@ export default function SelectTimeScreen() {
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  safe:                { flex: 1, backgroundColor: '#F8FAFC' },
-  header:              { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Palette.grey200, backgroundColor: '#fff', maxWidth: 480, alignSelf: 'center', width: '100%' },
-  backBtn:             { width: 40 },
-  backIcon:            { fontSize: 30, color: Palette.primary, lineHeight: 34 },
-  title:               { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: Palette.grey900 },
-  progress:            { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, backgroundColor: '#fff', maxWidth: 480, alignSelf: 'center', width: '100%' },
-  dot:                 { width: 10, height: 10, borderRadius: 5, backgroundColor: Palette.grey300 },
-  dotActive:           { backgroundColor: Palette.primary },
-  line:                { flex: 1, height: 2, backgroundColor: Palette.grey300 },
-  progressLabels:      { flexDirection: 'row', paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Palette.grey200, maxWidth: 480, alignSelf: 'center', width: '100%' },
-  progressLabel:       { fontSize: 11, color: Palette.grey500, flex: 1, textAlign: 'center' },
-  progressLabelActive: { color: Palette.primary, fontWeight: '700' },
-  body:                { padding: Spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },
-  courtName:           { fontSize: 17, fontWeight: '800', color: Palette.grey900 },
-  dateLabel:           { fontSize: 13, color: Palette.grey600, marginTop: 4, marginBottom: Spacing.md },
-  legend:              { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md, marginBottom: Spacing.sm },
-  legendItem:          { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendDot:           { width: 10, height: 10, borderRadius: 3 },
-  legendText:          { fontSize: 11, color: Palette.grey600 },
-  instruction:         { fontSize: 13, color: Palette.grey700, fontWeight: '600', marginBottom: Spacing.md, backgroundColor: Palette.primaryLight, padding: Spacing.sm, borderRadius: Radius.sm },
-  sectionLabel:        { fontSize: 14, fontWeight: '800', color: Palette.primary, marginBottom: Spacing.md },
+  safe:   { flex: 1, backgroundColor: '#F8FAFC' },
 
-  // 3-column grid rows
-  gridRow:             { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  slot:                { flex: 1, paddingVertical: 20, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'transparent' },
-  slotSelected:        { borderColor: Palette.primary },
-  slotEmpty:           { flex: 1 },
-  slotTime:            { fontSize: 15, fontWeight: '700', color: '#1a1a1a', marginBottom: 5 },
-  slotLabel:           { fontSize: 13, fontWeight: '700' },
+  // Header
+  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#fff' },
+  backBtn:      { width: 40 },
+  backIcon:     { fontSize: 30, color: Palette.primary, lineHeight: 34 },
+  title:        { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
 
-  summaryBox:          { marginTop: Spacing.lg, backgroundColor: Palette.primaryLight, borderRadius: Radius.md, padding: Spacing.md },
-  summaryRow:          { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.xs },
-  summaryRowTotal:     { marginBottom: 0, paddingTop: Spacing.xs, borderTopWidth: 1, borderTopColor: 'rgba(26,143,227,0.2)', marginTop: Spacing.xs },
-  summaryLabel:        { fontSize: 13, color: Palette.grey600 },
-  summaryValue:        { fontSize: 13, color: Palette.grey900, fontWeight: '600' },
-  summaryTotal:        { fontSize: 16, color: Palette.primary, fontWeight: '800' },
-  footer:              { padding: Spacing.md, borderTopWidth: 1, borderTopColor: Palette.grey200, backgroundColor: '#fff', maxWidth: 480, alignSelf: 'center', width: '100%' },
-  continueBtn:         { backgroundColor: Palette.primary, borderRadius: Radius.md, paddingVertical: 15, alignItems: 'center' },
-  continueBtnDisabled: { backgroundColor: Palette.grey300 },
-  continueBtnText:     { color: '#fff', fontSize: 16, fontWeight: '700' },
+  // Progress
+  progressWrap:         { backgroundColor: '#fff', paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  progressTrack:        { flexDirection: 'row', alignItems: 'center' },
+  progressStep:         { alignItems: 'center', gap: 4 },
+  progressDot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center' },
+  progressDotActive:    { backgroundColor: Palette.primary },
+  progressDotNum:       { fontSize: 12, fontWeight: '700', color: '#94A3B8' },
+  progressDotNumActive: { color: '#fff' },
+  progressLabel:        { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+  progressLabelActive:  { color: Palette.primary },
+  progressLine:         { flex: 1, height: 2, backgroundColor: '#E2E8F0', marginBottom: 14 },
+  progressLineDone:     { backgroundColor: Palette.primary },
+
+  body:         { padding: Spacing.md, maxWidth: 480, alignSelf: 'center', width: '100%' },
+
+  // Section header
+  sectionHeader:     { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm, gap: Spacing.sm },
+  sectionTitle:      { fontSize: 14, fontWeight: '800', color: '#0F172A' },
+
+  // Legend
+  legend:       { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: Spacing.sm },
+  legendItem:   { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendSwatch: { width: 14, height: 14, borderRadius: 4, borderWidth: 1.5 },
+  legendText:   { fontSize: 11, color: '#64748B' },
+
+  // Instruction
+  instructionBanner: { backgroundColor: '#EFF6FF', borderRadius: 12, paddingVertical: 10, paddingHorizontal: Spacing.md, marginBottom: Spacing.md, borderLeftWidth: 3, borderLeftColor: Palette.primary },
+  instructionText:   { fontSize: 13, color: '#1E40AF', fontWeight: '600' },
+
+  // Slots column
+  slotsColumn:     { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E2E8F0', marginBottom: Spacing.md },
+  slotRow:         { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F1F5F9', borderWidth: 1.5, borderColor: 'transparent', gap: 12 },
+  slotRowFirst:    { borderTopLeftRadius: 14, borderTopRightRadius: 14 },
+  slotRowLast:     { borderBottomLeftRadius: 14, borderBottomRightRadius: 14, borderBottomWidth: 0 },
+  slotRowActive:   { borderWidth: 1.5 },
+  slotTimeCol:     { width: 90 },
+  slotTime:        { fontSize: 15, fontWeight: '700' },
+  slotDuration:    { fontSize: 11, color: '#94A3B8', marginTop: 2 },
+  slotDivider:     { width: 1, height: 36, opacity: 0.3 },
+  slotStatusCol:   { flex: 1 },
+  slotBadge:       { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
+  slotBadgeText:   { fontSize: 12, fontWeight: '700' },
+  slotArrow:       { opacity: 0.5 },
+
+  // Summary box
+  summaryBox:        { backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  summaryTitle:      { fontSize: 14, fontWeight: '800', color: '#0F172A', marginBottom: Spacing.sm },
+  summaryRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  summaryLabel:      { fontSize: 13, color: '#64748B' },
+  summaryValue:      { fontSize: 13, color: '#0F172A', fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
+  summaryDivider:    { height: 1, backgroundColor: '#E2E8F0', marginVertical: 8 },
+  summaryTotalLabel: { fontSize: 15, fontWeight: '800', color: '#0F172A' },
+  summaryTotal:      { fontSize: 18, fontWeight: '900', color: Palette.primary },
+
+  // Footer
+  footer:            { padding: Spacing.md, borderTopWidth: 1, borderTopColor: '#E2E8F0', backgroundColor: '#fff' },
+  continueBtn:       { backgroundColor: Palette.primary, borderRadius: 14, height: 54, alignItems: 'center', justifyContent: 'center' },
+  continueBtnDisabled: { backgroundColor: '#CBD5E1' },
+  continueBtnText:   { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
 });

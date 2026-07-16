@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { deleteItemAsync, getItemAsync, isAvailableAsync, setItemAsync } from 'expo-secure-store';
 import {
     createContext,
     ReactNode,
@@ -8,6 +8,47 @@ import {
     useMemo,
     useState,
 } from 'react';
+
+// ── Fallback in-memory store (used when SecureStore is unavailable, e.g. web) ─
+const memoryStore: Record<string, string> = {};
+
+async function storeSet(key: string, value: string) {
+  try {
+    const available = await isAvailableAsync();
+    if (available) {
+      await setItemAsync(key, value);
+    } else {
+      memoryStore[key] = value;
+    }
+  } catch {
+    memoryStore[key] = value;
+  }
+}
+
+async function storeGet(key: string): Promise<string | null> {
+  try {
+    const available = await isAvailableAsync();
+    if (available) {
+      return await getItemAsync(key);
+    }
+    return memoryStore[key] ?? null;
+  } catch {
+    return memoryStore[key] ?? null;
+  }
+}
+
+async function storeDel(key: string) {
+  try {
+    const available = await isAvailableAsync();
+    if (available) {
+      await deleteItemAsync(key);
+    } else {
+      delete memoryStore[key];
+    }
+  } catch {
+    delete memoryStore[key];
+  }
+}
 
 export type UserRole = 'user' | 'admin';
 
@@ -45,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const stored = await SecureStore.getItemAsync(STORAGE_KEY);
+        const stored = await storeGet(STORAGE_KEY);
         if (stored) {
           const parsed: AuthUser = JSON.parse(stored);
           setUser(parsed);
@@ -62,15 +103,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Persist user to secure store ──────────────────────────────────────────
   const persistUser = useCallback(async (u: AuthUser | null) => {
     if (u) {
-      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(u));
+      await storeSet(STORAGE_KEY, JSON.stringify(u));
     } else {
-      await SecureStore.deleteItemAsync(STORAGE_KEY);
+      await storeDel(STORAGE_KEY);
     }
     setUser(u);
   }, []);
 
   // ── Auth actions ──────────────────────────────────────────────────────────
   const login = useCallback(async (payload: LoginPayload) => {
+    if (!payload.email.toLowerCase().endsWith('@gmail.com')) {
+      throw new Error('Only @gmail.com email addresses are allowed.');
+    }
     const role: UserRole = payload.email.toLowerCase().startsWith('admin') ? 'admin' : 'user';
     const u: AuthUser = {
       id:    '1',

@@ -11,7 +11,11 @@ export interface StaffBooking {
   endTime: string;
   durationHrs: number;
   companions: number;
+  players: number;
   amount: number;
+  serviceFee: number;
+  subtotal: number;
+  paymentMethod: string;
   paid: boolean;
   status: 'confirmed' | 'pending' | 'cancelled' | 'no_show' | 'checked_in' | 'completed';
 }
@@ -23,23 +27,17 @@ export interface StaffCourt {
   status: 'open' | 'closed' | 'maintenance';
 }
 
-// ── Seed data ─────────────────────────────────────────────────────────────────
-
-const SEED_BOOKINGS: StaffBooking[] = [
-  { id: 'BKG-001', playerName: 'Customer', playerPhone: '', courtId: '1', courtName: 'Court 1', date: '2026-07-13', startTime: '09:00', endTime: '11:00', durationHrs: 2, companions: 0, amount: 420, paid: true,  status: 'checked_in' },
-  { id: 'BKG-002', playerName: 'Customer', playerPhone: '', courtId: '2', courtName: 'Court 2', date: '2026-07-12', startTime: '09:00', endTime: '10:00', durationHrs: 1, companions: 0, amount: 126, paid: true,  status: 'confirmed'  },
-  { id: 'BKG-003', playerName: 'Customer', playerPhone: '', courtId: '1', courtName: 'Court 1', date: '2026-07-17', startTime: '10:00', endTime: '11:00', durationHrs: 1, companions: 0, amount: 315, paid: true,  status: 'confirmed'  },
-];
+// ── Seed courts only ─────────────────────────────────────────────────────────
 
 const SEED_COURTS: StaffCourt[] = [
-  { id: '1', name: 'Court 1', pricePerHour: 20, status: 'open' },
-  { id: '2', name: 'Court 2', pricePerHour: 15, status: 'open' },
-  { id: '3', name: 'Court 3', pricePerHour: 18, status: 'open' },
+  { id: '1', name: 'Court 1', pricePerHour: 500, status: 'open' },
+  { id: '2', name: 'Court 2', pricePerHour: 500, status: 'open' },
+  { id: '3', name: 'Court 3', pricePerHour: 500, status: 'open' },
 ];
 
 // ── In-memory stores ──────────────────────────────────────────────────────────
 
-let bookings: StaffBooking[] = [...SEED_BOOKINGS];
+let bookings: StaffBooking[] = [];
 let courts:   StaffCourt[]   = [...SEED_COURTS];
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
