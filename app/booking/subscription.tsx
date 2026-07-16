@@ -64,7 +64,7 @@ export default function SubscriptionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ courtId: string; courtName: string; price: string }>();
 
-  const pricePerHour = parseFloat(params.price ?? '20');
+  const pricePerHour = parseFloat(params.price ?? '500');
   const courtName    = params.courtName ?? 'Court';
 
   const [frequency,  setFrequency]  = useState<Frequency>('weekly');

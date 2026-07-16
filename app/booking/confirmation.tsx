@@ -136,7 +136,7 @@ export default function ConfirmationScreen() {
   const params = useLocalSearchParams<{
     bookingId: string; courtName: string; date: string;
     startTime: string; endTime: string; duration: string;
-    grandTotal: string; paymentMethod: string;
+    grandTotal: string; paymentMethod: string; players: string;
   }>();
 
   const details = [
@@ -145,6 +145,7 @@ export default function ConfirmationScreen() {
     { label: 'Date',       value: formatDate(params.date) },
     { label: 'Time',       value: `${to12h(params.startTime)} – ${to12h(params.endTime)}` },
     { label: 'Duration',   value: `${params.duration} hr${parseFloat(params.duration ?? '1') !== 1 ? 's' : ''}` },
+    { label: 'Players',    value: `${params.players ?? '1'} player${parseInt(params.players ?? '1') !== 1 ? 's' : ''}` },
     { label: 'Payment',    value: params.paymentMethod ?? 'GCash' },
     { label: 'Total Paid', value: `₱${parseFloat(params.grandTotal ?? '0').toFixed(2)}` },
   ];
@@ -224,7 +225,17 @@ export default function ConfirmationScreen() {
 
           <TouchableOpacity
             style={s.secondaryBtn}
-            onPress={() => router.replace('/(tabs)')}
+            onPress={() => router.replace({
+              pathname: '/(tabs)',
+              params: {
+                recentCourtName:  params.courtName,
+                recentTotal:      params.grandTotal,
+                recentPlayers:    params.players ?? '1',
+                recentDate:       params.date,
+                recentStartTime:  params.startTime,
+                recentEndTime:    params.endTime,
+              },
+            })}
             accessibilityRole="button"
             accessibilityLabel="Back to home"
           >

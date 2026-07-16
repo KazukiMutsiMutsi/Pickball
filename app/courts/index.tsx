@@ -27,7 +27,7 @@ const COURT = {
   name:         'PicklePro Pickleball Court',
   address:      '8X66+R3 Lapu-Lapu, Cebu',
   city:         'Lapu-Lapu City, Cebu',
-  pricePerHour: 20,
+  pricePerHour: 500,
   rating:       4.8,
   slots:        6,
   lat:          10.31216602850818,
