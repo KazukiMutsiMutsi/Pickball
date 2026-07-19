@@ -11,12 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MENU = [
-  { icon: '✏️', label: 'Edit Profile',     route: '/profile-edit'           },
-  { icon: '📋', label: 'Booking History',  route: '/booking/history'        },
-  { icon: '🔔', label: 'Notifications',    route: '/notification-settings'  },
-  { icon: '⚙️', label: 'Settings',         route: '/settings'               },
-  { icon: '❓', label: 'Help & Support',   route: '/help-support'           },
-  { icon: '📄', label: 'Terms & Privacy',  route: '/terms-privacy'          },
+  { label: 'Edit Profile',     route: '/profile-edit'           },
+  { label: 'Booking History',  route: '/booking/history'        },
+  { label: 'Notifications',    route: '/notification-settings'  },
+  { label: 'Settings',         route: '/settings'               },
+  { label: 'Help & Support',   route: '/help-support'           },
+  { label: 'Terms & Privacy',  route: '/terms-privacy'          },
 ];
 
 export default function ProfileScreen() {
@@ -42,14 +42,14 @@ export default function ProfileScreen() {
               <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <TouchableOpacity style={styles.editAvatarBtn} accessibilityLabel="Change photo">
-              <Text style={styles.editAvatarIcon}>📷</Text>
+              <Text style={styles.editAvatarText}>Edit</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.userName}>{user?.name ?? 'Player'}</Text>
           <Text style={styles.userEmail}>{user?.email ?? ''}</Text>
           <View style={styles.levelRow}>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>⭐ Intermediate</Text>
+              <Text style={styles.levelText}>Intermediate</Text>
             </View>
             <View style={styles.rankBadge}>
               <Text style={styles.rankText}>Rank #5</Text>
@@ -70,9 +70,8 @@ export default function ProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel={item.label}
             >
-              <Text style={styles.menuIcon}>{item.icon}</Text>
               <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuChevron}>›</Text>
+              <Text style={styles.menuChevron}>Open</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -97,8 +96,8 @@ const styles = StyleSheet.create({
   avatarWrap:     { marginTop: Spacing.xl, position: 'relative' },
   avatar:         { width: 96, height: 96, borderRadius: 48, backgroundColor: Palette.primaryDark, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff' },
   avatarText:     { color: '#fff', fontSize: 30, fontWeight: '900' },
-  editAvatarBtn:  { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  editAvatarIcon: { fontSize: 12 },
+  editAvatarBtn:  { position: 'absolute', bottom: 0, right: 0, minWidth: 28, height: 28, borderRadius: 14, paddingHorizontal: 6, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  editAvatarText: { fontSize: 9, fontWeight: '800', color: '#fff' },
   userName:       { fontSize: 22, fontWeight: '900', color: '#0F172A', marginTop: Spacing.sm },
   userEmail:      { fontSize: 13, color: '#64748B', marginTop: 2 },
   levelRow:       { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
   menuCard:      { backgroundColor: '#fff', borderRadius: 14, marginHorizontal: Spacing.md, overflow: 'hidden', marginBottom: 12, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
   menuRow:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, height: 56 },
   menuRowBorder: { borderTopWidth: 1, borderTopColor: '#E2E8F0' },
-  menuIcon:      { fontSize: 18, width: 28 },
   menuLabel:     { flex: 1, fontSize: 15, color: '#0F172A' },
   menuChevron:   { fontSize: 20, color: '#64748B' },
 

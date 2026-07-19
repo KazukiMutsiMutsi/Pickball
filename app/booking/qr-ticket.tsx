@@ -77,7 +77,7 @@ export default function QRTicketScreen() {
         </TouchableOpacity>
         <Text style={s.title}>Your QR Ticket</Text>
         <TouchableOpacity onPress={handleShare} style={s.shareBtn} accessibilityLabel="Share ticket">
-          <Text style={s.shareIcon}>↗️</Text>
+          <Text style={s.shareText}>Share</Text>
         </TouchableOpacity>
       </View>
 
@@ -87,9 +87,8 @@ export default function QRTicketScreen() {
         <View style={[s.ticket, shadowMd]}>
           {/* Top section — court info */}
           <View style={s.ticketTop}>
-            <Text style={s.ticketEmoji}>🏓</Text>
             <Text style={s.ticketCourt}>{params.courtName ?? 'Court'}</Text>
-            <Text style={s.ticketLocation}>📍 8X66+R3 Lapu-Lapu, Cebu</Text>
+            <Text style={s.ticketLocation}>8X66+R3 Lapu-Lapu, Cebu</Text>
           </View>
 
           {/* Perforated divider */}
@@ -147,14 +146,13 @@ export default function QRTicketScreen() {
         {/* Instructions */}
         <View style={s.instructions}>
           {[
-            { icon: '📱', text: 'Open this screen at the court entrance' },
-            { icon: '🔍', text: 'Staff will scan your QR code to check you in' },
-            { icon: '✅', text: 'Green tick confirms your booking is valid' },
-            { icon: '⚠️', text: 'Each QR code is unique and single-use' },
-          ].map((item, i) => (
-            <View key={i} style={s.instrRow}>
-              <Text style={s.instrIcon}>{item.icon}</Text>
-              <Text style={s.instrText}>{item.text}</Text>
+            'Open this screen at the court entrance',
+            'Staff will scan your QR code to check you in',
+            'Green tick confirms your booking is valid',
+            'Each QR code is unique and single-use',
+          ].map((text) => (
+            <View key={text} style={s.instrRow}>
+              <Text style={s.instrText}>{text}</Text>
             </View>
           ))}
         </View>
@@ -176,14 +174,13 @@ const s = StyleSheet.create({
   backBtn:  { width: 40 },
   backIcon: { fontSize: 30, color: Palette.primary, lineHeight: 34 },
   title:    { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  shareBtn: { width: 40, alignItems: 'flex-end' },
-  shareIcon:{ fontSize: 20 },
+  shareBtn: { minWidth: 40, alignItems: 'flex-end', justifyContent: 'center' },
+  shareText:{ fontSize: 14, fontWeight: '600', color: Palette.primary },
   body:     { padding: Spacing.md, alignItems: 'center', alignSelf: 'center', width: '100%', maxWidth: 480 },
 
   // Ticket
   ticket:           { width: '100%', backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', marginBottom: Spacing.md },
   ticketTop:        { alignItems: 'center', padding: Spacing.lg, backgroundColor: Palette.primary },
-  ticketEmoji:      { fontSize: 52, marginBottom: Spacing.sm },
   ticketCourt:      { fontSize: 22, fontWeight: '900', color: '#fff', textAlign: 'center' },
   ticketLocation:   { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
 
@@ -211,8 +208,7 @@ const s = StyleSheet.create({
 
   // Instructions
   instructions: { width: '100%', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, marginBottom: Spacing.md, gap: Spacing.sm },
-  instrRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
-  instrIcon:    { fontSize: 18, width: 28 },
+  instrRow:     { flexDirection: 'row', alignItems: 'flex-start' },
   instrText:    { flex: 1, fontSize: 13, color: '#64748B', lineHeight: 20 },
 
   bookingsBtn:     { backgroundColor: Palette.primaryLight, paddingHorizontal: Spacing.xl, paddingVertical: 14, borderRadius: 12 },

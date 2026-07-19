@@ -92,7 +92,6 @@ export default function BookingHistoryScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>📋</Text>
             <Text style={styles.emptyText}>No bookings here yet.</Text>
           </View>
         }
@@ -109,10 +108,10 @@ export default function BookingHistoryScreen() {
                 </View>
               </View>
               <View style={styles.cardMeta}>
-                <Text style={styles.metaItem}>📅 {formatDate(item.date)}</Text>
-                <Text style={styles.metaItem}>🕐 {to12h(item.startTime)} – {to12h(item.endTime)}</Text>
-                <Text style={styles.metaItem}>⏱ {item.duration} hr{item.duration !== 1 ? 's' : ''}</Text>
-                <Text style={styles.metaItem}>💳 {item.paymentMethod}</Text>
+                <Text style={styles.metaItem}>{formatDate(item.date)}</Text>
+                <Text style={styles.metaItem}>{to12h(item.startTime)} – {to12h(item.endTime)}</Text>
+                <Text style={styles.metaItem}>{item.duration} hr{item.duration !== 1 ? 's' : ''}</Text>
+                <Text style={styles.metaItem}>{item.paymentMethod}</Text>
               </View>
               <View style={styles.cardFooter}>
                 <Text style={styles.bookingId}>{item.id}</Text>
@@ -159,8 +158,7 @@ const styles = StyleSheet.create({
   tabTextActive:{ color: Palette.primary, fontWeight: '700' },
   list:         { padding: Spacing.md, gap: Spacing.sm },
   empty:        { alignItems: 'center', paddingTop: 60 },
-  emptyEmoji:   { fontSize: 48 },
-  emptyText:    { fontSize: 15, color: Palette.grey500, marginTop: Spacing.sm },
+  emptyText:    { fontSize: 15, color: Palette.grey500 },
   card:         { backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md },
   cardHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   courtName:    { fontSize: 15, fontWeight: '700', color: Palette.grey900, flex: 1, marginRight: 8 },

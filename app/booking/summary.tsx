@@ -24,7 +24,7 @@ export default function BookingSummaryScreen() {
     courtId: string; courtName: string; price: string;
     date: string; startTime: string; endTime: string;
     duration: string; total: string; players: string;
-    serviceFee: string; grandTotal: string;
+    serviceFee: string; grandTotal: string; holdId?: string;
   }>();
 
   const players    = parseInt(params.players ?? '1');
@@ -75,15 +75,12 @@ export default function BookingSummaryScreen() {
 
         {/* Court card */}
         <View style={styles.courtCard}>
-          <View style={styles.courtIconWrap}>
-            <Text style={styles.courtIcon}>🏓</Text>
-          </View>
           <View style={styles.courtDetails}>
             <Text style={styles.courtName}>{params.courtName}</Text>
-            <Text style={styles.courtMeta}>📅 {formatDate(params.date)}</Text>
-            <Text style={styles.courtMeta}>🕐 {to12h(params.startTime)} – {to12h(params.endTime)}</Text>
-            <Text style={styles.courtMeta}>⏱ {params.duration} hr{parseFloat(params.duration) !== 1 ? 's' : ''}</Text>
-            <Text style={styles.courtMeta}>👥 {players} player{players !== 1 ? 's' : ''}</Text>
+            <Text style={styles.courtMeta}>{formatDate(params.date)}</Text>
+            <Text style={styles.courtMeta}>{to12h(params.startTime)} – {to12h(params.endTime)}</Text>
+            <Text style={styles.courtMeta}>{params.duration} hr{parseFloat(params.duration) !== 1 ? 's' : ''}</Text>
+            <Text style={styles.courtMeta}>{players} player{players !== 1 ? 's' : ''}</Text>
           </View>
         </View>
 
@@ -155,10 +152,8 @@ const styles = StyleSheet.create({
   progressLabelActive: { color: Palette.primary, fontWeight: '700' },
 
   body:                { padding: Spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },
-  courtCard:           { flexDirection: 'row', backgroundColor: Palette.grey50, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.md },
-  courtIconWrap:       { width: 64, height: 64, borderRadius: Radius.md, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.md },
-  courtIcon:           { fontSize: 32 },
-  courtDetails:        { flex: 1, gap: 4 },
+  courtCard:           { backgroundColor: Palette.grey50, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.md },
+  courtDetails:        { gap: 4 },
   courtName:           { fontSize: 15, fontWeight: '700', color: Palette.grey900 },
   courtMeta:           { fontSize: 13, color: Palette.grey600 },
 

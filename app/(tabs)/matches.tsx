@@ -80,7 +80,6 @@ export default function MatchesScreen() {
         {/* Join banner for open games */}
         {tab === 'open' && (
           <View style={styles.joinBanner}>
-            <Text style={styles.joinBannerEmoji}>⚡</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.joinBannerTitle}>Find players near you</Text>
               <Text style={styles.joinBannerSub}>Join open games or create one and invite others</Text>
@@ -94,7 +93,6 @@ export default function MatchesScreen() {
         {/* Empty state */}
         {data.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🎾</Text>
             <Text style={styles.emptyText}>No matches here yet.</Text>
           </View>
         )}
@@ -126,8 +124,8 @@ export default function MatchesScreen() {
 
             {/* Info */}
             <Text style={styles.opponent}>{m.opponent}</Text>
-            <Text style={styles.meta}>🏓 {m.court}</Text>
-            <Text style={styles.meta}>📅 {m.date} · 🕐 {m.time}</Text>
+            <Text style={styles.meta}>Court • {m.court}</Text>
+            <Text style={styles.meta}>Date • {m.date} · Time • {m.time}</Text>
 
             {/* Actions */}
             {tab !== 'past' && (
@@ -167,14 +165,12 @@ const styles = StyleSheet.create({
   body:              { padding: Spacing.md, gap: Spacing.sm, paddingBottom: 32 },
 
   joinBanner:        { flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.primaryLight, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.sm, marginBottom: Spacing.sm },
-  joinBannerEmoji:   { fontSize: 28 },
   joinBannerTitle:   { fontSize: 14, fontWeight: '700', color: Palette.grey900 },
   joinBannerSub:     { fontSize: 12, color: Palette.grey600, marginTop: 2 },
   joinBannerBtn:     { backgroundColor: Palette.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: Radius.full },
   joinBannerBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   empty:             { alignItems: 'center', paddingTop: 60 },
-  emptyEmoji:        { fontSize: 48 },
   emptyText:         { fontSize: 15, color: Palette.grey500, marginTop: Spacing.sm },
 
   card:              { backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md },

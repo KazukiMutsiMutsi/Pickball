@@ -1,12 +1,13 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { StaffBooking } from '@/src/booking/bookingStore';
-import { addBooking, hasConflict } from '@/src/booking/bookingStore';
+import { addBooking, hasConflict, releasePendingHold } from '@/src/booking/bookingStore';
 import { notifyBookingConfirmed } from '@/src/notifications/notificationStore';
 import { generateQRMatrix, makeBookingToken } from '@/src/utils/qr';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
     ActivityIndicator,
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -55,7 +56,7 @@ export default function PaymentScreen() {
     courtId: string; courtName: string; date: string;
     startTime: string; endTime: string; duration: string;
     grandTotal: string; total: string; players: string;
-    serviceFee: string;
+    serviceFee: string; holdId?: string;
   }>();
 
   const [step,    setStep]    = useState<'select' | 'gcash'>('select');
@@ -64,6 +65,7 @@ export default function PaymentScreen() {
 
   const grandTotal = parseFloat(params.grandTotal ?? '0');
   const players    = parseInt(params.players ?? '1');
+  const holdId     = typeof params.holdId === 'string' ? params.holdId : undefined;
 
   // Generate QR token from booking params
   const qrToken = useMemo(() => makeBookingToken({
@@ -75,8 +77,10 @@ export default function PaymentScreen() {
 
   const handleConfirmPayment = async () => {
     setError('');
-    if (hasConflict(params.courtId, params.date, params.startTime, params.endTime)) {
-      setError('⚠️ This slot was just taken. Please go back and choose a different time.');
+    // Ignore our own pending hold; block if someone else booked/held it
+    if (hasConflict(params.courtId, params.date, params.startTime, params.endTime, undefined, holdId)) {
+      setError('This slot was just taken. Please go back and choose a different time.');
+      releasePendingHold(holdId);
       return;
     }
     setLoading(true);
@@ -103,6 +107,7 @@ export default function PaymentScreen() {
         status:        'confirmed',
       };
       addBooking(booking);
+      releasePendingHold(holdId); // Pending → Booked
       notifyBookingConfirmed({
         bookingId,
         courtName:  params.courtName,
@@ -166,6 +171,14 @@ export default function PaymentScreen() {
               <Text style={s.orderAmount}>₱{grandTotal.toFixed(2)}</Text>
             </View>
 
+            {holdId ? (
+              <View style={s.holdBanner}>
+                <Text style={s.holdBannerText}>
+                  Your slot ({to12h(params.startTime)} – {to12h(params.endTime)}) is Pending. Confirm payment to mark it Booked.
+                </Text>
+              </View>
+            ) : null}
+
             <Text style={s.sectionTitle}>Choose Payment Method</Text>
 
             {/* GCash — only option */}
@@ -175,9 +188,11 @@ export default function PaymentScreen() {
               accessibilityRole="button"
               accessibilityLabel="Pay with GCash"
             >
-              <View style={s.methodIconWrap}>
-                <Text style={s.methodIconText}>G</Text>
-              </View>
+              <Image
+                source={require('../../assets/images/gshocklogo.png')}
+                style={s.methodLogo}
+                resizeMode="contain"
+              />
               <View style={{ flex: 1 }}>
                 <Text style={s.methodName}>GCash</Text>
                 <Text style={s.methodDesc}>Scan QR or send to GCash number</Text>
@@ -198,9 +213,11 @@ export default function PaymentScreen() {
             {/* GCash card */}
             <View style={s.gcashCard}>
               <View style={s.gcashHeader}>
-                <View style={s.gcashLogoWrap}>
-                  <Text style={s.gcashLogoText}>G</Text>
-                </View>
+                <Image
+                  source={require('../../assets/images/gshocklogo.png')}
+                  style={s.methodLogo}
+                  resizeMode="contain"
+                />
                 <View>
                   <Text style={s.gcashTitle}>Pay via GCash</Text>
                   <Text style={s.gcashSub}>Scan QR or send to number below</Text>
@@ -227,7 +244,7 @@ export default function PaymentScreen() {
 
               <View style={s.gcashNote}>
                 <Text style={s.gcashNoteText}>
-                  📌 Use your Booking ID as reference when sending payment.
+                  Use your Booking ID as reference when sending payment.
                 </Text>
               </View>
             </View>
@@ -284,7 +301,7 @@ export default function PaymentScreen() {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={s.payBtnText}>✅  I've Sent Payment  ·  ₱{grandTotal.toFixed(2)}</Text>
+                : <Text style={s.payBtnText}>I've Sent Payment  ·  ₱{grandTotal.toFixed(2)}</Text>
               }
             </TouchableOpacity>
           </View>
@@ -316,21 +333,20 @@ const s = StyleSheet.create({
   body: { padding: Spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },
 
   // Method selection (step 1)
-  orderBanner:    { backgroundColor: Palette.primary, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.lg, alignItems: 'center' },
+  orderBanner:    { backgroundColor: Palette.primary, borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.md, alignItems: 'center' },
   orderLabel:     { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
   orderCourt:     { fontSize: 16, fontWeight: '700', color: '#fff', marginTop: 2 },
   orderAmount:    { fontSize: 28, fontWeight: '900', color: '#fff', marginTop: 4 },
+  holdBanner:     { backgroundColor: '#FFF7ED', borderRadius: 12, padding: Spacing.sm, marginBottom: Spacing.md, borderLeftWidth: 3, borderLeftColor: '#F97316' },
+  holdBannerText: { fontSize: 12, color: '#C2410C', fontWeight: '600', lineHeight: 17 },
   sectionTitle:   { fontSize: 14, fontWeight: '800', color: '#0F172A', marginBottom: Spacing.sm },
   methodCard:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, marginBottom: Spacing.sm, borderWidth: 2, borderColor: '#0070FF', gap: Spacing.md, shadowColor: '#0070FF', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 3 },
-  methodIconWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0070FF', alignItems: 'center', justifyContent: 'center' },
-  methodIconText: { fontSize: 22, fontWeight: '900', color: '#fff' },
+  methodLogo:     { width: 44, height: 44 },
   methodName:     { fontSize: 15, fontWeight: '700', color: '#0F172A' },
   methodDesc:     { fontSize: 12, color: '#64748B', marginTop: 2 },
   methodArrow:    { fontSize: 24, color: '#0070FF', fontWeight: '700' },
   gcashCard:     { backgroundColor: '#fff', borderRadius: 20, padding: Spacing.lg, marginBottom: Spacing.md, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 },
   gcashHeader:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.lg, alignSelf: 'flex-start' },
-  gcashLogoWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0070FF', alignItems: 'center', justifyContent: 'center' },
-  gcashLogoText: { fontSize: 22, fontWeight: '900', color: '#fff' },
   gcashTitle:    { fontSize: 16, fontWeight: '800', color: '#0F172A' },
   gcashSub:      { fontSize: 12, color: '#64748B', marginTop: 1 },
   qrWrap:        { padding: 16, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: Spacing.md },

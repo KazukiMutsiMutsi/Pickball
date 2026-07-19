@@ -11,14 +11,6 @@ import {
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const MIN_PLAYERS = 1;
-const MAX_PLAYERS = 10;
-
-const PLAYER_ICONS: Record<number, string> = {
-  1: '🧍', 2: '👫', 3: '👨‍👩‍👦', 4: '👨‍👩‍👧‍👦',
-  5: '🏃', 6: '🏃', 7: '🏃', 8: '🏃', 9: '🏃', 10: '🏃',
-};
-
 function to12h(t: string) {
   const [h, m] = t.split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -60,7 +52,7 @@ export default function PlayersScreen() {
   const params = useLocalSearchParams<{
     courtId: string; courtName: string; price: string;
     date: string; startTime: string; endTime: string;
-    duration: string; total: string;
+    duration: string; total: string; holdId?: string;
   }>();
 
   const [players, setPlayers] = useState(2);
@@ -73,9 +65,6 @@ export default function PlayersScreen() {
   const subtotal   = parseFloat(params.total ?? '0');
   const serviceFee = subtotal * SERVICE_FEE_RATE;
   const grandTotal = subtotal + serviceFee;
-
-  const dec = () => setPlayers(p => Math.max(MIN_PLAYERS, p - 1));
-  const inc = () => setPlayers(p => Math.min(MAX_PLAYERS, p + 1));
 
   const handleConfirm = () => {
     if (!allChecked) return;
@@ -123,35 +112,21 @@ export default function PlayersScreen() {
 
         {/* ── Player count ── */}
         <Animated.View entering={FadeInDown.duration(280)} style={s.section}>
-          <Text style={s.sectionTitle}>👥 How many players?</Text>
+          {params.holdId ? (
+            <View style={s.holdBanner}>
+              <Text style={s.holdBannerText}>
+                Slot held as Pending · {to12h(params.startTime)} – {to12h(params.endTime)}. Confirm payment to book it.
+              </Text>
+            </View>
+          ) : null}
+          <Text style={s.sectionTitle}>How many players?</Text>
           <Text style={s.sectionSub}>Including yourself</Text>
 
           <View style={s.counterRow}>
-            <TouchableOpacity
-              style={[s.counterBtn, players <= MIN_PLAYERS && s.counterBtnOff]}
-              onPress={dec}
-              disabled={players <= MIN_PLAYERS}
-              accessibilityRole="button"
-              accessibilityLabel="Decrease"
-            >
-              <Text style={[s.counterBtnText, players <= MIN_PLAYERS && s.counterBtnTextOff]}>−</Text>
-            </TouchableOpacity>
-
             <Animated.View key={players} entering={ZoomIn.duration(150)} style={s.counterVal}>
-              <Text style={s.counterEmoji}>{PLAYER_ICONS[players] ?? '🏃'}</Text>
               <Text style={s.counterNum}>{players}</Text>
               <Text style={s.counterUnit}>player{players !== 1 ? 's' : ''}</Text>
             </Animated.View>
-
-            <TouchableOpacity
-              style={[s.counterBtn, players >= MAX_PLAYERS && s.counterBtnOff]}
-              onPress={inc}
-              disabled={players >= MAX_PLAYERS}
-              accessibilityRole="button"
-              accessibilityLabel="Increase"
-            >
-              <Text style={[s.counterBtnText, players >= MAX_PLAYERS && s.counterBtnTextOff]}>+</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Quick presets */}
@@ -172,12 +147,11 @@ export default function PlayersScreen() {
 
         {/* ── Booking summary ── */}
         <Animated.View entering={FadeInDown.delay(80).duration(280)} style={s.section}>
-          <Text style={s.sectionTitle}>📋 Booking Summary</Text>
+          <Text style={s.sectionTitle}>Booking Summary</Text>
 
           <View style={s.summaryCard}>
             {/* Court */}
             <View style={s.summaryRow}>
-              <View style={s.summaryIconWrap}><Text style={s.summaryIcon}>🏓</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.summaryCourtName}>{params.courtName}</Text>
                 <Text style={s.summaryCourtSub}>Pickleball Court</Text>
@@ -188,19 +162,19 @@ export default function PlayersScreen() {
 
             {/* Details */}
             <View style={s.summaryDetail}>
-              <Text style={s.summaryDetailLabel}>📅 Date</Text>
+              <Text style={s.summaryDetailLabel}>Date</Text>
               <Text style={s.summaryDetailValue}>{formatDate(params.date)}</Text>
             </View>
             <View style={s.summaryDetail}>
-              <Text style={s.summaryDetailLabel}>🕐 Time</Text>
+              <Text style={s.summaryDetailLabel}>Time</Text>
               <Text style={s.summaryDetailValue}>{to12h(params.startTime)} – {to12h(params.endTime)}</Text>
             </View>
             <View style={s.summaryDetail}>
-              <Text style={s.summaryDetailLabel}>⏱ Duration</Text>
+              <Text style={s.summaryDetailLabel}>Duration</Text>
               <Text style={s.summaryDetailValue}>{params.duration} hr{parseFloat(params.duration) !== 1 ? 's' : ''}</Text>
             </View>
             <View style={s.summaryDetail}>
-              <Text style={s.summaryDetailLabel}>👥 Players</Text>
+              <Text style={s.summaryDetailLabel}>Players</Text>
               <Text style={s.summaryDetailValue}>{players} player{players !== 1 ? 's' : ''}</Text>
             </View>
 
@@ -227,7 +201,7 @@ export default function PlayersScreen() {
 
         {/* ── Agreements ── */}
         <Animated.View entering={FadeInDown.delay(160).duration(280)} style={s.section}>
-          <Text style={s.sectionTitle}>📝 Agreements</Text>
+          <Text style={s.sectionTitle}>Agreements</Text>
           <Text style={s.sectionSub}>Please read and accept all policies to proceed</Text>
 
           <View style={s.checkCard}>
@@ -270,7 +244,7 @@ export default function PlayersScreen() {
           accessibilityLabel="Confirm booking"
         >
           <Text style={s.confirmBtnText}>
-            {allChecked ? `✅  Confirm Booking  ·  ₱${grandTotal.toFixed(2)}` : 'Confirm Booking'}
+            {allChecked ? `Confirm Booking  ·  ₱${grandTotal.toFixed(2)}` : 'Confirm Booking'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -306,17 +280,14 @@ const s = StyleSheet.create({
   section:       { marginBottom: Spacing.lg },
   sectionTitle:  { fontSize: 15, fontWeight: '800', color: '#0F172A', marginBottom: 2 },
   sectionSub:    { fontSize: 12, color: '#64748B', marginBottom: Spacing.md },
+  holdBanner:    { backgroundColor: '#FFF7ED', borderRadius: 12, padding: Spacing.sm, marginBottom: Spacing.md, borderLeftWidth: 3, borderLeftColor: '#F97316' },
+  holdBannerText:{ fontSize: 12, color: '#C2410C', fontWeight: '600', lineHeight: 17 },
 
   // Counter
-  counterRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xl, marginBottom: Spacing.md },
-  counterBtn:        { width: 52, height: 52, borderRadius: 26, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', shadowColor: Palette.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
-  counterBtnOff:     { backgroundColor: '#E2E8F0', shadowOpacity: 0 },
-  counterBtnText:    { fontSize: 26, color: '#fff', fontWeight: '300', lineHeight: 30, marginTop: -2 },
-  counterBtnTextOff: { color: '#94A3B8' },
-  counterVal:        { alignItems: 'center', minWidth: 80 },
-  counterEmoji:      { fontSize: 32, marginBottom: 2 },
-  counterNum:        { fontSize: 44, fontWeight: '900', color: '#0F172A', lineHeight: 48 },
-  counterUnit:       { fontSize: 12, color: '#64748B', fontWeight: '600' },
+  counterRow:   { alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  counterVal:   { alignItems: 'center', minWidth: 80 },
+  counterNum:   { fontSize: 44, fontWeight: '900', color: '#0F172A', lineHeight: 48 },
+  counterUnit:  { fontSize: 12, color: '#64748B', fontWeight: '600' },
 
   presets:     { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   preset:      { width: 48, height: 48, borderRadius: 10, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#E2E8F0' },

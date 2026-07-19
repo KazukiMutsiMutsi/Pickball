@@ -1,8 +1,14 @@
 import { Palette, Radius, Spacing } from '@/constants/theme';
-import { getBookingsForSlot } from '@/src/booking/bookingStore';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  createPendingHold,
+  getBookingsForSlot,
+  getPendingHoldsForSlot,
+  getSessionHoldId,
+  purgeExpiredHolds,
+} from '@/src/booking/bookingStore';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,54 +37,76 @@ function formatDate(iso: string) {
   });
 }
 
-type SlotState = 'free' | 'booked' | 'start' | 'end' | 'range' | 'past';
+type SlotState = 'free' | 'booked' | 'pending' | 'start' | 'end' | 'range' | 'past';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function SelectTimeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     courtId: string; courtName: string; price: string; date: string;
+    holdId?: string;
   }>();
 
   const [startSlot, setStartSlot] = useState<string | null>(null);
   const [endSlot,   setEndSlot]   = useState<string | null>(null);
+  const [tick, setTick] = useState(0); // refresh slot status on focus
 
   const pricePerHour = parseFloat(params.price ?? '0');
   const todayISO     = new Date().toISOString().slice(0, 10);
   const isToday      = params.date === todayISO;
   const nowMins      = isToday ? new Date().getHours() * 60 + new Date().getMinutes() : -1;
 
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh booked/pending UI; holds expire after HOLD_TTL_MS
+      purgeExpiredHolds();
+      setTick(t => t + 1);
+    }, []),
+  );
+
   const bookedRanges = useMemo(() => {
     return getBookingsForSlot(params.courtId, params.date)
       .map(b => ({ start: toMins(b.startTime), end: toMins(b.endTime) }));
-  }, [params.courtId, params.date]);
+  }, [params.courtId, params.date, tick]);
+
+  const pendingRanges = useMemo(() => {
+    return getPendingHoldsForSlot(params.courtId, params.date)
+      .map(h => ({ start: toMins(h.startTime), end: toMins(h.endTime), id: h.id }));
+  }, [params.courtId, params.date, tick]);
 
   const isBooked = (t: string) => {
     const m = toMins(t);
     return bookedRanges.some(r => m >= r.start && m < r.end);
   };
 
+  const isPending = (t: string) => {
+    const m = toMins(t);
+    return pendingRanges.some(r => m >= r.start && m < r.end);
+  };
+
   const slotState = (t: string): SlotState => {
     const m = toMins(t);
     if (isToday && t !== '00:00' && m <= nowMins) return 'past';
     if (isBooked(t))            return 'booked';
+    // Selected range wins over pending while picking on this screen
     if (t === startSlot)        return 'start';
     if (t === endSlot)          return 'end';
     if (startSlot && endSlot) {
       const sm = toMins(startSlot), em = toMins(endSlot);
       if (m > sm && m < em)     return 'range';
     }
+    if (isPending(t))           return 'pending';
     return 'free';
   };
 
   const handleTap = (t: string) => {
     const st = slotState(t);
-    if (st === 'past' || st === 'booked') return;
+    if (st === 'past' || st === 'booked' || st === 'pending') return;
     if (!startSlot) { setStartSlot(t); setEndSlot(null); return; }
     if (startSlot && !endSlot && toMins(t) > toMins(startSlot)) {
       const blocked = ALL_SLOTS.some(s => {
         const sm = toMins(s);
-        return sm >= toMins(startSlot) && sm < toMins(t) && isBooked(s);
+        return sm >= toMins(startSlot) && sm < toMins(t) && (isBooked(s) || isPending(s));
       });
       if (!blocked) { setEndSlot(t); return; }
     }
@@ -90,21 +118,46 @@ export default function SelectTimeScreen() {
   const canContinue = !!startSlot && !!endSlot && duration > 0;
 
   const handleContinue = () => {
-    if (!canContinue) return;
+    if (!canContinue || !startSlot || !endSlot) return;
+    const hold = createPendingHold(
+      params.courtId,
+      params.date,
+      startSlot,
+      endSlot,
+      (typeof params.holdId === 'string' ? params.holdId : undefined) ?? getSessionHoldId() ?? undefined,
+    );
+    if (!hold) {
+      Alert.alert(
+        'Slot unavailable',
+        'This time was just taken or is pending. Please choose another slot.',
+      );
+      setTick(t => t + 1);
+      setStartSlot(null);
+      setEndSlot(null);
+      return;
+    }
     router.push({
       pathname: '/booking/players',
-      params: { ...params, startTime: startSlot!, endTime: endSlot!, duration: String(duration), total: String(total) },
+      params: {
+        ...params,
+        startTime: startSlot,
+        endTime: endSlot,
+        duration: String(duration),
+        total: String(total),
+        holdId: hold.id,
+      },
     });
   };
 
   const slotAppearance = (st: SlotState) => {
     switch (st) {
-      case 'free':   return { bg: '#F0FDF4', border: '#86EFAC', label: 'Free',   labelColor: '#16A34A', timeColor: '#166534' };
-      case 'booked': return { bg: '#FEF2F2', border: '#FCA5A5', label: 'Booked', labelColor: '#DC2626', timeColor: '#9B1C1C' };
-      case 'past':   return { bg: '#F8FAFC', border: '#E2E8F0', label: 'Past',   labelColor: '#94A3B8', timeColor: '#94A3B8' };
-      case 'start':  return { bg: Palette.primary, border: Palette.primary, label: 'Start', labelColor: '#fff', timeColor: '#fff' };
-      case 'end':    return { bg: '#0D6EAB', border: '#0D6EAB', label: 'End',   labelColor: '#fff', timeColor: '#fff' };
-      case 'range':  return { bg: '#DBEAFE', border: '#93C5FD', label: '✓',    labelColor: Palette.primary, timeColor: '#1E40AF' };
+      case 'free':    return { bg: '#F0FDF4', border: '#86EFAC', label: 'Free',    labelColor: '#16A34A', timeColor: '#166534' };
+      case 'booked':  return { bg: '#FEF2F2', border: '#FCA5A5', label: 'Booked',  labelColor: '#DC2626', timeColor: '#9B1C1C' };
+      case 'pending': return { bg: '#FFF7ED', border: '#FDBA74', label: 'Pending', labelColor: '#EA580C', timeColor: '#C2410C' };
+      case 'past':    return { bg: '#F8FAFC', border: '#E2E8F0', label: 'Past',    labelColor: '#94A3B8', timeColor: '#94A3B8' };
+      case 'start':   return { bg: Palette.primary, border: Palette.primary, label: 'Start', labelColor: '#fff', timeColor: '#fff' };
+      case 'end':     return { bg: '#0D6EAB', border: '#0D6EAB', label: 'End',   labelColor: '#fff', timeColor: '#fff' };
+      case 'range':   return { bg: '#DBEAFE', border: '#93C5FD', label: 'Selected', labelColor: Palette.primary, timeColor: '#1E40AF' };
     }
   };
 
@@ -143,6 +196,7 @@ export default function SelectTimeScreen() {
         <Animated.View entering={FadeInDown.delay(140).duration(300)} style={s.legend}>
           {[
             { bg: '#F0FDF4', border: '#86EFAC', label: 'Available' },
+            { bg: '#FFF7ED', border: '#FDBA74', label: 'Pending'   },
             { bg: '#FEF2F2', border: '#FCA5A5', label: 'Booked'    },
             { bg: Palette.primary, border: Palette.primary, label: 'Selected' },
             { bg: '#F8FAFC', border: '#E2E8F0', label: 'Past'      },
@@ -158,10 +212,10 @@ export default function SelectTimeScreen() {
         <Animated.View entering={FadeInDown.delay(180).duration(300)} style={s.instructionBanner}>
           <Text style={s.instructionText}>
             {!startSlot
-              ? '👆 Tap a slot to set your start time'
+              ? 'Tap a slot to set your start time'
               : !endSlot
-              ? '👆 Now tap a later slot for your end time'
-              : `✅ ${to12h(startSlot)} → ${to12h(endSlot)}`}
+              ? 'Now tap a later slot for your end time'
+              : `${to12h(startSlot)} → ${to12h(endSlot)}`}
           </Text>
         </Animated.View>
 
@@ -174,7 +228,7 @@ export default function SelectTimeScreen() {
           {ALL_SLOTS.map((t, idx) => {
             const st       = slotState(t);
             const app      = slotAppearance(st);
-            const disabled = st === 'past' || st === 'booked';
+            const disabled = st === 'past' || st === 'booked' || st === 'pending';
             const isActive = st === 'start' || st === 'end' || st === 'range';
 
             return (

@@ -12,11 +12,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MENU_ITEMS = [
-  { icon: '📋', label: 'My Bookings', route: '/booking/history' },
-  { icon: '🔔', label: 'Notifications', route: '/notifications' },
-  { icon: '⚙️', label: 'Settings', route: '/settings' },
-  { icon: '❓', label: 'Help & Support', route: null },
-  { icon: '📄', label: 'Terms & Privacy', route: null },
+  { label: 'My Bookings', route: '/booking/history' },
+  { label: 'Notifications', route: '/notifications' },
+  { label: 'Settings', route: '/settings' },
+  { label: 'Help & Support', route: null },
+  { label: 'Terms & Privacy', route: null },
 ];
 
 export default function ProfileScreen() {
@@ -66,7 +66,6 @@ export default function ProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel={item.label}
             >
-              <Text style={styles.menuIcon}>{item.icon}</Text>
               <Text style={styles.menuLabel}>{item.label}</Text>
               <Text style={styles.menuChevron}>›</Text>
             </TouchableOpacity>
@@ -108,7 +107,6 @@ const styles = StyleSheet.create({
   menu:           { backgroundColor: '#fff', marginHorizontal: Spacing.md, borderRadius: Radius.md, overflow: 'hidden' },
   menuItem:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 15 },
   menuItemBorder: { borderTopWidth: 1, borderTopColor: Palette.grey200 },
-  menuIcon:       { fontSize: 20, marginRight: Spacing.md },
   menuLabel:      { flex: 1, fontSize: 15, color: Palette.grey900 },
   menuChevron:    { fontSize: 20, color: Palette.grey400 },
   signOutBtn:     { margin: Spacing.md, borderWidth: 1, borderColor: Palette.danger, borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center' },

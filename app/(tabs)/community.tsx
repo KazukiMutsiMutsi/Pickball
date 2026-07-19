@@ -27,18 +27,18 @@ const TOURNAMENTS = [
 ];
 
 const CLUBS = [
-  { id: '1', name: 'Manila Picklers',      members: 128, level: 'All Levels',   emoji: '🏓' },
-  { id: '2', name: 'BGC Smash Squad',      members: 64,  level: 'Intermediate', emoji: '⚡' },
-  { id: '3', name: 'Northside Ballers',    members: 45,  level: 'Advanced',     emoji: '🎯' },
-  { id: '4', name: 'Bayview Beginners',    members: 92,  level: 'Beginner',     emoji: '🌊' },
+  { id: '1', name: 'Manila Picklers',      members: 128, level: 'All Levels' },
+  { id: '2', name: 'BGC Smash Squad',      members: 64,  level: 'Intermediate' },
+  { id: '3', name: 'Northside Ballers',    members: 45,  level: 'Advanced' },
+  { id: '4', name: 'Bayview Beginners',    members: 92,  level: 'Beginner' },
 ];
 
 const PLAYERS = [
-  { id: '1', name: 'Maria Santos',   rating: 4.8, wins: 38, rank: '#1',  badge: '🥇' },
-  { id: '2', name: 'Pedro Reyes',    rating: 4.6, wins: 30, rank: '#2',  badge: '🥈' },
-  { id: '3', name: 'Ana Gonzales',   rating: 4.4, wins: 25, rank: '#3',  badge: '🥉' },
-  { id: '4', name: 'Jose Rizal',     rating: 4.3, wins: 22, rank: '#4',  badge: '⭐' },
-  { id: '5', name: 'Juan dela Cruz', rating: 4.2, wins: 24, rank: '#5',  badge: '⭐' },
+  { id: '1', name: 'Maria Santos',   rating: 4.8, wins: 38, rank: '#1',  badge: '1st' },
+  { id: '2', name: 'Pedro Reyes',    rating: 4.6, wins: 30, rank: '#2',  badge: '2nd' },
+  { id: '3', name: 'Ana Gonzales',   rating: 4.4, wins: 25, rank: '#3',  badge: '3rd' },
+  { id: '4', name: 'Jose Rizal',     rating: 4.3, wins: 22, rank: '#4',  badge: '4th' },
+  { id: '5', name: 'Juan dela Cruz', rating: 4.2, wins: 24, rank: '#5',  badge: '5th' },
 ];
 
 const TABS: { key: CommunityTab; label: string }[] = [
@@ -64,7 +64,7 @@ export default function CommunityScreen() {
         <Text style={styles.title}>Community</Text>
         {tab === 'feed' && (
           <TouchableOpacity style={styles.postBtn} accessibilityRole="button" accessibilityLabel="Create post">
-            <Text style={styles.postBtnText}>✏️ Post</Text>
+            <Text style={styles.postBtnText}>Post</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -101,15 +101,12 @@ export default function CommunityScreen() {
             <Text style={styles.postText}>{p.text}</Text>
             <View style={styles.postActions}>
               <TouchableOpacity style={styles.postAction} accessibilityLabel={`${p.likes} likes`}>
-                <Text style={styles.postActionIcon}>❤️</Text>
-                <Text style={styles.postActionCount}>{p.likes}</Text>
+                <Text style={styles.postActionCount}>{p.likes} likes</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.postAction} accessibilityLabel={`${p.comments} comments`}>
-                <Text style={styles.postActionIcon}>💬</Text>
-                <Text style={styles.postActionCount}>{p.comments}</Text>
+                <Text style={styles.postActionCount}>{p.comments} comments</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.postAction} accessibilityLabel="Share">
-                <Text style={styles.postActionIcon}>↗️</Text>
                 <Text style={styles.postActionCount}>Share</Text>
               </TouchableOpacity>
             </View>
@@ -150,7 +147,9 @@ export default function CommunityScreen() {
             </TouchableOpacity>
             {CLUBS.map((c) => (
               <View key={c.id} style={styles.clubCard}>
-                <View style={styles.clubEmoji}><Text style={{ fontSize: 30 }}>{c.emoji}</Text></View>
+                <View style={styles.clubInitials}>
+                  <Text style={styles.clubInitialsText}>{c.name.split(' ').slice(0, 2).map((part) => part[0]).join('')}</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.clubName}>{c.name}</Text>
                   <Text style={styles.clubMeta}>{c.members} members · {c.level}</Text>
@@ -167,7 +166,7 @@ export default function CommunityScreen() {
         {tab === 'players' && (
           <>
             <View style={styles.lbHeader}>
-              <Text style={styles.lbTitle}>🏆 Top Players</Text>
+              <Text style={styles.lbTitle}>Top Players</Text>
               <Text style={styles.lbSub}>Updated weekly</Text>
             </View>
             {PLAYERS.map((p, i) => (
@@ -181,7 +180,7 @@ export default function CommunityScreen() {
                   <Text style={styles.lbWins}>{p.wins} wins</Text>
                 </View>
                 <Text style={styles.lbBadge}>{p.badge}</Text>
-                <Text style={styles.lbRating}>⭐ {p.rating}</Text>
+                <Text style={styles.lbRating}>{p.rating}</Text>
               </View>
             ))}
           </>
@@ -218,7 +217,6 @@ const styles = StyleSheet.create({
   postText:       { fontSize: 14, color: Palette.grey700, lineHeight: 20, marginBottom: Spacing.sm },
   postActions:    { flexDirection: 'row', gap: Spacing.lg, borderTopWidth: 1, borderTopColor: Palette.grey100, paddingTop: Spacing.sm },
   postAction:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  postActionIcon: { fontSize: 15 },
   postActionCount:{ fontSize: 12, color: Palette.grey600, fontWeight: '600' },
 
   // Tournaments
@@ -239,7 +237,8 @@ const styles = StyleSheet.create({
   createClubBtn: { backgroundColor: Palette.primaryLight, borderRadius: Radius.md, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: Palette.primary, borderStyle: 'dashed' },
   createClubText:{ color: Palette.primary, fontWeight: '700', fontSize: 14 },
   clubCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.md, ...shadowSm },
-  clubEmoji:     { width: 52, height: 52, borderRadius: 26, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  clubInitials:  { width: 52, height: 52, borderRadius: 26, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  clubInitialsText:{ color: Palette.primary, fontWeight: '700', fontSize: 14 },
   clubName:      { fontSize: 15, fontWeight: '700', color: Palette.grey900 },
   clubMeta:      { fontSize: 12, color: Palette.grey600, marginTop: 2 },
   joinClubBtn:   { backgroundColor: Palette.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: Radius.full },

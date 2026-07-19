@@ -27,7 +27,7 @@ const HISTORY = [
 ];
 
 const METHODS = [
-  { id: 'gcash', label: 'GCash', icon: '📱', color: '#007BFF' },
+  { id: 'gcash', label: 'GCash', color: '#007BFF' },
 ];
 
 // ─── Google-Pay-style card input ──────────────────────────────────────────────
@@ -47,7 +47,6 @@ function CardForm() {
     <View style={cf.wrap}>
       {/* Visual card */}
       <View style={cf.cardVisual}>
-        <View style={cf.chip} />
         <Text style={cf.cardNum}>{num || '•••• •••• •••• ••••'}</Text>
         <View style={cf.cardBottom}>
           <View>
@@ -80,7 +79,6 @@ function CardForm() {
       <TextInput style={cf.input} placeholder="Juan dela Cruz" placeholderTextColor={Palette.grey400} value={name} onChangeText={setName} autoCapitalize="words" accessibilityLabel="Name on card" />
 
       <View style={cf.secureNote}>
-        <Text style={cf.secureIcon}>🔒</Text>
         <Text style={cf.secureText}>256-bit encrypted · PCI DSS compliant</Text>
       </View>
     </View>
@@ -90,7 +88,6 @@ function CardForm() {
 const cf = StyleSheet.create({
   wrap:        { marginTop: Spacing.sm },
   cardVisual:  { backgroundColor: Palette.primary, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.md },
-  chip:        { width: 36, height: 28, borderRadius: 6, backgroundColor: '#FFD700', marginBottom: Spacing.md },
   cardNum:     { fontSize: 18, letterSpacing: 3, color: '#fff', fontWeight: '600', marginBottom: Spacing.md },
   cardBottom:  { flexDirection: 'row', justifyContent: 'space-between' },
   cardLabel:   { fontSize: 10, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' },
@@ -99,7 +96,6 @@ const cf = StyleSheet.create({
   input:       { borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 14, paddingHorizontal: Spacing.md, paddingVertical: 12, fontSize: 15, color: '#0F172A', backgroundColor: '#F8FAFC' },
   row2:        { flexDirection: 'row', gap: Spacing.sm },
   secureNote:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', borderRadius: 14, padding: Spacing.sm, marginTop: Spacing.md, gap: 8 },
-  secureIcon:  { fontSize: 14 },
   secureText:  { fontSize: 12, color: '#64748B' },
 });
 
@@ -127,9 +123,6 @@ export default function PaymentsTab() {
               <Text style={styles.summaryLabel}>Pending Payment</Text>
               <Text style={styles.summaryAmount}>₱{totalPending.toFixed(2)}</Text>
             </View>
-            <View style={styles.summaryIcon}>
-              <Text style={{ fontSize: 32 }}>💳</Text>
-            </View>
           </View>
           {PENDING.length > 0 && (
             <TouchableOpacity style={styles.payAllBtn} accessibilityRole="button" accessibilityLabel="Pay all pending">
@@ -143,7 +136,7 @@ export default function PaymentsTab() {
           {(['pending', 'history'] as PayTab[]).map((t) => (
             <TouchableOpacity key={t} style={[styles.tabBtn, tab === t && styles.tabBtnActive]} onPress={() => setTab(t)} accessibilityRole="tab">
               <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                {t === 'pending' ? '⚠️ Pending' : '📜 History'}
+                {t === 'pending' ? 'Pending' : 'History'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -154,7 +147,6 @@ export default function PaymentsTab() {
           <View style={styles.section}>
             {PENDING.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyEmoji}>✅</Text>
                 <Text style={styles.emptyTitle}>All paid up!</Text>
                 <Text style={styles.emptySub}>No pending payments</Text>
               </View>
@@ -166,7 +158,7 @@ export default function PaymentsTab() {
                       <Text style={styles.pendingCourt}>{p.court}</Text>
                       <Text style={styles.pendingAmount}>₱{p.amount.toFixed(2)}</Text>
                     </View>
-                    <Text style={styles.pendingMeta}>📅 {p.date} · 🕐 {p.time}</Text>
+                    <Text style={styles.pendingMeta}>{p.date} · {p.time}</Text>
                     <Text style={styles.pendingId}>{p.id}</Text>
                   </View>
                 ))}
@@ -181,7 +173,6 @@ export default function PaymentsTab() {
                     accessibilityRole="radio"
                     accessibilityState={{ checked: method === m.id }}
                   >
-                    <Text style={styles.methodIcon}>{m.icon}</Text>
                     <Text style={[styles.methodLabel, method === m.id && { color: m.color, fontWeight: '700' }]}>{m.label}</Text>
                     <View style={[styles.radio, method === m.id && { borderColor: m.color }]}>
                       {method === m.id && <View style={[styles.radioDot, { backgroundColor: m.color }]} />}
@@ -202,7 +193,7 @@ export default function PaymentsTab() {
                   <Text style={styles.payBtnText}>Pay ₱{totalPending.toFixed(2)}</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.secureFooter}>🔒 Payments are secure and encrypted</Text>
+                <Text style={styles.secureFooter}>Payments are secure and encrypted</Text>
               </>
             )}
           </View>
@@ -216,15 +207,15 @@ export default function PaymentsTab() {
                 <View style={styles.historyTop}>
                   <Text style={styles.historyCourt}>{h.court}</Text>
                   <Text style={[styles.historyAmount, h.status === 'refunded' && { color: Palette.warning }]}>
-                    {h.status === 'refunded' ? '↩ ' : ''}₱{h.amount.toFixed(2)}
+                    {h.status === 'refunded' ? 'Refund ' : ''}₱{h.amount.toFixed(2)}
                   </Text>
                 </View>
-                <Text style={styles.historyMeta}>📅 {h.date}</Text>
+                <Text style={styles.historyMeta}>{h.date}</Text>
                 <View style={styles.historyFooter}>
                   <Text style={styles.historyId}>{h.id}</Text>
                   <View style={[styles.historyBadge, h.status === 'refunded' ? styles.historyBadgeRefund : styles.historyBadgePaid]}>
                     <Text style={[styles.historyBadgeText, { color: h.status === 'refunded' ? Palette.warning : Palette.success }]}>
-                      {h.status === 'paid' ? `✓ ${h.method}` : '↩ Refunded'}
+                      {h.status === 'paid' ? h.method : 'Refunded'}
                     </Text>
                   </View>
                 </View>
@@ -248,7 +239,6 @@ const styles = StyleSheet.create({
   summaryRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   summaryLabel:      { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   summaryAmount:     { fontSize: 32, fontWeight: '900', color: '#fff', marginTop: 4 },
-  summaryIcon:       { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   payAllBtn:         { backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   payAllBtnText:     { color: Palette.primary, fontWeight: '800', fontSize: 15 },
 
@@ -270,7 +260,7 @@ const styles = StyleSheet.create({
 
   methodRow:         { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderRadius: 14, borderWidth: 1.5, borderColor: '#E2E8F0', backgroundColor: '#fff', marginBottom: Spacing.sm },
   methodRowActive:   { borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
-  methodIcon:        { fontSize: 22, marginRight: Spacing.md },
+  methodLogo:        { width: 28, height: 28, marginRight: Spacing.md },
   methodLabel:       { flex: 1, fontSize: 14, color: '#0F172A' },
   radio:             { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center' },
   radioDot:          { width: 10, height: 10, borderRadius: 5 },
@@ -280,8 +270,7 @@ const styles = StyleSheet.create({
   secureFooter:      { textAlign: 'center', fontSize: 12, color: '#64748B', marginTop: Spacing.sm },
 
   empty:             { alignItems: 'center', paddingTop: 40, paddingBottom: Spacing.lg },
-  emptyEmoji:        { fontSize: 52 },
-  emptyTitle:        { fontSize: 18, fontWeight: '800', color: '#0F172A', marginTop: Spacing.md },
+  emptyTitle:        { fontSize: 18, fontWeight: '800', color: '#0F172A' },
   emptySub:          { fontSize: 14, color: '#64748B', marginTop: 6 },
 
   historyCard:       { backgroundColor: '#fff', borderRadius: 14, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },

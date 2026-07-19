@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: 'How does Repeat Booking work?',
-    a: 'In My Bookings, tap "🔄 Repeat" to set up a recurring schedule (weekly, bi-weekly, or monthly). You\'ll get a discount for weekly bookings.',
+    a: 'In My Bookings, tap "Repeat" to set up a recurring schedule (weekly, bi-weekly, or monthly). You\'ll get a discount for weekly bookings.',
   },
   {
     q: 'What if a court is fully booked?',
@@ -43,7 +43,7 @@ const FAQS = [
   },
   {
     q: 'How do I get directions to the court?',
-    a: 'Open the Courts tab, tap the court, then tap "🧭 Get Directions". This opens Google Maps with turn-by-turn navigation to the court.',
+    a: 'Open the Courts tab, tap the court, then tap "Get Directions". This opens Google Maps with turn-by-turn navigation to the court.',
   },
   {
     q: 'Can I change my booking time?',
@@ -61,11 +61,11 @@ const FAQS = [
 
 // ─── Contact options ──────────────────────────────────────────────────────────
 const CONTACTS = [
-  { icon: '📱', label: 'Call Us',        sub: '+63 32 888 1234',    action: () => Linking.openURL('tel:+63328881234')              },
-  { icon: '💬', label: 'WhatsApp',       sub: '+63 917 123 4567',   action: () => Linking.openURL('https://wa.me/639171234567')    },
-  { icon: '✉️', label: 'Email Support',  sub: 'support@picklepro.ph',action: () => Linking.openURL('mailto:support@picklepro.ph')  },
-  { icon: '📘', label: 'Facebook Page',  sub: 'fb.com/PickleProPH', action: () => WebBrowser.openBrowserAsync('https://facebook.com') },
-  { icon: '🗺️', label: 'Visit Us',       sub: '8X66+R3 Lapu-Lapu, Cebu', action: () => WebBrowser.openBrowserAsync('https://maps.google.com/?q=10.31216,123.96019') },
+  { label: 'Call Us',        sub: '+63 32 888 1234',    action: () => Linking.openURL('tel:+63328881234')              },
+  { label: 'WhatsApp',       sub: '+63 917 123 4567',   action: () => Linking.openURL('https://wa.me/639171234567')    },
+  { label: 'Email Support',  sub: 'support@picklepro.ph',action: () => Linking.openURL('mailto:support@picklepro.ph')  },
+  { label: 'Facebook Page',  sub: 'fb.com/PickleProPH', action: () => WebBrowser.openBrowserAsync('https://facebook.com') },
+  { label: 'Visit Us',       sub: '8X66+R3 Lapu-Lapu, Cebu', action: () => WebBrowser.openBrowserAsync('https://maps.google.com/?q=10.31216,123.96019') },
 ];
 
 // ─── Accordion FAQ item ───────────────────────────────────────────────────────
@@ -75,7 +75,6 @@ function FAQItem({ q, a }: { q: string; a: string }) {
     <View style={f.wrap}>
       <TouchableOpacity style={f.question} onPress={() => setOpen((v) => !v)} accessibilityRole="button" accessibilityLabel={q} accessibilityState={{ expanded: open }}>
         <Text style={f.qText}>{q}</Text>
-        <Text style={[f.arrow, open && f.arrowOpen]}>›</Text>
       </TouchableOpacity>
       {open && <Text style={f.answer}>{a}</Text>}
     </View>
@@ -83,10 +82,8 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 const f = StyleSheet.create({
   wrap:      { borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
-  question:  { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: Spacing.md, paddingHorizontal: Spacing.md, gap: Spacing.sm },
+  question:  { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: Spacing.md, paddingHorizontal: Spacing.md },
   qText:     { flex: 1, fontSize: 14, fontWeight: '600', color: '#0F172A', lineHeight: 20 },
-  arrow:     { fontSize: 20, color: Palette.grey400, transform: [{ rotate: '0deg' }] },
-  arrowOpen: { transform: [{ rotate: '90deg' }], color: Palette.primary },
   answer:    { fontSize: 13, color: '#64748B', lineHeight: 20, paddingHorizontal: Spacing.md, paddingBottom: Spacing.md },
 });
 
@@ -118,7 +115,7 @@ export default function HelpSupportScreen() {
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Go back">
-          <Text style={s.backIcon}>‹</Text>
+          <Text style={s.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={s.title}>Help & Support</Text>
         <View style={{ width: 40 }} />
@@ -128,16 +125,14 @@ export default function HelpSupportScreen() {
 
         {/* Hero */}
         <View style={[s.hero, shadowSm]}>
-          <Text style={s.heroEmoji}>🏓</Text>
           <Text style={s.heroTitle}>How can we help?</Text>
           <Text style={s.heroSub}>Search FAQs or contact our support team</Text>
         </View>
 
         {/* Search FAQs */}
         <View style={[s.searchWrap, shadowSm]}>
-          <Text style={s.searchIcon}>🔍</Text>
           <TextInput style={s.searchInput} placeholder="Search FAQs…" placeholderTextColor={Palette.grey400} value={search} onChangeText={setSearch} accessibilityLabel="Search FAQs" />
-          {search.length > 0 && <TouchableOpacity onPress={() => setSearch('')}><Text style={{ color: Palette.grey400, fontSize: 16 }}>✕</Text></TouchableOpacity>}
+          {search.length > 0 && <TouchableOpacity onPress={() => setSearch('')}><Text style={{ color: Palette.grey400, fontSize: 16 }}>×</Text></TouchableOpacity>}
         </View>
 
         {/* FAQs */}
@@ -154,12 +149,10 @@ export default function HelpSupportScreen() {
         <View style={[s.card, shadowSm]}>
           {CONTACTS.map((c, idx) => (
             <TouchableOpacity key={c.label} style={[s.contactRow, idx > 0 && s.rowDivider]} onPress={c.action} accessibilityRole="button" accessibilityLabel={c.label}>
-              <View style={s.contactIconWrap}><Text style={s.contactIcon}>{c.icon}</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={s.contactLabel}>{c.label}</Text>
                 <Text style={s.contactSub}>{c.sub}</Text>
               </View>
-              <Text style={s.chevron}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -187,13 +180,13 @@ export default function HelpSupportScreen() {
           />
 
           <TouchableOpacity style={[s.sendBtn, sending && { opacity: 0.6 }]} onPress={handleSend} disabled={sending} accessibilityRole="button" accessibilityLabel="Send message">
-            <Text style={s.sendBtnText}>{sending ? 'Sending…' : '✉️ Send Message'}</Text>
+            <Text style={s.sendBtnText}>{sending ? 'Sending…' : 'Send Message'}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Operating hours */}
         <View style={[s.hoursCard, shadowSm]}>
-          <Text style={s.hoursTitle}>⏰ Support Hours</Text>
+          <Text style={s.hoursTitle}>Support Hours</Text>
           <Text style={s.hoursText}>Monday – Saturday: 8:00 AM – 8:00 PM</Text>
           <Text style={s.hoursText}>Sunday: 9:00 AM – 5:00 PM</Text>
           <Text style={s.hoursNote}>We typically respond within 2–4 hours during support hours.</Text>
@@ -209,26 +202,21 @@ const s = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: '#F8FAFC' },
   header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   backBtn: { width: 40 },
-  backIcon:{ fontSize: 30, color: Palette.primary, lineHeight: 34 },
+  backText:{ fontSize: 14, color: Palette.primary, fontWeight: '700' },
   title:   { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
   body:    { padding: Spacing.md, gap: Spacing.md },
   hero:    { backgroundColor: Palette.primary, borderRadius: 20, padding: Spacing.xl, alignItems: 'center' },
-  heroEmoji:{ fontSize: 48, marginBottom: Spacing.sm },
   heroTitle:{ fontSize: 22, fontWeight: '900', color: '#fff' },
   heroSub:  { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, textAlign: 'center' },
   searchWrap:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: Spacing.md, paddingVertical: 12, gap: 8 },
-  searchIcon:  { fontSize: 15 },
   searchInput: { flex: 1, fontSize: 14, color: '#0F172A' },
   sectionTitle:{ fontSize: 15, fontWeight: '800', color: '#0F172A' },
   card:        { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden' },
   noResults:   { textAlign: 'center', color: '#64748B', padding: Spacing.lg },
-  contactRow:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 15, gap: Spacing.md },
+  contactRow:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 15 },
   rowDivider:  { borderTopWidth: 1, borderTopColor: '#E2E8F0' },
-  contactIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  contactIcon: { fontSize: 18 },
   contactLabel:{ fontSize: 14, fontWeight: '700', color: '#0F172A' },
   contactSub:  { fontSize: 12, color: '#64748B', marginTop: 1 },
-  chevron:     { fontSize: 20, color: '#64748B' },
   fieldLabel:  { fontSize: 12, fontWeight: '700', color: '#64748B', marginBottom: 6, marginTop: Spacing.sm, marginHorizontal: Spacing.md },
   input:       { borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: Spacing.md, paddingVertical: 12, fontSize: 14, color: '#0F172A', backgroundColor: '#F8FAFC', marginHorizontal: Spacing.md },
   textarea:    { height: 100, textAlignVertical: 'top' },

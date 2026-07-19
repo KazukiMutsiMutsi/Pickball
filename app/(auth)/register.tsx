@@ -140,14 +140,12 @@ export default function RegisterScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.iconCircle}><Text style={styles.headerEmoji}>🏓</Text></View>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join PicklePro and start booking courts</Text>
         </View>
 
         {!!error && (
           <View style={styles.errorBanner}>
-            <Text style={styles.errorIcon}>⚠️</Text>
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
@@ -155,7 +153,6 @@ export default function RegisterScreen() {
         {/* Full name */}
         <Field label="Full Name" required>
           <View style={styles.inputWrap}>
-            <Text style={styles.inputIcon}>👤</Text>
             <TextInput style={styles.input} placeholder="Juan dela Cruz" placeholderTextColor={Palette.grey400} value={fullName} onChangeText={setFullName} autoCapitalize="words" accessibilityLabel="Full name" />
           </View>
         </Field>
@@ -163,7 +160,6 @@ export default function RegisterScreen() {
         {/* Email */}
         <Field label="Email Address" required>
           <View style={styles.inputWrap}>
-            <Text style={styles.inputIcon}>✉️</Text>
             <TextInput style={styles.input} placeholder="you@example.com" placeholderTextColor={Palette.grey400} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} accessibilityLabel="Email address" />
           </View>
         </Field>
@@ -172,13 +168,12 @@ export default function RegisterScreen() {
         <Field label="Mobile Number" required>
           <View style={styles.phoneRow}>
             <View style={styles.phPrefix}>
-              <Text style={styles.phFlag}>🇵🇭</Text>
               <Text style={styles.phCode}>+63</Text>
             </View>
             <TextInput style={styles.phoneInput} placeholder="9XX XXX XXXX" placeholderTextColor={Palette.grey400} value={phone} onChangeText={(t) => setPhone(formatPHPhone(t))} keyboardType="number-pad" maxLength={12} accessibilityLabel="Philippine mobile number" />
             {phoneDigits.length > 0 && (
               <View style={[styles.phoneStatus, phoneValid ? styles.phoneStatusOk : styles.phoneStatusBad]}>
-                <Text style={styles.phoneStatusIcon}>{phoneValid ? '✓' : '✕'}</Text>
+                <Text style={styles.phoneStatusIcon}>{phoneValid ? 'OK' : 'No'}</Text>
               </View>
             )}
           </View>
@@ -193,10 +188,9 @@ export default function RegisterScreen() {
         {/* Password */}
         <Field label="Password" required>
           <View style={styles.inputWrap}>
-            <Text style={styles.inputIcon}>🔒</Text>
             <TextInput style={styles.input} placeholder="Min. 8 characters" placeholderTextColor={Palette.grey400} value={password} onChangeText={setPassword} secureTextEntry={!showPass} accessibilityLabel="Password" />
             <TouchableOpacity onPress={() => setShowPass((v) => !v)} style={styles.eyeBtn} accessibilityLabel={showPass ? 'Hide' : 'Show'}>
-              <Text style={styles.eyeIcon}>{showPass ? '🙈' : '👁️'}</Text>
+              <Text style={styles.eyeText}>{showPass ? 'Hide' : 'Show'}</Text>
             </TouchableOpacity>
           </View>
           <PasswordStrength password={password} />
@@ -205,21 +199,18 @@ export default function RegisterScreen() {
         {/* Confirm password */}
         <Field label="Confirm Password" required>
           <View style={[styles.inputWrap, confirm.length > 0 && password !== confirm && styles.inputWrapError]}>
-            <Text style={styles.inputIcon}>🔒</Text>
             <TextInput style={styles.input} placeholder="Repeat password" placeholderTextColor={Palette.grey400} value={confirm} onChangeText={setConfirm} secureTextEntry={!showConfirm} accessibilityLabel="Confirm password" />
             <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeBtn} accessibilityLabel={showConfirm ? 'Hide' : 'Show'}>
-              <Text style={styles.eyeIcon}>{showConfirm ? '🙈' : '👁️'}</Text>
+              <Text style={styles.eyeText}>{showConfirm ? 'Hide' : 'Show'}</Text>
             </TouchableOpacity>
-            {confirm.length > 0 && password === confirm && <Text style={styles.matchIcon}>✓</Text>}
+            {confirm.length > 0 && password === confirm && <Text style={styles.matchIcon}>OK</Text>}
           </View>
           {confirm.length > 0 && password !== confirm && <Text style={styles.mismatchText}>Passwords don't match</Text>}
         </Field>
 
         {/* Terms */}
         <TouchableOpacity style={styles.termsRow} onPress={() => setAgreed((v) => !v)} accessibilityRole="checkbox" accessibilityState={{ checked: agreed }} accessibilityLabel="Agree to Terms">
-          <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-            {agreed && <Text style={styles.checkboxTick}>✓</Text>}
-          </View>
+          <View style={[styles.checkbox, agreed && styles.checkboxChecked]} />
           <Text style={styles.termsText}>
             I agree to the <Text style={styles.termsLink}>Terms of Service</Text> and <Text style={styles.termsLink}>Privacy Policy</Text>
           </Text>
@@ -260,24 +251,19 @@ const styles = StyleSheet.create({
   flex:            { flex: 1, backgroundColor: '#F8FAFC' },
   container:       { flexGrow: 1, paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl },
   header:          { alignItems: 'center', marginBottom: Spacing.lg },
-  iconCircle:      { width: 80, height: 80, borderRadius: 40, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
-  headerEmoji:     { fontSize: 36 },
   title:           { fontSize: 28, fontWeight: '800', color: '#0F172A' },
   subtitle:        { fontSize: 14, color: '#64748B', marginTop: 4 },
   errorBanner:     { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FDECEA', borderRadius: 12, padding: Spacing.md, marginBottom: Spacing.md, gap: Spacing.sm, borderLeftWidth: 3, borderLeftColor: '#EF4444' },
-  errorIcon:       { fontSize: 14 },
   errorText:       { flex: 1, color: '#EF4444', fontSize: 13, lineHeight: 18 },
   inputWrap:       { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, backgroundColor: '#F8FAFC', paddingHorizontal: Spacing.md },
   inputWrapError:  { borderColor: '#EF4444' },
-  inputIcon:       { fontSize: 16, marginRight: 8 },
   input:           { flex: 1, fontSize: 15, color: '#0F172A', paddingVertical: 14 },
   eyeBtn:          { padding: 4 },
-  eyeIcon:         { fontSize: 16 },
+  eyeText:         { fontSize: 13, color: Palette.primary, fontWeight: '600' },
   matchIcon:       { fontSize: 16, color: '#10B981', fontWeight: '700' },
   mismatchText:    { fontSize: 12, color: '#EF4444', marginTop: 4 },
   phoneRow:        { flexDirection: 'row', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, backgroundColor: '#F8FAFC', overflow: 'hidden', alignItems: 'center' },
   phPrefix:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 14, borderRightWidth: 1.5, borderRightColor: '#E2E8F0', backgroundColor: Palette.primaryLight, gap: 5 },
-  phFlag:          { fontSize: 18 },
   phCode:          { fontSize: 14, fontWeight: '800', color: Palette.primary },
   phoneInput:      { flex: 1, fontSize: 16, color: '#0F172A', paddingHorizontal: Spacing.md, paddingVertical: 14, letterSpacing: 1 },
   phoneStatus:     { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
