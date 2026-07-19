@@ -125,7 +125,6 @@ export default function LoginScreen() {
 
           {!!error && (
             <Animated.View style={[styles.errorBanner, { transform: [{ translateX: shakeAnim }] }]}>
-              <Text style={styles.errorIcon}>⚠️</Text>
               <Text style={styles.errorText}>{error}</Text>
             </Animated.View>
           )}
@@ -134,7 +133,6 @@ export default function LoginScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email Address</Text>
             <View style={[styles.inputWrap, email.length > 0 && styles.inputWrapFocused]}>
-              <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.input}
                 placeholder="you@example.com"
@@ -148,7 +146,7 @@ export default function LoginScreen() {
                 accessibilityLabel="Email address"
               />
               {email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-                <Text style={styles.validTick}>✓</Text>
+                <Text style={styles.validTick}>OK</Text>
               )}
             </View>
           </View>
@@ -162,7 +160,6 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
             <View style={[styles.inputWrap, password.length > 0 && styles.inputWrapFocused]}>
-              <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
@@ -175,7 +172,7 @@ export default function LoginScreen() {
                 accessibilityLabel="Password"
               />
               <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn} accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}>
-                <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+                <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -244,7 +241,6 @@ const styles = StyleSheet.create({
   cardSubtitle:     { fontSize: 14, color: '#64748B', marginTop: 2, marginBottom: Spacing.md },
 
   errorBanner:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FDECEA', borderRadius: 12, padding: Spacing.sm, marginBottom: Spacing.sm, gap: Spacing.sm, borderLeftWidth: 3, borderLeftColor: '#EF4444' },
-  errorIcon:        { fontSize: 14 },
   errorText:        { flex: 1, color: '#EF4444', fontSize: 13, lineHeight: 18 },
 
   fieldGroup:       { marginBottom: Spacing.md },
@@ -253,11 +249,10 @@ const styles = StyleSheet.create({
   forgotLink:       { fontSize: 13, color: Palette.primary, fontWeight: '600' },
   inputWrap:        { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, backgroundColor: '#F8FAFC', paddingHorizontal: Spacing.md },
   inputWrapFocused: { borderColor: Palette.primary, backgroundColor: Palette.primaryLight },
-  inputIcon:        { fontSize: 16, marginRight: 8 },
   input:            { flex: 1, fontSize: 15, color: '#0F172A', paddingVertical: 15 },
   validTick:        { fontSize: 15, color: '#10B981', fontWeight: '700' },
   eyeBtn:           { padding: 4, marginLeft: 4 },
-  eyeIcon:          { fontSize: 16 },
+  eyeText:          { fontSize: 13, color: Palette.primary, fontWeight: '600' },
 
   loginBtn:         { backgroundColor: '#0D1F35', borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.sm, marginBottom: Spacing.md },
   loginBtnDisabled: { opacity: 0.6 },

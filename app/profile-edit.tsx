@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Alert,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,26 +13,6 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-// ─── Avatar options ───────────────────────────────────────────────────────────
-const AVATARS = [
-  { id: 'paddle',    emoji: '🏓', label: 'Paddle'    },
-  { id: 'trophy',    emoji: '🏆', label: 'Trophy'    },
-  { id: 'fire',      emoji: '🔥', label: 'Fire'      },
-  { id: 'star',      emoji: '⭐', label: 'Star'      },
-  { id: 'lightning', emoji: '⚡', label: 'Lightning' },
-  { id: 'crown',     emoji: '👑', label: 'Crown'     },
-  { id: 'rocket',    emoji: '🚀', label: 'Rocket'    },
-  { id: 'ninja',     emoji: '🥷', label: 'Ninja'     },
-  { id: 'robot',     emoji: '🤖', label: 'Robot'     },
-  { id: 'alien',     emoji: '👾', label: 'Alien'     },
-  { id: 'dragon',    emoji: '🐉', label: 'Dragon'    },
-  { id: 'phoenix',   emoji: '🦅', label: 'Phoenix'   },
-  { id: 'cat',       emoji: '😸', label: 'Cat'       },
-  { id: 'panda',     emoji: '🐼', label: 'Panda'     },
-  { id: 'fox',       emoji: '🦊', label: 'Fox'       },
-  { id: 'wolf',      emoji: '🐺', label: 'Wolf'      },
-];
 
 const AVATAR_BG_COLORS = [
   '#1A8FE3','#27AE60','#E91E63','#F39C12','#8E44AD',
@@ -52,13 +31,13 @@ export default function ProfileEditScreen() {
   const [showCurrent,  setShowCurrent]  = useState(false);
   const [showNew,      setShowNew]      = useState(false);
   const [showConfirm,  setShowConfirm]  = useState(false);
-  const [selectedEmoji,setSelectedEmoji]= useState('🏓');
   const [selectedBg,   setSelectedBg]   = useState('#1A8FE3');
-  const [avatarModal,  setAvatarModal]  = useState(false);
   const [saving,       setSaving]       = useState(false);
   const [tab,          setTab]          = useState<'profile' | 'password'>('profile');
 
-  const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials = name.trim()
+    ? name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'AV';
 
   const handleSaveProfile = async () => {
     if (!name.trim()) { Alert.alert('Error', 'Name cannot be empty.'); return; }
@@ -86,7 +65,7 @@ export default function ProfileEditScreen() {
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityLabel="Go back">
-          <Text style={s.backIcon}>‹</Text>
+          <Text style={s.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={s.title}>Edit Profile</Text>
         <View style={{ width: 40 }} />
@@ -94,13 +73,12 @@ export default function ProfileEditScreen() {
 
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Avatar section */}
+        {/* Avatar section — initials from name */}
         <View style={[s.avatarSection, shadowSm]}>
-          <TouchableOpacity onPress={() => setAvatarModal(true)} style={[s.avatarCircle, { backgroundColor: selectedBg }]} accessibilityRole="button" accessibilityLabel="Change avatar">
-            <Text style={s.avatarEmoji}>{selectedEmoji}</Text>
-            <View style={s.editBadge}><Text style={s.editBadgeText}>✏️</Text></View>
-          </TouchableOpacity>
-          <Text style={s.avatarHint}>Tap to change avatar</Text>
+          <View style={[s.avatarCircle, { backgroundColor: selectedBg }]} accessibilityLabel="Avatar">
+            <Text style={s.avatarInitials}>{initials || 'Avatar'}</Text>
+          </View>
+          <Text style={s.avatarHint}>Avatar from your name</Text>
 
           {/* BG color picker */}
           <View style={s.colorRow}>
@@ -131,25 +109,22 @@ export default function ProfileEditScreen() {
           <View style={[s.card, shadowSm]}>
             <Text style={s.fieldLabel}>Full Name</Text>
             <View style={s.inputWrap}>
-              <Text style={s.inputIcon}>👤</Text>
               <TextInput style={s.input} value={name} onChangeText={setName} placeholder="Your full name" placeholderTextColor={Palette.grey400} autoCapitalize="words" accessibilityLabel="Full name" />
             </View>
 
             <Text style={s.fieldLabel}>Email Address</Text>
             <View style={s.inputWrap}>
-              <Text style={s.inputIcon}>✉️</Text>
               <TextInput style={s.input} value={email} onChangeText={setEmail} placeholder="your@email.com" placeholderTextColor={Palette.grey400} keyboardType="email-address" autoCapitalize="none" accessibilityLabel="Email" />
             </View>
 
             <Text style={s.fieldLabel}>Phone Number</Text>
             <View style={[s.inputWrap, { opacity: 0.6 }]}>
-              <Text style={s.inputIcon}>📱</Text>
               <TextInput style={s.input} value="+63 917 *** ****" editable={false} placeholderTextColor={Palette.grey400} accessibilityLabel="Phone (read only)" />
               <Text style={s.readOnly}>Verified</Text>
             </View>
 
             <TouchableOpacity style={[s.saveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveProfile} disabled={saving} accessibilityRole="button" accessibilityLabel="Save profile">
-              <Text style={s.saveBtnText}>{saving ? 'Saving…' : '💾 Save Profile'}</Text>
+              <Text style={s.saveBtnText}>{saving ? 'Saving…' : 'Save Profile'}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -159,23 +134,26 @@ export default function ProfileEditScreen() {
           <View style={[s.card, shadowSm]}>
             <Text style={s.fieldLabel}>Current Password</Text>
             <View style={s.inputWrap}>
-              <Text style={s.inputIcon}>🔒</Text>
               <TextInput style={s.input} value={currentPass} onChangeText={setCurrentPass} secureTextEntry={!showCurrent} placeholder="Enter current password" placeholderTextColor={Palette.grey400} accessibilityLabel="Current password" />
-              <TouchableOpacity onPress={() => setShowCurrent((v) => !v)} style={s.eyeBtn}><Text>{showCurrent ? '🙈' : '👁️'}</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowCurrent((v) => !v)} style={s.eyeBtn} accessibilityLabel={showCurrent ? 'Hide' : 'Show'}>
+                <Text style={s.eyeText}>{showCurrent ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={s.fieldLabel}>New Password</Text>
             <View style={s.inputWrap}>
-              <Text style={s.inputIcon}>🔑</Text>
               <TextInput style={s.input} value={newPass} onChangeText={setNewPass} secureTextEntry={!showNew} placeholder="Min. 8 characters" placeholderTextColor={Palette.grey400} accessibilityLabel="New password" />
-              <TouchableOpacity onPress={() => setShowNew((v) => !v)} style={s.eyeBtn}><Text>{showNew ? '🙈' : '👁️'}</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowNew((v) => !v)} style={s.eyeBtn} accessibilityLabel={showNew ? 'Hide' : 'Show'}>
+                <Text style={s.eyeText}>{showNew ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={s.fieldLabel}>Confirm New Password</Text>
             <View style={[s.inputWrap, confirmPass.length > 0 && newPass !== confirmPass && s.inputWrapError]}>
-              <Text style={s.inputIcon}>🔑</Text>
               <TextInput style={s.input} value={confirmPass} onChangeText={setConfirmPass} secureTextEntry={!showConfirm} placeholder="Repeat new password" placeholderTextColor={Palette.grey400} accessibilityLabel="Confirm password" />
-              <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={s.eyeBtn}><Text>{showConfirm ? '🙈' : '👁️'}</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={s.eyeBtn} accessibilityLabel={showConfirm ? 'Hide' : 'Show'}>
+                <Text style={s.eyeText}>{showConfirm ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
             </View>
             {confirmPass.length > 0 && newPass !== confirmPass && <Text style={s.mismatch}>Passwords don't match</Text>}
 
@@ -187,45 +165,20 @@ export default function ProfileEditScreen() {
                 { rule: 'Contains special character',     pass: /[^A-Za-z0-9]/.test(newPass) },
               ].map((r) => (
                 <View key={r.rule} style={s.ruleRow}>
-                  <Text style={[s.ruleIcon, { color: r.pass ? Palette.success : Palette.grey400 }]}>{r.pass ? '✓' : '○'}</Text>
+                  <Text style={[s.ruleIcon, { color: r.pass ? Palette.success : Palette.grey400 }]}>{r.pass ? 'OK' : '•'}</Text>
                   <Text style={[s.ruleText, { color: r.pass ? Palette.success : Palette.grey500 }]}>{r.rule}</Text>
                 </View>
               ))}
             </View>
 
             <TouchableOpacity style={[s.saveBtn, saving && { opacity: 0.6 }]} onPress={handleSavePassword} disabled={saving} accessibilityRole="button" accessibilityLabel="Change password">
-              <Text style={s.saveBtnText}>{saving ? 'Saving…' : '🔐 Change Password'}</Text>
+              <Text style={s.saveBtnText}>{saving ? 'Saving…' : 'Change Password'}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
-
-      {/* Avatar picker modal */}
-      <Modal visible={avatarModal} transparent animationType="slide" onRequestClose={() => setAvatarModal(false)}>
-        <View style={s.modalOverlay}>
-          <TouchableOpacity style={s.modalBackdrop} onPress={() => setAvatarModal(false)} activeOpacity={1} />
-          <View style={s.modalSheet}>
-            <View style={s.modalHandle} />
-            <Text style={s.modalTitle}>Choose Your Avatar</Text>
-            <View style={s.avatarGrid}>
-              {AVATARS.map((av) => (
-                <TouchableOpacity
-                  key={av.id}
-                  style={[s.avatarOption, { backgroundColor: selectedBg }, selectedEmoji === av.emoji && s.avatarOptionSelected]}
-                  onPress={() => { setSelectedEmoji(av.emoji); setAvatarModal(false); }}
-                  accessibilityRole="button"
-                  accessibilityLabel={av.label}
-                >
-                  <Text style={s.avatarOptionEmoji}>{av.emoji}</Text>
-                  <Text style={s.avatarOptionLabel}>{av.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -234,16 +187,14 @@ const s = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#F8FAFC' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   backBtn:{ width: 40 },
-  backIcon:{ fontSize: 30, color: Palette.primary, lineHeight: 34 },
+  backText:{ fontSize: 14, color: Palette.primary, fontWeight: '700' },
   title:  { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
   body:   { padding: Spacing.md, gap: Spacing.md },
 
   // Avatar section
   avatarSection:  { backgroundColor: '#fff', borderRadius: 20, padding: Spacing.lg, alignItems: 'center' },
-  avatarCircle:   { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', position: 'relative', marginBottom: Spacing.sm },
-  avatarEmoji:    { fontSize: 48 },
-  editBadge:      { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: Palette.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  editBadgeText:  { fontSize: 12 },
+  avatarCircle:   { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.sm },
+  avatarInitials: { fontSize: 32, fontWeight: '800', color: '#fff' },
   avatarHint:     { fontSize: 12, color: '#64748B', marginBottom: Spacing.md },
   colorRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   colorDot:       { width: 26, height: 26, borderRadius: 13 },
@@ -261,10 +212,10 @@ const s = StyleSheet.create({
   fieldLabel:    { fontSize: 13, fontWeight: '700', color: '#64748B', marginTop: 4 },
   inputWrap:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12, backgroundColor: '#F8FAFC', paddingHorizontal: Spacing.md },
   inputWrapError:{ borderColor: Palette.danger },
-  inputIcon:     { fontSize: 16, marginRight: 8 },
   input:         { flex: 1, fontSize: 15, color: '#0F172A', paddingVertical: 13 },
   readOnly:      { fontSize: 11, color: Palette.success, fontWeight: '700' },
   eyeBtn:        { padding: 4 },
+  eyeText:       { fontSize: 13, color: Palette.primary, fontWeight: '600' },
   mismatch:      { fontSize: 12, color: Palette.danger, marginTop: -4 },
   saveBtn:       { backgroundColor: Palette.primary, borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.sm },
   saveBtnText:   { color: '#fff', fontSize: 15, fontWeight: '800' },
@@ -274,16 +225,4 @@ const s = StyleSheet.create({
   ruleRow:       { flexDirection: 'row', alignItems: 'center', gap: 6 },
   ruleIcon:      { fontSize: 13, width: 18 },
   ruleText:      { fontSize: 12 },
-
-  // Modal
-  modalOverlay:  { flex: 1, justifyContent: 'flex-end' },
-  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
-  modalSheet:    { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: Spacing.md, paddingBottom: 32 },
-  modalHandle:   { width: 40, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: Spacing.md },
-  modalTitle:    { fontSize: 18, fontWeight: '800', color: '#0F172A', marginBottom: Spacing.md, textAlign: 'center' },
-  avatarGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, justifyContent: 'center' },
-  avatarOption:  { width: 70, height: 80, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 2, borderColor: 'transparent' },
-  avatarOptionSelected: { borderColor: '#0F172A', transform: [{ scale: 1.08 }] },
-  avatarOptionEmoji:    { fontSize: 30 },
-  avatarOptionLabel:    { fontSize: 9, color: '#fff', fontWeight: '700' },
 });

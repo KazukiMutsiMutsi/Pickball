@@ -166,7 +166,7 @@ export default function ConfirmationScreen() {
 
         {/* Headline */}
         <Animated.Text entering={FadeInUp.delay(200).springify()} style={s.headline}>
-          Booking Confirmed! 🎉
+          Booking Confirmed!
         </Animated.Text>
         <Animated.Text entering={FadeInUp.delay(300).springify()} style={s.subline}>
           Your court is reserved. Get ready to play!
@@ -188,10 +188,10 @@ export default function ConfirmationScreen() {
         <Animated.View entering={FadeInDown.delay(500).springify()} style={s.tipsCard}>
           <Text style={s.tipsTitle}>Before you go</Text>
           {[
-            '🏓 Bring your own paddle or rent one at the venue',
-            '👟 Wear non-marking court shoes',
-            '💧 Stay hydrated — bring a water bottle',
-            '📍 Arrive 10 minutes early to warm up',
+            'Bring your own paddle or rent one at the venue',
+            'Wear non-marking court shoes',
+            'Stay hydrated — bring a water bottle',
+            'Arrive 10 minutes early to warm up',
           ].map(tip => <Text key={tip} style={s.tipText}>{tip}</Text>)}
         </Animated.View>
 
@@ -211,7 +211,7 @@ export default function ConfirmationScreen() {
             accessibilityRole="button"
             accessibilityLabel="View QR ticket"
           >
-            <Text style={s.qrBtnText}>🎫 View QR Check-in Ticket</Text>
+            <Text style={s.qrBtnText}>View QR Check-in Ticket</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

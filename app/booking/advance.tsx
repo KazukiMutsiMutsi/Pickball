@@ -64,7 +64,7 @@ export default function AdvanceBookingScreen() {
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
 
         <Text style={s.courtName}>{params.courtName}</Text>
-        <Text style={s.hint}>📅 Select any date within the next <Text style={s.hintBold}>30 days</Text></Text>
+        <Text style={s.hint}>Select any date within the next <Text style={s.hintBold}>30 days</Text></Text>
 
         {byMonth.map(group => (
           <View key={group.label} style={s.group}>

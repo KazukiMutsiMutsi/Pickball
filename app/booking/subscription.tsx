@@ -127,7 +127,6 @@ export default function SubscriptionScreen() {
 
         {/* Court banner */}
         <View style={[s.courtBanner, shadowSm]}>
-          <Text style={s.courtBannerEmoji}>🏓</Text>
           <View style={{ flex: 1 }}>
             <Text style={s.courtBannerName}>{courtName}</Text>
             <Text style={s.courtBannerPrice}>₱{pricePerHour}/hr · Lapu-Lapu, Cebu</Text>
@@ -286,7 +285,7 @@ export default function SubscriptionScreen() {
         {/* Terms */}
         <View style={s.termsNote}>
           <Text style={s.termsText}>
-            📋 Cancellations must be made 24 hours before each session. Auto-renew can be turned off anytime from your bookings.
+            Cancellations must be made 24 hours before each session. Auto-renew can be turned off anytime from your bookings.
           </Text>
         </View>
 
@@ -306,7 +305,7 @@ export default function SubscriptionScreen() {
           accessibilityRole="button"
           accessibilityLabel="Subscribe"
         >
-          <Text style={s.subscribeBtnText}>🔄 Subscribe Now</Text>
+          <Text style={s.subscribeBtnText}>Subscribe Now</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -321,8 +320,7 @@ const s = StyleSheet.create({
   title:   { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: '#0F172A' },
   body:    { padding: Spacing.md, gap: Spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 480 },
 
-  courtBanner:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, gap: Spacing.md },
-  courtBannerEmoji:  { fontSize: 36 },
+  courtBanner:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md },
   courtBannerName:   { fontSize: 15, fontWeight: '700', color: '#0F172A' },
   courtBannerPrice:  { fontSize: 12, color: '#64748B', marginTop: 2 },
 

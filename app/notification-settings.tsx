@@ -57,9 +57,8 @@ export default function NotificationSettingsScreen() {
     router.back();
   };
 
-  const SectionTitle = ({ title, icon }: { title: string; icon: string }) => (
+  const SectionTitle = ({ title }: { title: string }) => (
     <View style={s.sectionTitleRow}>
-      <Text style={s.sectionIcon}>{icon}</Text>
       <Text style={s.sectionTitle}>{title}</Text>
     </View>
   );
@@ -101,7 +100,6 @@ export default function NotificationSettingsScreen() {
         {/* ── Push master toggle ── */}
         <View style={[s.masterCard, shadowSm]}>
           <View style={s.masterLeft}>
-            <Text style={s.masterIcon}>🔔</Text>
             <View>
               <Text style={s.masterLabel}>Push Notifications</Text>
               <Text style={s.masterDesc}>Receive alerts on your device</Text>
@@ -111,7 +109,7 @@ export default function NotificationSettingsScreen() {
         </View>
 
         {/* ── Booking notifications ── */}
-        <SectionTitle title="Booking Alerts" icon="📅" />
+        <SectionTitle title="Booking Alerts" />
         <View style={[s.card, shadowSm]}>
           <ToggleRow label="Booking Confirmed"  desc="When a booking is approved"             value={bookingConfirm}  onToggle={() => setBookingConfirm(v => !v)}  disabled={!pushEnabled} />
           <View style={s.rowDivider} />
@@ -125,7 +123,7 @@ export default function NotificationSettingsScreen() {
         {/* ── Reminder timing ── */}
         {bookingReminder && pushEnabled && (
           <>
-            <SectionTitle title="Reminder Timing" icon="⏰" />
+            <SectionTitle title="Reminder Timing" />
             <View style={[s.card, shadowSm]}>
               {REMINDER_OPTIONS.map((opt, i) => (
                 <React.Fragment key={opt.key}>
@@ -143,7 +141,7 @@ export default function NotificationSettingsScreen() {
         )}
 
         {/* ── Payment & promotions ── */}
-        <SectionTitle title="Payments & Offers" icon="💳" />
+        <SectionTitle title="Payments & Offers" />
         <View style={[s.card, shadowSm]}>
           <ToggleRow label="Payment Alerts"    desc="Successful payments & refunds"   value={paymentAlerts} onToggle={() => setPaymentAlerts(v => !v)} disabled={!pushEnabled} />
           <View style={s.rowDivider} />
@@ -155,7 +153,6 @@ export default function NotificationSettingsScreen() {
         {/* ── Email ── */}
         <View style={[s.masterCard, shadowSm]}>
           <View style={s.masterLeft}>
-            <Text style={s.masterIcon}>✉️</Text>
             <View>
               <Text style={s.masterLabel}>Email Notifications</Text>
               <Text style={s.masterDesc}>Receive emails for important updates</Text>
@@ -175,7 +172,7 @@ export default function NotificationSettingsScreen() {
         </View>
 
         {/* ── Do Not Disturb ── */}
-        <SectionTitle title="Do Not Disturb" icon="🌙" />
+        <SectionTitle title="Do Not Disturb" />
         <View style={[s.card, shadowSm]}>
           <ToggleRow label="Enable Do Not Disturb" desc="Silence all notifications during set hours" value={dndEnabled} onToggle={() => setDndEnabled(v => !v)} />
           {dndEnabled && (
@@ -203,7 +200,7 @@ export default function NotificationSettingsScreen() {
 
         {/* Save button */}
         <TouchableOpacity style={s.saveBtnFull} onPress={handleSave} accessibilityRole="button" accessibilityLabel="Save notification settings">
-          <Text style={s.saveBtnFullText}>💾 Save Preferences</Text>
+          <Text style={s.saveBtnFullText}>Save Preferences</Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
@@ -225,13 +222,11 @@ const s = StyleSheet.create({
   // Master card
   masterCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: Spacing.md, gap: Spacing.md },
   masterLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  masterIcon: { fontSize: 26 },
   masterLabel:{ fontSize: 15, fontWeight: '700', color: '#0F172A' },
   masterDesc: { fontSize: 12, color: '#64748B', marginTop: 2 },
 
   // Section title
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.sm },
-  sectionIcon:     { fontSize: 16 },
   sectionTitle:    { fontSize: 13, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // Card

@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Notif {
   id: string;
-  icon: string;
   title: string;
   message: string;
   time: string;
@@ -22,17 +21,8 @@ interface Notif {
 const INITIAL: Notif[] = [
   {
     id: '1',
-    icon: '✅',
-    title: 'Login Successful',
-    message: 'You have successfully logged in to PicklePro. Welcome back!',
-    time: 'Just now',
-    read: false,
-  },
-  {
-    id: '2',
-    icon: '🏓',
-    title: 'Welcome to PicklePro!',
-    message: 'Book courts, track your sessions, and enjoy the game. Tap "Book a Court" to get started.',
+    title: 'Thank you for choosing PicklePro',
+    message: 'Thank you for choosing PicklePro. We are glad to have you here — book a court and enjoy the game!',
     time: 'Just now',
     read: false,
   },
@@ -83,9 +73,6 @@ export default function NotificationsScreen() {
             onPress={() => markRead(item.id)}
             activeOpacity={0.7}
           >
-            <View style={s.iconWrap}>
-              <Text style={{ fontSize: 20 }}>{item.icon}</Text>
-            </View>
             <View style={s.body}>
               <View style={s.row}>
                 <Text style={[s.cardTitle, !item.read && s.cardTitleUnread]} numberOfLines={1}>
@@ -116,7 +103,6 @@ const s = StyleSheet.create({
   emptyText:     { fontSize: 15, color: '#64748B' },
   card:          { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fff', borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.sm, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   cardUnread:    { borderLeftWidth: 3, borderLeftColor: Palette.primary, backgroundColor: '#F8FBFF' },
-  iconWrap:      { width: 42, height: 42, borderRadius: 21, backgroundColor: Palette.primaryLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   body:          { flex: 1 },
   row:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, gap: 6 },
   cardTitle:     { fontSize: 14, fontWeight: '600', color: '#64748B', flex: 1 },
