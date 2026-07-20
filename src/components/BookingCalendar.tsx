@@ -231,8 +231,11 @@ export function BookingCalendar() {
     // Clear selection so when user presses Back, cell shows Pending (not Start)
     resetSelection();
     setTick(t => t + 1);
+    const subtotal   = court.pricePerHour * duration;
+    const serviceFee = subtotal * 0.05;
+    const grandTotal = subtotal + serviceFee;
     router.push({
-      pathname: '/booking/players',
+      pathname: '/booking/payment',
       params: {
         courtId:   court.id,
         courtName: `${court.label} – Pickleball Court`,
@@ -241,7 +244,9 @@ export function BookingCalendar() {
         startTime,
         endTime,
         duration:  String(duration),
-        total:     String(court.pricePerHour * duration),
+        total:     String(subtotal),
+        serviceFee: String(serviceFee),
+        grandTotal: String(grandTotal),
         holdId:    hold.id,
       },
     });
