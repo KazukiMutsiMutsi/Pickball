@@ -1,7 +1,11 @@
 import { Palette, Spacing } from '@/constants/theme';
+import type { StaffBooking } from '@/src/booking/bookingStore';
+import { addBooking, hasConflict, releasePendingHold } from '@/src/booking/bookingStore';
+import { notifyBookingConfirmed } from '@/src/notifications/notificationStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,8 +24,6 @@ function formatDate(iso: string) {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 }
-
-const SERVICE_FEE_RATE = 0.05;
 
 // ─── Checkbox row ─────────────────────────────────────────────────────────────
 function CheckRow({
@@ -52,31 +54,81 @@ export default function PlayersScreen() {
   const params = useLocalSearchParams<{
     courtId: string; courtName: string; price: string;
     date: string; startTime: string; endTime: string;
-    duration: string; total: string; holdId?: string;
+    duration: string; total: string; serviceFee: string;
+    grandTotal: string; holdId?: string;
   }>();
 
   const [players, setPlayers] = useState(2);
   const [agreePrivacy,  setAgreePrivacy]  = useState(false);
   const [agreeTerms,    setAgreeTerms]    = useState(false);
   const [agreeRefund,   setAgreeRefund]   = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [error,         setError]         = useState('');
 
   const allChecked = agreePrivacy && agreeTerms && agreeRefund;
 
-  const subtotal   = parseFloat(params.total ?? '0');
-  const serviceFee = subtotal * SERVICE_FEE_RATE;
-  const grandTotal = subtotal + serviceFee;
+  const grandTotal = parseFloat(params.grandTotal ?? '0');
+  const holdId     = typeof params.holdId === 'string' ? params.holdId : undefined;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!allChecked) return;
-    router.push({
-      pathname: '/booking/summary',
-      params: {
-        ...params,
-        players:    String(players),
-        serviceFee: String(serviceFee),
-        grandTotal: String(grandTotal),
-      },
-    });
+    setError('');
+
+    // Final conflict check before committing
+    if (hasConflict(params.courtId, params.date, params.startTime, params.endTime, undefined, holdId)) {
+      setError('This slot was just taken. Please go back and choose a different time.');
+      releasePendingHold(holdId);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await new Promise(r => setTimeout(r, 900));
+      const bookingId = `BKG-${Date.now().toString(36).toUpperCase()}`;
+      const booking: StaffBooking = {
+        id:            bookingId,
+        playerName:    'Customer',
+        playerPhone:   '',
+        courtId:       params.courtId,
+        courtName:     params.courtName,
+        date:          params.date,
+        startTime:     params.startTime,
+        endTime:       params.endTime,
+        durationHrs:   parseFloat(params.duration ?? '1'),
+        companions:    players - 1,
+        players,
+        subtotal:      parseFloat(params.total ?? '0'),
+        serviceFee:    parseFloat(params.serviceFee ?? '0'),
+        amount:        grandTotal,
+        paymentMethod: 'GCash',
+        paid:          true,
+        status:        'confirmed',
+      };
+      addBooking(booking);
+      releasePendingHold(holdId);
+      notifyBookingConfirmed({
+        bookingId,
+        courtName:  params.courtName,
+        date:       params.date,
+        startTime:  params.startTime,
+        endTime:    params.endTime,
+        grandTotal,
+        players,
+      });
+      router.replace({
+        pathname: '/booking/confirmation',
+        params: {
+          ...params,
+          bookingId,
+          paymentMethod: 'GCash',
+          players: String(players),
+        },
+      });
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,15 +146,15 @@ export default function PlayersScreen() {
       {/* ── Progress ── */}
       <View style={s.progressWrap}>
         <View style={s.progressTrack}>
-          {['Time', 'Players', 'Payment'].map((label, i) => (
+          {['Payment', 'GCash', 'Confirm'].map((label, i) => (
             <React.Fragment key={label}>
               <View style={s.progressStep}>
-                <View style={[s.progressDot, i <= 1 && s.progressDotActive]}>
-                  <Text style={[s.progressDotNum, i <= 1 && s.progressDotNumActive]}>{i + 1}</Text>
+                <View style={[s.progressDot, i <= 2 && s.progressDotActive]}>
+                  <Text style={[s.progressDotNum, i <= 2 && s.progressDotNumActive]}>{i + 1}</Text>
                 </View>
-                <Text style={[s.progressLabel, i <= 1 && s.progressLabelActive]}>{label}</Text>
+                <Text style={[s.progressLabel, i <= 2 && s.progressLabelActive]}>{label}</Text>
               </View>
-              {i < 2 && <View style={[s.progressLine, i < 1 && s.progressLineDone]} />}
+              {i < 2 && <View style={[s.progressLine, i < 2 && s.progressLineDone]} />}
             </React.Fragment>
           ))}
         </View>
@@ -183,11 +235,11 @@ export default function PlayersScreen() {
             {/* Price breakdown */}
             <View style={s.summaryDetail}>
               <Text style={s.summaryDetailLabel}>Court rental</Text>
-              <Text style={s.summaryDetailValue}>₱{subtotal.toFixed(2)}</Text>
+              <Text style={s.summaryDetailValue}>₱{parseFloat(params.total ?? '0').toFixed(2)}</Text>
             </View>
             <View style={s.summaryDetail}>
               <Text style={s.summaryDetailLabel}>Service fee (5%)</Text>
-              <Text style={s.summaryDetailValue}>₱{serviceFee.toFixed(2)}</Text>
+              <Text style={s.summaryDetailValue}>₱{parseFloat(params.serviceFee ?? '0').toFixed(2)}</Text>
             </View>
 
             <View style={s.summaryDivider} />
@@ -233,19 +285,23 @@ export default function PlayersScreen() {
 
       {/* ── Confirm button ── */}
       <View style={s.footer}>
+        {!!error && <Text style={s.errorText}>{error}</Text>}
         {!allChecked && (
           <Text style={s.footerHint}>Accept all 3 agreements to confirm</Text>
         )}
         <TouchableOpacity
-          style={[s.confirmBtn, !allChecked && s.confirmBtnOff]}
+          style={[s.confirmBtn, (!allChecked || loading) && s.confirmBtnOff]}
           onPress={handleConfirm}
-          disabled={!allChecked}
+          disabled={!allChecked || loading}
           accessibilityRole="button"
           accessibilityLabel="Confirm booking"
         >
-          <Text style={s.confirmBtnText}>
-            {allChecked ? `Confirm Booking  ·  ₱${grandTotal.toFixed(2)}` : 'Confirm Booking'}
-          </Text>
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={s.confirmBtnText}>
+                {allChecked ? `Confirm Booking  ·  ₱${grandTotal.toFixed(2)}` : 'Confirm Booking'}
+              </Text>
+          }
         </TouchableOpacity>
       </View>
 
@@ -322,6 +378,7 @@ const s = StyleSheet.create({
   // Footer
   footer:         { padding: Spacing.md, borderTopWidth: 1, borderTopColor: '#E2E8F0', backgroundColor: '#fff', gap: 6 },
   footerHint:     { fontSize: 12, color: '#94A3B8', textAlign: 'center' },
+  errorText:      { fontSize: 12, color: '#DC2626', backgroundColor: '#FEF2F2', padding: Spacing.sm, borderRadius: 8, textAlign: 'center' },
   confirmBtn:     { backgroundColor: Palette.primary, borderRadius: 14, height: 54, alignItems: 'center', justifyContent: 'center' },
   confirmBtnOff:  { backgroundColor: '#CBD5E1' },
   confirmBtnText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },
