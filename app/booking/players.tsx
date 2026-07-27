@@ -1,16 +1,15 @@
 import { Palette, Spacing } from '@/constants/theme';
-import type { StaffBooking } from '@/src/booking/bookingStore';
-import { addBooking, hasConflict, releasePendingHold } from '@/src/booking/bookingStore';
-import { notifyBookingConfirmed } from '@/src/notifications/notificationStore';
+import { useAuthContext } from '@/src/context/AuthContext';
+import { bookingsService } from '@/src/services/bookings.service';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,6 +50,7 @@ function CheckRow({
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function PlayersScreen() {
   const router = useRouter();
+  const { user } = useAuthContext();
   const params = useLocalSearchParams<{
     courtId: string; courtName: string; price: string;
     date: string; startTime: string; endTime: string;
@@ -66,55 +66,46 @@ export default function PlayersScreen() {
   const [error,         setError]         = useState('');
 
   const allChecked = agreePrivacy && agreeTerms && agreeRefund;
-
   const grandTotal = parseFloat(params.grandTotal ?? '0');
-  const holdId     = typeof params.holdId === 'string' ? params.holdId : undefined;
 
   const handleConfirm = async () => {
     if (!allChecked) return;
+    if (!user?.token) { setError('You must be logged in to book.'); return; }
     setError('');
-
-    // Final conflict check before committing
-    if (hasConflict(params.courtId, params.date, params.startTime, params.endTime, undefined, holdId)) {
-      setError('This slot was just taken. Please go back and choose a different time.');
-      releasePendingHold(holdId);
-      return;
-    }
-
     setLoading(true);
     try {
-      await new Promise(r => setTimeout(r, 900));
-      const bookingId = `BKG-${Date.now().toString(36).toUpperCase()}`;
-      const booking: StaffBooking = {
-        id:            bookingId,
-        playerName:    'Customer',
-        playerPhone:   '',
-        courtId:       params.courtId,
-        courtName:     params.courtName,
-        date:          params.date,
-        startTime:     params.startTime,
-        endTime:       params.endTime,
-        durationHrs:   parseFloat(params.duration ?? '1'),
-        companions:    players - 1,
-        players,
-        subtotal:      parseFloat(params.total ?? '0'),
-        serviceFee:    parseFloat(params.serviceFee ?? '0'),
-        amount:        grandTotal,
-        paymentMethod: 'GCash',
-        paid:          true,
-        status:        'confirmed',
-      };
-      addBooking(booking);
-      releasePendingHold(holdId);
-      notifyBookingConfirmed({
-        bookingId,
-        courtName:  params.courtName,
-        date:       params.date,
-        startTime:  params.startTime,
-        endTime:    params.endTime,
-        grandTotal,
-        players,
-      });
+      // bookingDbId is passed from payment.tsx after backend booking was created
+      const bookingDbId = (params as { bookingDbId?: string }).bookingDbId;
+
+      if (bookingDbId) {
+        // Booking already created via PayMongo flow — just navigate to confirmation
+        router.replace({
+          pathname: '/booking/confirmation',
+          params: {
+            ...params,
+            bookingId:     (params as { bookingRef?: string }).bookingRef ?? bookingDbId,
+            paymentMethod: 'GCash',
+            players:       String(players),
+          },
+        });
+        return;
+      }
+
+      // Fallback: create booking now (manual GCash flow)
+      const result = await bookingsService.create(
+        {
+          courtId:   params.courtId,
+          date:      params.date,
+          startSlot: params.startTime,
+          endSlot:   params.endTime,
+          players,
+        },
+        user.token,
+      );
+
+      const bookingId = result.booking.booking_ref;
+      await bookingsService.submitPayment(result.booking.id, bookingId, user.token);
+
       router.replace({
         pathname: '/booking/confirmation',
         params: {
@@ -124,8 +115,13 @@ export default function PlayersScreen() {
           players: String(players),
         },
       });
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong.';
+      if (msg.includes('409') || msg.includes('already been reserved')) {
+        setError('This slot was just taken. Please go back and choose a different time.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

@@ -1,12 +1,15 @@
-// Base API client — configure your backend base URL here
+// Base API client — reads EXPO_PUBLIC_API_URL from .env
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.example.com';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000';
 
 interface RequestOptions extends RequestInit {
   token?: string;
 }
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const { token, ...fetchOptions } = options;
 
   const headers: Record<string, string> = {

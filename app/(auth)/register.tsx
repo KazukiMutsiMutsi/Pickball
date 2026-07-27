@@ -1,17 +1,18 @@
 import { Palette, Spacing } from '@/constants/theme';
+import { useAuth } from '@/src/hooks/useAuth';
 import { shadow } from '@/src/utils/shadow';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // ─── Password strength ────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ function isValidPHPhone(raw: string): boolean {
 // ─── Register Screen ──────────────────────────────────────────────────────────
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register, loginWithGoogle } = useAuth();
   const [fullName,    setFullName]    = useState('');
   const [email,       setEmail]       = useState('');
   const [phone,       setPhone]       = useState('');
@@ -110,6 +112,7 @@ export default function RegisterScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed,      setAgreed]      = useState(false);
   const [loading,     setLoading]     = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error,       setError]       = useState('');
 
   const phoneDigits = phone.replace(/\D/g, '');
@@ -117,20 +120,43 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     setError('');
-    if (!fullName.trim())                                             { setError('Full name is required.');                         return; }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Enter a valid email address.');                   return; }
+    if (!fullName.trim())                                             { setError('Full name is required.');                            return; }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Enter a valid email address.');                      return; }
     if (!phoneValid)                                                  { setError('Enter a valid PH mobile number (e.g. 9171234567).'); return; }
-    if (password.length < 8)                                          { setError('Password must be at least 8 characters.');       return; }
-    if (password !== confirm)                                         { setError('Passwords do not match.');                       return; }
-    if (!agreed)                                                      { setError('Please agree to the Terms & Privacy Policy.');   return; }
+    if (password.length < 8)                                          { setError('Password must be at least 8 characters.');          return; }
+    if (password !== confirm)                                         { setError('Passwords do not match.');                          return; }
+    if (!agreed)                                                      { setError('Please agree to the Terms & Privacy Policy.');      return; }
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      await register({
+        name:     fullName.trim(),
+        email:    email.trim(),
+        phone:    `+63${phoneDigits}`,
+        password,
+      });
       router.replace('/(tabs)');
-    } catch (e: any) {
-      setError(e.message ?? 'Registration failed. Please try again.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Registration failed. Please try again.';
+      // Supabase sends a confirmation email — not actually an error
+      if (msg.toLowerCase().includes('check your email') || msg.toLowerCase().includes('confirm')) {
+        router.replace('/(auth)/login');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Google sign-up failed.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -229,9 +255,17 @@ export default function RegisterScreen() {
         </View>
 
         {/* Google */}
-        <TouchableOpacity style={styles.googleBtn} onPress={() => {}} accessibilityRole="button" accessibilityLabel="Continue with Google">
-          <GoogleIcon />
-          <Text style={styles.googleBtnText}>Continue with Google</Text>
+        <TouchableOpacity
+          style={styles.googleBtn}
+          onPress={handleGoogle}
+          disabled={googleLoading}
+          accessibilityRole="button"
+          accessibilityLabel="Continue with Google"
+        >
+          {googleLoading
+            ? <ActivityIndicator size="small" color={Palette.primary} />
+            : <><GoogleIcon /><Text style={styles.googleBtnText}>Continue with Google</Text></>
+          }
         </TouchableOpacity>
 
         {/* Footer */}

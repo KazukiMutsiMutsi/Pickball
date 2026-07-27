@@ -1,8 +1,6 @@
 import { Palette, Spacing } from '@/constants/theme';
-import { generateQRMatrix, makeBookingToken } from '@/src/utils/qr';
 import { shadowMd } from '@/src/utils/shadow';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
 import {
     ScrollView,
     Share,
@@ -41,8 +39,10 @@ function QRCode({ data, size = 220 }: { data: string; size?: number }) {
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function QRTicketScreen() {
   const router = useRouter();
+  const { user } = useAuthContext();
   const params = useLocalSearchParams<{
-    bookingId: string;
+    bookingId: string;      // booking_ref e.g. BKG-MRYT6LLJ
+    bookingDbId?: string;   // actual UUID (needed to fetch QR from backend)
     courtName: string;
     date: string;
     startTime: string;
@@ -52,12 +52,19 @@ export default function QRTicketScreen() {
     paymentMethod: string;
   }>();
 
-  const token = useMemo(() => makeBookingToken({
-    bookingId: params.bookingId ?? 'BKG-000',
-    courtName: params.courtName ?? 'Court',
-    date:      params.date ?? '',
-    time:      params.startTime ?? '',
-  }), [params]);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [loadingQr, setLoadingQr] = useState(false);
+
+  // Fetch the QR code from the backend when we have a DB id and token
+  useEffect(() => {
+    const dbId = params.bookingDbId;
+    if (!dbId || !user?.token) return;
+    setLoadingQr(true);
+    bookingsService.getQRTicket(dbId, user.token)
+      .then(res => setQrDataUrl(res.qrCode))
+      .catch(() => setQrDataUrl(null))
+      .finally(() => setLoadingQr(false));
+  }, [params.bookingDbId, user?.token]);
 
   const handleShare = async () => {
     try {
@@ -133,13 +140,35 @@ export default function QRTicketScreen() {
           <View style={s.qrSection}>
             <Text style={s.qrInstructions}>Show this QR code at the court entrance</Text>
             <View style={s.qrWrap}>
-              <QRCode data={token} size={200} />
+              {loadingQr ? (
+                <ActivityIndicator color={Palette.primary} style={{ width: 200, height: 200 }} />
+              ) : qrDataUrl ? (
+                <Image
+                  source={{ uri: qrDataUrl }}
+                  style={{ width: 200, height: 200 }}
+                  resizeMode="contain"
+                  accessibilityLabel="QR check-in code"
+                />
+              ) : (
+                // Booking is still pending — QR not generated yet
+                <View style={s.qrPending}>
+                  <Text style={s.qrPendingEmoji}>⏳</Text>
+                  <Text style={s.qrPendingText}>QR code will appear after admin confirms your payment.</Text>
+                </View>
+              )}
             </View>
             <Text style={s.bookingId}>{params.bookingId ?? 'BKG-000'}</Text>
-            <View style={[s.statusBadge, { backgroundColor: '#E8F8EF' }]}>
-              <View style={s.statusDot} />
-              <Text style={s.statusText}>Valid · Ready to scan</Text>
-            </View>
+            {qrDataUrl ? (
+              <View style={[s.statusBadge, { backgroundColor: '#E8F8EF' }]}>
+                <View style={s.statusDot} />
+                <Text style={s.statusText}>Valid · Ready to scan</Text>
+              </View>
+            ) : (
+              <View style={[s.statusBadge, { backgroundColor: '#FFF7ED' }]}>
+                <View style={[s.statusDot, { backgroundColor: '#D97706' }]} />
+                <Text style={[s.statusText, { color: '#D97706' }]}>Pending confirmation</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -213,4 +242,7 @@ const s = StyleSheet.create({
 
   bookingsBtn:     { backgroundColor: Palette.primaryLight, paddingHorizontal: Spacing.xl, paddingVertical: 14, borderRadius: 12 },
   bookingsBtnText: { color: Palette.primary, fontWeight: '700', fontSize: 14 },
+  qrPending:       { width: 200, height: 200, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16 },
+  qrPendingEmoji:  { fontSize: 40 },
+  qrPendingText:   { fontSize: 12, color: '#64748B', textAlign: 'center', lineHeight: 18 },
 });

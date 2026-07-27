@@ -1,11 +1,5 @@
-import { Palette, Radius, Spacing } from '@/constants/theme';
-import {
-  createPendingHold,
-  getBookingsForSlot,
-  getPendingHoldsForSlot,
-  getSessionHoldId,
-  purgeExpiredHolds,
-} from '@/src/booking/bookingStore';
+import { Palette, Spacing } from '@/constants/theme';
+import { courtsService, type CourtAvailability } from '@/src/services/courts.service';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -49,53 +43,43 @@ export default function SelectTimeScreen() {
 
   const [startSlot, setStartSlot] = useState<string | null>(null);
   const [endSlot,   setEndSlot]   = useState<string | null>(null);
-  const [tick, setTick] = useState(0); // refresh slot status on focus
+  // slotStatusMap comes from the backend: slot -> 'open' | 'pending' | 'booked'
+  const [slotStatusMap, setSlotStatusMap] = useState<Record<string, string>>({});
 
   const pricePerHour = parseFloat(params.price ?? '0');
   const todayISO     = new Date().toISOString().slice(0, 10);
   const isToday      = params.date === todayISO;
   const nowMins      = isToday ? new Date().getHours() * 60 + new Date().getMinutes() : -1;
 
+  // Fetch availability from backend on focus
   useFocusEffect(
     useCallback(() => {
-      // Refresh booked/pending UI; holds expire after HOLD_TTL_MS
-      purgeExpiredHolds();
-      setTick(t => t + 1);
-    }, []),
+      let active = true;
+      courtsService.getCourtAvailability(params.courtId, params.date).then((result: CourtAvailability) => {
+        if (!active) return;
+        const map: Record<string, string> = {};
+        for (const s of result.availability) {
+          map[s.slot] = s.status;
+        }
+        setSlotStatusMap(map);
+      }).catch(() => { /* show slots as open on error */ });
+      return () => { active = false; };
+    }, [params.courtId, params.date]),
   );
-
-  const bookedRanges = useMemo(() => {
-    return getBookingsForSlot(params.courtId, params.date)
-      .map(b => ({ start: toMins(b.startTime), end: toMins(b.endTime) }));
-  }, [params.courtId, params.date, tick]);
-
-  const pendingRanges = useMemo(() => {
-    return getPendingHoldsForSlot(params.courtId, params.date)
-      .map(h => ({ start: toMins(h.startTime), end: toMins(h.endTime), id: h.id }));
-  }, [params.courtId, params.date, tick]);
-
-  const isBooked = (t: string) => {
-    const m = toMins(t);
-    return bookedRanges.some(r => m >= r.start && m < r.end);
-  };
-
-  const isPending = (t: string) => {
-    const m = toMins(t);
-    return pendingRanges.some(r => m >= r.start && m < r.end);
-  };
 
   const slotState = (t: string): SlotState => {
     const m = toMins(t);
     if (isToday && t !== '00:00' && m <= nowMins) return 'past';
-    if (isBooked(t))            return 'booked';
-    // Selected range wins over pending while picking on this screen
+    // Selected range wins over server status while user is picking
     if (t === startSlot)        return 'start';
     if (t === endSlot)          return 'end';
     if (startSlot && endSlot) {
       const sm = toMins(startSlot), em = toMins(endSlot);
       if (m > sm && m < em)     return 'range';
     }
-    if (isPending(t))           return 'pending';
+    const serverStatus = slotStatusMap[t];
+    if (serverStatus === 'booked')  return 'booked';
+    if (serverStatus === 'pending') return 'pending';
     return 'free';
   };
 
@@ -106,7 +90,8 @@ export default function SelectTimeScreen() {
     if (startSlot && !endSlot && toMins(t) > toMins(startSlot)) {
       const blocked = ALL_SLOTS.some(s => {
         const sm = toMins(s);
-        return sm >= toMins(startSlot) && sm < toMins(t) && (isBooked(s) || isPending(s));
+        const status = slotStatusMap[s];
+        return sm >= toMins(startSlot) && sm < toMins(t) && (status === 'booked' || status === 'pending');
       });
       if (!blocked) { setEndSlot(t); return; }
     }
@@ -114,37 +99,41 @@ export default function SelectTimeScreen() {
   };
 
   const duration    = useMemo(() => (!startSlot || !endSlot) ? 0 : (toMins(endSlot) - toMins(startSlot)) / 60, [startSlot, endSlot]);
-  const total       = pricePerHour * duration;
+  const subtotal    = pricePerHour * duration;
+  const serviceFee  = Math.round(subtotal * 0.05 * 100) / 100;
+  const grandTotal  = subtotal + serviceFee;
   const canContinue = !!startSlot && !!endSlot && duration > 0;
 
   const handleContinue = () => {
     if (!canContinue || !startSlot || !endSlot) return;
-    const hold = createPendingHold(
-      params.courtId,
-      params.date,
-      startSlot,
-      endSlot,
-      (typeof params.holdId === 'string' ? params.holdId : undefined) ?? getSessionHoldId() ?? undefined,
-    );
-    if (!hold) {
-      Alert.alert(
-        'Slot unavailable',
-        'This time was just taken or is pending. Please choose another slot.',
-      );
-      setTick(t => t + 1);
-      setStartSlot(null);
-      setEndSlot(null);
-      return;
+
+    // Check no slot in the range is taken (client-side guard before backend confirms)
+    for (let t = toMins(startSlot); t < toMins(endSlot); t += 60) {
+      const hh   = String(Math.floor(t / 60)).padStart(2, '0');
+      const slot = `${hh}:00`;
+      const st   = slotStatusMap[slot];
+      if (st === 'booked' || st === 'pending') {
+        Alert.alert('Slot unavailable', 'One or more slots in your range are already taken. Please choose another time.');
+        setStartSlot(null);
+        setEndSlot(null);
+        return;
+      }
     }
+
+    const subtotal    = pricePerHour * duration;
+    const serviceFee  = Math.round(subtotal * 0.05 * 100) / 100;
+    const grandTotal  = subtotal + serviceFee;
+
     router.push({
-      pathname: '/booking/players',
+      pathname: '/booking/payment',
       params: {
         ...params,
-        startTime: startSlot,
-        endTime: endSlot,
-        duration: String(duration),
-        total: String(total),
-        holdId: hold.id,
+        startTime:   startSlot,
+        endTime:     endSlot,
+        duration:    String(duration),
+        total:       String(subtotal),
+        serviceFee:  String(serviceFee),
+        grandTotal:  String(grandTotal),
       },
     });
   };
@@ -306,7 +295,7 @@ export default function SelectTimeScreen() {
             <View style={s.summaryDivider} />
             <View style={s.summaryRow}>
               <Text style={s.summaryTotalLabel}>Total</Text>
-              <Text style={s.summaryTotal}>₱{total.toFixed(2)}</Text>
+              <Text style={s.summaryTotal}>₱{grandTotal.toFixed(2)}</Text>
             </View>
           </Animated.View>
         )}
@@ -324,7 +313,7 @@ export default function SelectTimeScreen() {
           accessibilityLabel="Continue to summary"
         >
           <Text style={s.continueBtnText}>
-            {canContinue ? `Continue  →  ₱${total.toFixed(2)}` : 'Select time to continue'}
+            {canContinue ? `Continue  →  ₱${grandTotal.toFixed(2)}` : 'Select time to continue'}
           </Text>
         </TouchableOpacity>
       </View>

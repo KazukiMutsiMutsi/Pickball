@@ -1,30 +1,23 @@
-// Centralised API endpoint definitions
+// Centralised API endpoint definitions — matches pickleball-backend routes
 
 export const ENDPOINTS = {
-  auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    logout: '/auth/logout',
-  },
   courts: {
-    list: '/courts',
-    detail: (id: string) => `/courts/${id}`,
+    list:         '/api/courts',
+    availability: '/api/courts/availability',         // ?date=YYYY-MM-DD
+    courtAvail:   (id: string) => `/api/courts/${id}/availability`, // ?date=
+    gcash:        '/api/gcash',
   },
   bookings: {
-    list: '/bookings',
-    create: '/bookings',
-    cancel: (id: string) => `/bookings/${id}/cancel`,
-  },
-  payments: {
-    create: '/payments',
-    detail: (id: string) => `/payments/${id}`,
+    create:    '/api/bookings',
+    mine:      '/api/bookings/me',
+    detail:    (id: string) => `/api/bookings/${id}`,
+    qr:        (id: string) => `/api/bookings/${id}/qr`,
+    pay:       (id: string) => `/api/bookings/${id}/pay`,
+    cancel:    (id: string) => `/api/bookings/${id}/cancel`,
   },
   notifications: {
-    list: '/notifications',
-    markRead: (id: string) => `/notifications/${id}/read`,
-  },
-  profile: {
-    get: '/profile',
-    update: '/profile',
+    list:     '/api/notifications',
+    markRead: (id: string) => `/api/notifications/${id}/read`,
+    readAll:  '/api/notifications/read-all',
   },
 } as const;

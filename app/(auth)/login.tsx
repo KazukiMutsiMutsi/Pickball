@@ -5,16 +5,16 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Animated,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 // ─── Google icon (pure RN) ────────────────────────────────────────────────────
@@ -47,12 +47,13 @@ const brandStyles = StyleSheet.create({
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 export default function LoginScreen() {
   const router   = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [email,        setEmail]        = useState('');
   const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error,        setError]        = useState('');
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -82,16 +83,30 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login({ email, password });
+      // Role-based redirect: admin emails get admin panel
       if (email.toLowerCase().startsWith('admin')) {
         router.replace('/(admin)' as any);
       } else {
         router.replace('/(tabs)');
       }
-    } catch (e: any) {
-      setError(e.message ?? 'Incorrect email or password. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Incorrect email or password.');
       shake();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      // OAuth opens a browser — session is picked up on return via deep link
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Google sign-in failed.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -198,12 +213,15 @@ export default function LoginScreen() {
           {/* Google */}
           <TouchableOpacity
             style={[styles.socialBtn, styles.socialBtnGoogle]}
-            onPress={() => { /* TODO: Google sign-in */ }}
+            onPress={handleGoogle}
+            disabled={googleLoading}
             accessibilityRole="button"
             accessibilityLabel="Continue with Google"
           >
-            <GoogleIcon />
-            <Text style={styles.socialLabelGoogle}>Continue with Google</Text>
+            {googleLoading
+              ? <ActivityIndicator size="small" color={Palette.primary} />
+              : <><GoogleIcon /><Text style={styles.socialLabelGoogle}>Continue with Google</Text></>
+            }
           </TouchableOpacity>
           </View>{/* card */}
         </View>{/* pageWrap */}

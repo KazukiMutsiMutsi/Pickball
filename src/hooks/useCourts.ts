@@ -1,11 +1,10 @@
-import { Court } from '@/src/components/CourtCard';
-import { courtsService } from '@/src/services/courts.service';
+import { Court, courtsService } from '@/src/services/courts.service';
 import { useEffect, useState } from 'react';
 
 export function useCourts() {
-  const [courts, setCourts] = useState<Court[]>([]);
+  const [courts, setCourts]   = useState<Court[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
