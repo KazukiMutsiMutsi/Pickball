@@ -18,7 +18,7 @@ const LAST_UPDATED = 'July 11, 2026';
 const TERMS_SECTIONS = [
   {
     title: '1. Acceptance of Terms',
-    body: 'By downloading, installing, or using PicklePro ("the App"), you agree to be bound by these Terms of Service. If you do not agree, do not use the App. These terms apply to all users, including visitors, registered users, and customers.',
+    body: 'By downloading, installing, or using PicklePro, you agree to be bound by these Terms of Service. If you do not agree, do not use the App. These terms apply to all users, including visitors, registered users, and customers.',
   },
   {
     title: '2. Account Registration',
@@ -26,11 +26,11 @@ const TERMS_SECTIONS = [
   },
   {
     title: '3. Booking & Cancellations',
-    body: 'Court bookings are subject to availability and are confirmed only after payment is received. Free cancellations are allowed up to 24 hours before your session. Cancellations within 24 hours of the session may incur a 50% cancellation fee. No-shows are not eligible for refunds.',
+    body: 'Court bookings are subject to availability and are confirmed only after full payment is received. All bookings are final and non-refundable. Cancellations, modifications, or no-shows are not eligible for refunds.',
   },
   {
     title: '4. Payments',
-    body: 'All prices are in Philippine Peso (₱). We accept GCash, Maya, Credit/Debit Card, and PayPal. Payments are processed securely through PayMongo. PicklePro does not store card details on its servers.',
+    body: 'All prices are in Philippine Peso (₱). We accept GCash for secure payment processing. PicklePro does not store any payment details on its servers.',
   },
   {
     title: '5. QR Code & Check-in',

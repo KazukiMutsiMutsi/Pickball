@@ -25,7 +25,6 @@ const { width: W } = Dimensions.get('window');
 const COURTS = [
   { id: '1', label: 'CRT1', pricePerHour: 500 },
   { id: '2', label: 'CRT2', pricePerHour: 500 },
-  { id: '3', label: 'CRT3', pricePerHour: 500 },
 ];
 
 const HOURS = [
@@ -460,7 +459,7 @@ export function BookingCalendar() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const CARD_W   = Math.min(W, 480) - Spacing.md * 2;
 const TIME_W   = 88;
-const COURT_W  = (CARD_W - TIME_W - Spacing.md * 2 - 2) / 3;
+const COURT_W  = (CARD_W - TIME_W - Spacing.md * 2 - 2) / 2;
 
 const s = StyleSheet.create({
   wrap:             { marginHorizontal: Spacing.md, backgroundColor: '#fff', borderRadius: 20, padding: Spacing.md, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2, maxWidth: 480, alignSelf: 'center', width: '100%' },

@@ -51,7 +51,7 @@ const FAQS = [
   },
   {
     q: 'What is your refund policy?',
-    a: 'Cancellations 24+ hours before the session receive a full refund within 3–5 business days. Cancellations within 24 hours receive a 50% refund. No-shows are not refunded.',
+    a: 'All court bookings are final once confirmed. We do not accept cancellations, and no refunds will be issued for unused time or no-shows.',
   },
   {
     q: 'How do I contact the court directly?',
