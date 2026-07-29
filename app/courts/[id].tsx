@@ -22,7 +22,7 @@ const COURTS: Record<string, {
   address: string; city: string; lat: number; lng: number;
 }> = {
   '1': {
-    id: '1', name: 'Downtown Pickleball Center', type: 'Indoor',
+    id: '1', name: 'PicklePro Court', type: 'Indoor',
     pricePerHour: 500, rating: 4.8, slots: 6, reviewCount: 124,
     description: 'State-of-the-art indoor facility with 6 regulation pickleball courts, full air conditioning, and professional LED lighting. Located in Lapu-Lapu City, Cebu.',
     amenities: ['Air Conditioning', 'Locker Rooms', 'Showers', 'Pro Shop', 'Parking', 'Café', 'Equipment Rental'],
@@ -32,42 +32,12 @@ const COURTS: Record<string, {
     lat: 10.31216602850818, lng: 123.9601975259465,
   },
   '2': {
-    id: '2', name: 'Riverside Courts', type: 'Outdoor',
+    id: '2', name: 'PicklePro Court', type: 'Indoor',
     pricePerHour: 500, rating: 4.5, slots: 3, reviewCount: 87,
     description: 'Scenic outdoor courts in Lapu-Lapu City with a relaxed atmosphere. Perfect for morning and evening sessions.',
     amenities: ['Outdoor', 'Parking', 'Restrooms', 'Water Station', 'Seating Area'],
     images: ['https://picsum.photos/seed/court2a/800/400','https://picsum.photos/seed/court2b/800/400','https://picsum.photos/seed/court2c/800/400'],
     openHours: '5:00 AM – 9:00 PM daily', phone: '+63 32 888 2345',
-    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
-    lat: 10.31216602850818, lng: 123.9601975259465,
-  },
-  '3': {
-    id: '3', name: 'Sunset Pavilion', type: 'Covered',
-    pricePerHour: 500, rating: 4.7, slots: 8, reviewCount: 203,
-    description: 'Large covered pavilion in Lapu-Lapu City protecting players from rain and direct sun. Natural ventilation keeps it comfortable year-round.',
-    amenities: ['Covered Roof', 'LED Lighting', 'Parking', 'Restrooms', 'Spectator Seating'],
-    images: ['https://picsum.photos/seed/court3a/800/400','https://picsum.photos/seed/court3b/800/400','https://picsum.photos/seed/court3c/800/400'],
-    openHours: '6:00 AM – 11:00 PM daily', phone: '+63 32 888 3456',
-    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
-    lat: 10.31216602850818, lng: 123.9601975259465,
-  },
-  '4': {
-    id: '4', name: 'Northpark Arena', type: 'Indoor',
-    pricePerHour: 500, rating: 4.9, slots: 2, reviewCount: 311,
-    description: 'Premium tournament-grade indoor arena in Lapu-Lapu City with hardwood flooring, broadcast lighting, and 200-seat spectator stands.',
-    amenities: ['Air Conditioning', 'Locker Rooms', 'Showers', 'Spectator Stands', 'Pro Shop', 'Parking', 'Café', 'Scoreboard'],
-    images: ['https://picsum.photos/seed/court4a/800/400','https://picsum.photos/seed/court4b/800/400','https://picsum.photos/seed/court4c/800/400'],
-    openHours: '7:00 AM – 10:00 PM daily', phone: '+63 32 888 4567',
-    address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
-    lat: 10.31216602850818, lng: 123.9601975259465,
-  },
-  '5': {
-    id: '5', name: 'Bayview Open Courts', type: 'Outdoor',
-    pricePerHour: 500, rating: 4.3, slots: 10, reviewCount: 56,
-    description: 'Affordable open courts in Lapu-Lapu City with a stunning bay view. Perfect for group sessions and community leagues.',
-    amenities: ['Outdoor', 'Parking', 'Water Station', 'Bench Seating'],
-    images: ['https://picsum.photos/seed/court5a/800/400','https://picsum.photos/seed/court5b/800/400','https://picsum.photos/seed/court5c/800/400'],
-    openHours: '5:00 AM – 8:00 PM daily', phone: '+63 32 888 5678',
     address: '8X66+R3 Lapu-Lapu', city: 'Lapu-Lapu City, Cebu',
     lat: 10.31216602850818, lng: 123.9601975259465,
   },
@@ -131,9 +101,6 @@ export default function CourtDetailsScreen() {
     WebBrowser.openBrowserAsync(
       `https://www.google.com/maps/dir/?api=1&destination=${court.lat},${court.lng}`
     );
-
-  // Static map image URL (no API key needed for basic embed)
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${court.lat},${court.lng}&zoom=16&size=600x200&markers=color:red%7C${court.lat},${court.lng}`;
 
   // Google Maps Embed URL (works without API key for basic use)
   const embedUrl = `https://www.google.com/maps/embed?pb=!4v1783619134437!6m8!1m7!1skIchZMjoKl3QsK9Vx4V0Ew!2m2!1d${court.lat}!2d${court.lng}!3f175.5!4f4.3!5f0.78`;

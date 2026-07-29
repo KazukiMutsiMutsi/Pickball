@@ -1,4 +1,5 @@
 import { Layout, Palette, Spacing } from '@/constants/theme';
+import { supabase } from '@/src/context/AuthContext';
 import { useAuth } from '@/src/hooks/useAuth';
 import { shadow } from '@/src/utils/shadow';
 import { Image } from 'expo-image';
@@ -17,32 +18,16 @@ import {
     View,
 } from 'react-native';
 
-// ─── Google icon (pure RN) ────────────────────────────────────────────────────
+// ─── Google icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
   return (
-    <View style={brandStyles.googleWrap}>
-      <View style={[brandStyles.googleArc, brandStyles.googleArcTL]} />
-      <View style={[brandStyles.googleArc, brandStyles.googleArcTR]} />
-      <View style={[brandStyles.googleArc, brandStyles.googleArcBL]} />
-      <View style={[brandStyles.googleArc, brandStyles.googleArcBR]} />
-      <View style={brandStyles.googleCenter} />
-      <View style={brandStyles.googleBar} />
-      <Text style={brandStyles.googleLetter}>G</Text>
-    </View>
+    <Image
+      source={require('../../assets/images/google.png')}
+      style={{ width: 20, height: 20 }}
+      contentFit="contain"
+    />
   );
 }
-
-const brandStyles = StyleSheet.create({
-  googleWrap:   { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
-  googleArc:    { position: 'absolute', width: 22, height: 22, borderRadius: 11, borderWidth: 3 },
-  googleArcTL:  { borderColor: '#4285F4', borderBottomColor: 'transparent', borderRightColor: 'transparent' },
-  googleArcTR:  { borderColor: '#EA4335', borderBottomColor: 'transparent', borderLeftColor: 'transparent' },
-  googleArcBL:  { borderColor: '#34A853', borderTopColor: 'transparent',    borderRightColor: 'transparent' },
-  googleArcBR:  { borderColor: '#FBBC05', borderTopColor: 'transparent',    borderLeftColor: 'transparent' },
-  googleCenter: { position: 'absolute', width: 12, height: 12, borderRadius: 6, backgroundColor: '#fff' },
-  googleBar:    { position: 'absolute', right: 2, top: 9, width: 7, height: 3, backgroundColor: '#fff' },
-  googleLetter: { fontSize: 11, fontWeight: '900', color: '#4285F4', zIndex: 1 },
-});
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 export default function LoginScreen() {
@@ -110,6 +95,33 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError('Enter your email address above first, then tap Forgot password.');
+      shake();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address before resetting your password.');
+      shake();
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: 'picklepro://auth/reset-password',
+      });
+      if (resetError) throw new Error(resetError.message);
+      setError('');
+      alert(`Password reset email sent to ${email}. Check your inbox!`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to send reset email. Try again.');
+      shake();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -128,7 +140,7 @@ export default function LoginScreen() {
               />
             </View>
             <Text style={styles.appName}>PicklePro</Text>
-            <Text style={styles.heroTagline}>Your court awaits</Text>
+            <Text style={styles.heroTagline}>Seamless Booking for Everyday Play</Text>
           </View>
         </View>
 
@@ -170,7 +182,7 @@ export default function LoginScreen() {
           <View style={styles.fieldGroup}>
             <View style={styles.labelRow}>
               <Text style={styles.label}>Password</Text>
-              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Forgot password">
+              <TouchableOpacity onPress={handleForgotPassword} accessibilityRole="button" accessibilityLabel="Forgot password">
                 <Text style={styles.forgotLink}>Forgot password?</Text>
               </TouchableOpacity>
             </View>

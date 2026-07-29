@@ -28,7 +28,7 @@ function AuthGate() {
     if (isLoading) return;
 
     const inAuth  = segments[0] === '(auth)';
-    const inIndex = segments.length === 0 || segments[0] === 'index';
+    const inIndex = (segments as string[]).length === 0 || (segments as string[])[0] === 'index';
 
     if (isAuthenticated && (inAuth || inIndex)) {
       // Admin users go to admin panel, regular users to tabs
