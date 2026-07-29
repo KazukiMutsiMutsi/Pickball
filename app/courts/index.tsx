@@ -22,6 +22,8 @@ const { height: H } = Dimensions.get('window');
 const LOGO_URI: string = require('../../assets/images/logo.png') as string;
 
 // ─── Single real court location ───────────────────────────────────────────────
+const COURT_IMAGE = require('../../public/12.webp') as number;
+
 const COURT = {
   id:           '1',
   name:         'PicklePro Pickleball Court',
@@ -32,7 +34,6 @@ const COURT = {
   slots:        6,
   lat:          10.31216602850818,
   lng:          123.9601975259465,
-  image:        'https://picsum.photos/seed/court1/400/200',
 };
 
 // ─── Leaflet HTML — single pin + locate-me button, real-time tiles ───────────
@@ -225,7 +226,7 @@ export default function CourtsScreen() {
       {!mapView && (
         <ScrollView contentContainerStyle={s.infoScroll}>
           {/* Court photo */}
-          <Image source={{ uri: COURT.image }} style={s.courtPhoto} contentFit="cover" />
+          <Image source={COURT_IMAGE} style={s.courtPhoto} contentFit="cover" />
 
           <View style={s.infoCard}>
             <Text style={s.infoName}>{COURT.name}</Text>

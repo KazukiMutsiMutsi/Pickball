@@ -113,7 +113,7 @@ const PRIVACY_SECTIONS = [
   },
   {
     title: '12. Contact',
-    body: 'For privacy concerns or data requests, contact our Data Protection Officer at privacy@picklepro.ph or +63 32 888 1234.',
+    body: 'For inquiries, please contact the administrator. ',
   },
 ];
 
@@ -187,8 +187,8 @@ export default function TermsPrivacyScreen() {
         <View style={s.summaryBadge}>
           <Text style={s.summaryText}>
             {tab === 'terms'
-              ? '✅ By using PicklePro, you agree to these Terms of Service.'
-              : '🔒 Your data is protected under the Philippine Data Privacy Act of 2012.'}
+              ? ' By using PicklePro, you agree to these Terms of Service.'
+              : ' Your data is protected under the Philippine Data Privacy Act of 2012.'}
           </Text>
         </View>
 

@@ -125,7 +125,7 @@ export default function ProfileScreen() {
               accessibilityLabel={item.label}
             >
               <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuChevron}>Open</Text>
+              <Text style={styles.menuChevron}></Text>
             </TouchableOpacity>
           ))}
         </View>

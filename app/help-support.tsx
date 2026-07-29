@@ -23,19 +23,15 @@ const FAQS = [
   },
   {
     q: 'Can I cancel a booking?',
-    a: 'Yes. Go to My Bookings, find the booking and tap "Cancel". Free cancellations are allowed up to 24 hours before your session. Cancellations within 24 hours may incur a 50% fee.',
+    a: 'Please note that all bookings are final. We do not offer cancellations, rescheduling, or refunds for booked sessions. If you have any questions before booking, feel free to reach out to our team.',
   },
   {
     q: 'How do I pay for my booking?',
-    a: 'We accept GCash, Maya, Credit/Debit Card, and PayPal. After confirming your booking, go to Payments → Pending to complete payment.',
+    a: 'We exclusively accept GCash. Once you confirm your booking, go to Payments → Pending to complete your payment.',
   },
   {
     q: 'What is the QR check-in ticket?',
     a: 'After completing payment, you receive a unique QR code. Show it at the court entrance — staff will scan it to confirm your booking.',
-  },
-  {
-    q: 'How does Repeat Booking work?',
-    a: 'In My Bookings, tap "Repeat" to set up a recurring schedule (weekly, bi-weekly, or monthly). You\'ll get a discount for weekly bookings.',
   },
   {
     q: 'What if a court is fully booked?',
@@ -47,7 +43,7 @@ const FAQS = [
   },
   {
     q: 'Can I change my booking time?',
-    a: 'Currently, to change a booking time you need to cancel and re-book. We are working on a reschedule feature — stay tuned.',
+    a: 'No, booking times cannot be changed or rebooked once confirmed. All bookings are final.',
   },
   {
     q: 'What is your refund policy?',
